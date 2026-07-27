@@ -1,171 +1,51 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
+  CalendarDays,
   ChevronLeft,
   ChevronRight,
-  Clapperboard,
-  Layers,
-  Share2,
   Package,
+  Send,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  AGENDA_KIND_LABEL,
+  type AgendaEvent,
+  type AgendaEventKind,
+} from "@/lib/agency/agenda-events";
 import { cn } from "@/lib/utils";
-
-type EventTone = "green" | "yellow" | "orange" | "zinc";
-
-type AgendaEvent = {
-  id: string;
-  title: string;
-  client: string;
-  time: string;
-  note: string;
-  sector: "social" | "design" | "video";
-  type: "feeds" | "stories" | "captacoes";
-  day: number;
-  tone: EventTone;
-};
-
-const TONE_CHIP: Record<EventTone, string> = {
-  green: "bg-green-100 text-green-800",
-  yellow: "bg-yellow-100 text-yellow-800",
-  orange: "bg-orange-100 text-orange-800",
-  zinc: "bg-muted text-foreground/80",
-};
-
-const TONE_CARD: Record<EventTone, string> = {
-  green: "border-green-200/70 bg-green-50/70",
-  yellow: "border-yellow-200/70 bg-yellow-50/70",
-  orange: "border-orange-200/70 bg-orange-50/70",
-  zinc: "border-border bg-muted",
-};
-
-const TONE_BADGE: Record<EventTone, string> = {
-  green: "border-green-200 bg-green-100/80 text-green-800",
-  yellow: "border-yellow-200 bg-yellow-100/80 text-yellow-800",
-  orange: "border-orange-200 bg-orange-100/80 text-orange-800",
-  zinc: "border-border bg-muted text-foreground/80",
-};
 
 const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
-const MOCK_EVENTS: AgendaEvent[] = [
-  {
-    id: "e1",
-    title: "Carrossel Sorriso",
-    client: "Clínica Sorriso",
-    time: "09:00",
-    note: "5 slides — tom institucional, CTA agendar avaliação.",
-    sector: "design",
-    type: "feeds",
-    day: 8,
-    tone: "green",
-  },
-  {
-    id: "e2",
-    title: "Stories agenda",
-    client: "Clínica Sorriso",
-    time: "11:30",
-    note: "Sequência de 4 frames com horários da semana.",
-    sector: "social",
-    type: "stories",
-    day: 8,
-    tone: "yellow",
-  },
-  {
-    id: "e3",
-    title: "Gravação Clínica",
-    client: "Bella Clinic",
-    time: "14:00",
-    note: "Captação de depoimento + bastidores da unidade.",
-    sector: "video",
-    type: "captacoes",
-    day: 14,
-    tone: "orange",
-  },
-  {
-    id: "e4",
-    title: "Feed premium",
-    client: "Bella Clinic",
-    time: "10:00",
-    note: "Arte aprovada — publicar feed linha premium.",
-    sector: "social",
-    type: "feeds",
-    day: 21,
-    tone: "green",
-  },
-  {
-    id: "e5",
-    title: "Reels higiene oral",
-    client: "Clínica Sorriso",
-    time: "16:30",
-    note: "Entrega de arte + legendas para publicação.",
-    sector: "design",
-    type: "feeds",
-    day: 21,
-    tone: "yellow",
-  },
-  {
-    id: "e6",
-    title: "Thumbnails Q3",
-    client: "Bella Clinic",
-    time: "13:00",
-    note: "3 thumbs com tipografia forte para YouTube.",
-    sector: "design",
-    type: "feeds",
-    day: 26,
-    tone: "zinc",
-  },
-  {
-    id: "e7",
-    title: "Stories bastidores",
-    client: "Bella Clinic",
-    time: "18:00",
-    note: "Publicação dos stories de bastidores.",
-    sector: "social",
-    type: "stories",
-    day: 26,
-    tone: "green",
-  },
-];
+const KIND_CHIP: Record<AgendaEventKind, string> = {
+  due: "bg-amber-100 text-amber-900 dark:bg-amber-400/15 dark:text-amber-200",
+  delivery:
+    "bg-emerald-100 text-emerald-900 dark:bg-emerald-400/15 dark:text-emerald-200",
+  publish: "bg-sky-100 text-sky-900 dark:bg-sky-400/15 dark:text-sky-200",
+};
 
-const KPIS = [
-  {
-    id: "total",
-    label: "Total de Entregas",
-    value: 12,
-    icon: Package,
-    className: "border-green-200/70 bg-green-50/80",
-    iconClass: "bg-green-100 text-green-700",
-  },
-  {
-    id: "social",
-    label: "Social Media",
-    value: 5,
-    icon: Share2,
-    className: "border-border bg-card",
-    iconClass: "bg-muted text-muted-foreground",
-  },
-  {
-    id: "design",
-    label: "Design",
-    value: 4,
-    icon: Layers,
-    className: "border-border bg-card",
-    iconClass: "bg-muted text-muted-foreground",
-  },
-  {
-    id: "video",
-    label: "Vídeo",
-    value: 3,
-    icon: Clapperboard,
-    className: "border-border bg-card",
-    iconClass: "bg-muted text-muted-foreground",
-  },
-] as const;
+const KIND_CARD: Record<AgendaEventKind, string> = {
+  due: "border-amber-200/70 bg-amber-50/70 dark:border-amber-400/30 dark:bg-amber-400/10",
+  delivery:
+    "border-emerald-200/70 bg-emerald-50/70 dark:border-emerald-400/30 dark:bg-emerald-400/10",
+  publish:
+    "border-sky-200/70 bg-sky-50/70 dark:border-sky-400/30 dark:bg-sky-400/10",
+};
+
+const KIND_BADGE: Record<AgendaEventKind, string> = {
+  due: "border-amber-200 bg-amber-100/80 text-amber-900 dark:border-amber-400/40 dark:bg-amber-400/15 dark:text-amber-200",
+  delivery:
+    "border-emerald-200 bg-emerald-100/80 text-emerald-900 dark:border-emerald-400/40 dark:bg-emerald-400/15 dark:text-emerald-200",
+  publish:
+    "border-sky-200 bg-sky-100/80 text-sky-900 dark:border-sky-400/40 dark:bg-sky-400/15 dark:text-sky-200",
+};
+
+const KIND_OPTIONS: AgendaEventKind[] = ["due", "delivery", "publish"];
 
 function daysInMonth(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate();
@@ -182,22 +62,57 @@ function monthLabel(year: number, month: number) {
   });
 }
 
-export function AgendaView() {
+function eventDayParts(iso: string) {
+  const d = new Date(iso);
+  return {
+    year: d.getFullYear(),
+    month: d.getMonth(),
+    day: d.getDate(),
+    time: d.toLocaleTimeString("pt-BR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+  };
+}
+
+function eventHref(event: AgendaEvent) {
+  if (event.clientId) return `/clientes/${event.clientId}/quadro`;
+  return "/demandas";
+}
+
+export function AgendaView({ events }: { events: AgendaEvent[] }) {
   const today = new Date();
   const [cursor, setCursor] = useState(
     () => new Date(today.getFullYear(), today.getMonth(), 1)
   );
   const [selectedDay, setSelectedDay] = useState(today.getDate());
-  const [sectors, setSectors] = useState({
-    social: true,
-    design: true,
-    video: true,
-  });
-  const [types, setTypes] = useState({
-    feeds: true,
-    stories: true,
-    captacoes: true,
-  });
+
+  const sectorOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const e of events) {
+      const key = e.sectorId ?? e.sectorSlug ?? "__none__";
+      const label = e.sectorName ?? "Sem setor";
+      if (!map.has(key)) map.set(key, label);
+    }
+    return Array.from(map.entries()).map(([id, label]) => ({ id, label }));
+  }, [events]);
+
+  const [enabledKinds, setEnabledKinds] = useState<Record<AgendaEventKind, boolean>>(
+    () => ({ due: true, delivery: true, publish: true })
+  );
+  const [enabledSectors, setEnabledSectors] = useState<Record<string, boolean>>(
+    () => Object.fromEntries(sectorOptions.map((s) => [s.id, true]))
+  );
+
+  useEffect(() => {
+    setEnabledSectors((prev) => {
+      const next = { ...prev };
+      for (const s of sectorOptions) {
+        if (next[s.id] === undefined) next[s.id] = true;
+      }
+      return next;
+    });
+  }, [sectorOptions]);
 
   const year = cursor.getFullYear();
   const month = cursor.getMonth();
@@ -219,13 +134,63 @@ export function AgendaView() {
     return items;
   }, [year, month]);
 
-  const filteredEvents = MOCK_EVENTS.filter(
-    (event) => sectors[event.sector] && types[event.type]
-  );
+  const filteredEvents = useMemo(() => {
+    return events.filter((event) => {
+      if (!enabledKinds[event.kind]) return false;
+      const sectorKey = event.sectorId ?? event.sectorSlug ?? "__none__";
+      if (enabledSectors[sectorKey] === false) return false;
+      return true;
+    });
+  }, [events, enabledKinds, enabledSectors]);
 
-  const selectedEvents = filteredEvents.filter(
-    (event) => event.day === selectedDay
-  );
+  const monthEvents = useMemo(() => {
+    return filteredEvents.filter((event) => {
+      const p = eventDayParts(event.date);
+      return p.year === year && p.month === month;
+    });
+  }, [filteredEvents, year, month]);
+
+  const selectedEvents = useMemo(() => {
+    return monthEvents.filter((event) => {
+      const p = eventDayParts(event.date);
+      return p.day === selectedDay;
+    });
+  }, [monthEvents, selectedDay]);
+
+  const kpis = useMemo(() => {
+    const bySector = new Map<string, { label: string; count: number }>();
+    for (const e of monthEvents) {
+      const key = e.sectorId ?? e.sectorSlug ?? "__none__";
+      const label = e.sectorName ?? "Sem setor";
+      const cur = bySector.get(key) ?? { label, count: 0 };
+      cur.count += 1;
+      bySector.set(key, cur);
+    }
+    const sectorKpis = Array.from(bySector.values())
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 3);
+
+    return [
+      {
+        id: "total",
+        label: "Eventos no mês",
+        value: monthEvents.length,
+        icon: Package,
+        className:
+          "border-emerald-200/70 bg-emerald-50/80 dark:border-emerald-400/30 dark:bg-emerald-400/10",
+        iconClass:
+          "bg-emerald-100 text-emerald-700 dark:bg-emerald-400/20 dark:text-emerald-200",
+      },
+      ...sectorKpis.map((s, i) => ({
+        id: `sector-${i}`,
+        label: s.label,
+        value: s.count,
+        icon: i === 0 ? Send : CalendarDays,
+        className: "border-border bg-card",
+        iconClass: "bg-muted text-muted-foreground",
+      })),
+    ];
+  }, [monthEvents]);
 
   const weekCount = Math.ceil(cells.length / 7);
 
@@ -235,23 +200,28 @@ export function AgendaView() {
   );
 
   function shiftMonth(delta: number) {
-    setCursor((prev) => new Date(prev.getFullYear(), prev.getMonth() + delta, 1));
+    setCursor((prev) => {
+      const next = new Date(prev.getFullYear(), prev.getMonth() + delta, 1);
+      const maxDay = daysInMonth(next.getFullYear(), next.getMonth());
+      setSelectedDay((d) => Math.min(d, maxDay));
+      return next;
+    });
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#F8F9FA]">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-background">
       <header className="shrink-0 border-b border-border bg-card px-6 py-4">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
           Agenda
         </h1>
         <p className="mt-0.5 text-sm text-muted-foreground">
-          Calendário editorial e entregas programadas
+          Prazos, entregas e publicações das demandas
         </p>
       </header>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-4 p-4">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
         <section className="grid shrink-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {KPIS.map((kpi) => {
+          {kpis.map((kpi) => {
             const Icon = kpi.icon;
             return (
               <Card
@@ -269,7 +239,7 @@ export function AgendaView() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm text-muted-foreground">{kpi.label}</p>
-                    <p className="mt-0.5 text-xl font-semibold tracking-tight text-foreground">
+                    <p className="mt-0.5 text-xl font-semibold tabular-nums tracking-tight text-foreground">
                       {kpi.value}
                     </p>
                   </div>
@@ -280,7 +250,6 @@ export function AgendaView() {
         </section>
 
         <section className="grid min-h-0 flex-1 grid-cols-1 gap-4 xl:grid-cols-12">
-          {/* Filtros */}
           <aside className="min-h-0 xl:col-span-2">
             <Card className="rounded-2xl shadow-none">
               <CardHeader className="pb-3 pt-4">
@@ -291,66 +260,55 @@ export function AgendaView() {
               <CardContent className="space-y-5">
                 <div className="space-y-3">
                   <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    Setores
+                    Tipos
                   </p>
-                  {(
-                    [
-                      ["social", "Social Media"],
-                      ["design", "Design"],
-                      ["video", "Vídeo"],
-                    ] as const
-                  ).map(([key, label]) => (
+                  {KIND_OPTIONS.map((kind) => (
                     <label
-                      key={key}
+                      key={kind}
                       className="flex cursor-pointer items-center gap-2.5 text-sm text-muted-foreground"
                     >
                       <Checkbox
-                        checked={sectors[key]}
+                        checked={enabledKinds[kind]}
                         onCheckedChange={(checked) =>
-                          setSectors((prev) => ({
+                          setEnabledKinds((prev) => ({
                             ...prev,
-                            [key]: checked === true,
+                            [kind]: checked === true,
                           }))
                         }
                       />
-                      {label}
+                      {AGENDA_KIND_LABEL[kind]}
                     </label>
                   ))}
                 </div>
 
-                <div className="space-y-3">
-                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    Tipos
-                  </p>
-                  {(
-                    [
-                      ["feeds", "Feeds"],
-                      ["stories", "Stories"],
-                      ["captacoes", "Captações"],
-                    ] as const
-                  ).map(([key, label]) => (
-                    <label
-                      key={key}
-                      className="flex cursor-pointer items-center gap-2.5 text-sm text-muted-foreground"
-                    >
-                      <Checkbox
-                        checked={types[key]}
-                        onCheckedChange={(checked) =>
-                          setTypes((prev) => ({
-                            ...prev,
-                            [key]: checked === true,
-                          }))
-                        }
-                      />
-                      {label}
-                    </label>
-                  ))}
-                </div>
+                {sectorOptions.length > 0 ? (
+                  <div className="space-y-3">
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      Setores
+                    </p>
+                    {sectorOptions.map((s) => (
+                      <label
+                        key={s.id}
+                        className="flex cursor-pointer items-center gap-2.5 text-sm text-muted-foreground"
+                      >
+                        <Checkbox
+                          checked={enabledSectors[s.id] !== false}
+                          onCheckedChange={(checked) =>
+                            setEnabledSectors((prev) => ({
+                              ...prev,
+                              [s.id]: checked === true,
+                            }))
+                          }
+                        />
+                        {s.label}
+                      </label>
+                    ))}
+                  </div>
+                ) : null}
               </CardContent>
             </Card>
           </aside>
 
-          {/* Calendário */}
           <div className="flex min-h-0 flex-col xl:col-span-7">
             <Card className="flex h-full min-h-0 flex-col rounded-2xl shadow-none">
               <CardHeader className="flex shrink-0 flex-row items-center justify-between space-y-0 pb-3 pt-4">
@@ -398,7 +356,10 @@ export function AgendaView() {
                 >
                   {cells.map((cell) => {
                     const dayEvents = cell.day
-                      ? filteredEvents.filter((e) => e.day === cell.day)
+                      ? monthEvents.filter((e) => {
+                          const p = eventDayParts(e.date);
+                          return p.day === cell.day;
+                        })
                       : [];
                     const isSelected = cell.day === selectedDay;
                     const isToday =
@@ -416,8 +377,11 @@ export function AgendaView() {
                           "flex min-h-0 flex-col overflow-hidden bg-card p-1.5 text-left transition-colors",
                           cell.day && "hover:bg-muted",
                           !cell.day && "bg-muted/80",
-                          isSelected && "ring-2 ring-inset ring-green-400/70",
-                          isToday && !isSelected && "bg-green-50/40"
+                          isSelected &&
+                            "ring-2 ring-inset ring-emerald-400/70 dark:ring-emerald-400/50",
+                          isToday &&
+                            !isSelected &&
+                            "bg-emerald-50/40 dark:bg-emerald-400/10"
                         )}
                       >
                         {cell.day ? (
@@ -425,26 +389,30 @@ export function AgendaView() {
                             <span
                               className={cn(
                                 "inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-medium text-muted-foreground",
-                                isToday && "bg-green-600 text-white"
+                                isToday &&
+                                  "bg-emerald-600 text-white dark:bg-emerald-500"
                               )}
                             >
                               {cell.day}
                             </span>
                             <div className="mt-1 min-h-0 flex-1 space-y-0.5 overflow-hidden">
-                              {dayEvents.slice(0, 2).map((event) => (
-                                <div
-                                  key={event.id}
-                                  className={cn(
-                                    "truncate rounded-md px-1.5 py-0.5 text-[10px] font-medium leading-tight",
-                                    TONE_CHIP[event.tone]
-                                  )}
-                                >
-                                  <span className="block truncate">
-                                    {event.title}
-                                  </span>
-                                  <span className="opacity-80">{event.time}</span>
-                                </div>
-                              ))}
+                              {dayEvents.slice(0, 2).map((event) => {
+                                const p = eventDayParts(event.date);
+                                return (
+                                  <div
+                                    key={event.id}
+                                    className={cn(
+                                      "truncate rounded-md px-1.5 py-0.5 text-[10px] font-medium leading-tight",
+                                      KIND_CHIP[event.kind]
+                                    )}
+                                  >
+                                    <span className="block truncate">
+                                      {event.title}
+                                    </span>
+                                    <span className="opacity-80">{p.time}</span>
+                                  </div>
+                                );
+                              })}
                               {dayEvents.length > 2 ? (
                                 <p className="px-1 text-[10px] text-muted-foreground">
                                   +{dayEvents.length - 2} mais
@@ -461,61 +429,63 @@ export function AgendaView() {
             </Card>
           </div>
 
-          {/* Detalhes */}
           <aside className="flex min-h-0 flex-col xl:col-span-3">
             <Card className="flex h-full min-h-0 flex-col rounded-2xl shadow-none">
               <CardHeader className="shrink-0 pb-3 pt-4">
                 <CardTitle className="text-sm font-semibold tracking-tight">
-                  Detalhes da Demanda
+                  Detalhes do dia
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">{selectedDateLabel}</p>
               </CardHeader>
               <CardContent className="min-h-0 flex-1 space-y-3 overflow-y-auto">
                 {selectedEvents.length === 0 ? (
                   <div className="rounded-xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
-                    Nenhuma entrega neste dia.
+                    Nenhum evento neste dia.
                   </div>
                 ) : (
-                  selectedEvents.map((event) => (
-                    <div
-                      key={event.id}
-                      className={cn(
-                        "rounded-xl border p-4",
-                        TONE_CARD[event.tone]
-                      )}
-                    >
-                      <Badge
-                        variant="outline"
+                  selectedEvents.map((event) => {
+                    const p = eventDayParts(event.date);
+                    return (
+                      <Link
+                        key={event.id}
+                        href={eventHref(event)}
                         className={cn(
-                          "mb-2 font-normal",
-                          TONE_BADGE[event.tone]
+                          "block rounded-xl border p-4 transition-opacity hover:opacity-90",
+                          KIND_CARD[event.kind]
                         )}
                       >
-                        {event.sector === "social"
-                          ? "Social Media"
-                          : event.sector === "design"
-                            ? "Design"
-                            : "Vídeo"}
-                      </Badge>
-                      <h3 className="text-sm font-semibold tracking-tight text-foreground">
-                        {event.title}
-                      </h3>
-                      <dl className="mt-3 space-y-1.5 text-xs text-muted-foreground">
-                        <div className="flex gap-2">
-                          <dt className="w-16 shrink-0 text-muted-foreground">Cliente</dt>
-                          <dd>{event.client}</dd>
-                        </div>
-                        <div className="flex gap-2">
-                          <dt className="w-16 shrink-0 text-muted-foreground">Horário</dt>
-                          <dd>{event.time}</dd>
-                        </div>
-                        <div className="flex gap-2">
-                          <dt className="w-16 shrink-0 text-muted-foreground">Nota</dt>
-                          <dd className="leading-relaxed">{event.note}</dd>
-                        </div>
-                      </dl>
-                    </div>
-                  ))
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "mb-2 font-normal",
+                            KIND_BADGE[event.kind]
+                          )}
+                        >
+                          {AGENDA_KIND_LABEL[event.kind]}
+                          {event.sectorName ? ` · ${event.sectorName}` : ""}
+                        </Badge>
+                        <h3 className="text-sm font-semibold tracking-tight text-foreground">
+                          {event.title}
+                        </h3>
+                        <dl className="mt-3 space-y-1.5 text-xs text-muted-foreground">
+                          <div className="flex gap-2">
+                            <dt className="w-20 shrink-0">Cliente</dt>
+                            <dd>{event.clientName}</dd>
+                          </div>
+                          <div className="flex gap-2">
+                            <dt className="w-20 shrink-0">Horário</dt>
+                            <dd>{p.time}</dd>
+                          </div>
+                          {event.assigneeName ? (
+                            <div className="flex gap-2">
+                              <dt className="w-20 shrink-0">Responsável</dt>
+                              <dd>{event.assigneeName}</dd>
+                            </div>
+                          ) : null}
+                        </dl>
+                      </Link>
+                    );
+                  })
                 )}
               </CardContent>
             </Card>
