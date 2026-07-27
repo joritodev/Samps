@@ -1,0 +1,118 @@
+/* ==========================================================================
+   VIBE DESIGN SYSTEM — Modal / Dialog
+   ========================================================================== */
+
+/* ─── Overlay ────────────────────────────────────────────────────────────── */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  background-color: var(--bg-overlay);
+  backdrop-filter: blur(var(--blur-sm));
+  -webkit-backdrop-filter: blur(var(--blur-sm));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+
+  /* Animação */
+  opacity: 0;
+  transition: opacity var(--duration-default) var(--ease-default);
+}
+
+.modal-overlay[data-open='true'],
+.modal-overlay.is-open {
+  opacity: 1;
+}
+
+/* ─── Modal Container ────────────────────────────────────────────────────── */
+
+.modal {
+  position: relative;
+  width: 100%;
+  max-width: 32rem; /* 512px */
+  max-height: 90vh;
+  overflow-y: auto;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+
+  /* Animação */
+  transform: translateY(16px) scale(0.97);
+  opacity: 0;
+  transition:
+    transform var(--duration-slow) var(--ease-spring),
+    opacity var(--duration-default) var(--ease-default);
+}
+
+.modal-overlay[data-open='true'] .modal,
+.modal-overlay.is-open .modal {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+/* ─── Sections ───────────────────────────────────────────────────────────── */
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-6) var(--space-6) var(--space-4);
+}
+
+.modal-title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+}
+
+.modal-body {
+  padding: var(--space-4) var(--space-6);
+}
+
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-6) var(--space-6);
+}
+
+/* ─── Close Button ───────────────────────────────────────────────────────── */
+
+.modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  background: transparent;
+  color: var(--fg-muted);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition-all);
+}
+
+.modal-close:hover {
+  color: var(--fg-default);
+  background-color: hsl(var(--color-neutral-0) / 0.05);
+}
+
+/* ─── Sizes ──────────────────────────────────────────────────────────────── */
+
+.modal-sm {
+  max-width: 24rem;
+}
+.modal-lg {
+  max-width: 48rem;
+}
+.modal-xl {
+  max-width: 64rem;
+}
+.modal-full {
+  max-width: 100%;
+  margin: var(--space-4);
+}

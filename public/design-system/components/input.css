@@ -1,0 +1,197 @@
+/* ==========================================================================
+   VIBE DESIGN SYSTEM — Input, Select & Textarea
+   Baseado nos inputs do Luminal (border-bottom, focus:border-red-500)
+   ========================================================================== */
+
+/* ─── Shared Input Base ──────────────────────────────────────────────────── */
+
+.input,
+.select,
+.textarea {
+  display: block;
+  width: 100%;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  font-weight: var(--weight-regular);
+  color: var(--fg-default);
+  background-color: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-base);
+  padding: var(--space-2-5) var(--space-4);
+  transition:
+    var(--transition-colors),
+    box-shadow var(--duration-default) var(--ease-default);
+  outline: none;
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: hsl(var(--color-neutral-700));
+}
+
+.input:hover,
+.select:hover,
+.textarea:hover {
+  border-color: hsl(var(--color-neutral-0) / 0.3);
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  border-color: var(--accent-default);
+  box-shadow: var(--shadow-ring);
+}
+
+.input:disabled,
+.select:disabled,
+.textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: hsl(var(--color-neutral-0) / 0.02);
+}
+
+/* ─── Minimal Variant (underline only — Luminal footer input) ────────────── */
+
+.input-minimal {
+  background-color: transparent;
+  border: none;
+  border-bottom: 1px solid hsl(var(--color-neutral-0) / 0.2);
+  border-radius: 0;
+  padding: var(--space-2) 0;
+}
+
+.input-minimal:hover {
+  border-bottom-color: hsl(var(--color-neutral-0) / 0.4);
+}
+
+.input-minimal:focus {
+  border-bottom-color: hsl(var(--color-primary-500));
+  box-shadow: none;
+}
+
+/* ─── Sizes ──────────────────────────────────────────────────────────────── */
+
+.input-sm,
+.select-sm {
+  font-size: var(--text-sm);
+  padding: var(--space-1-5) var(--space-3);
+}
+
+.input-lg,
+.select-lg {
+  font-size: var(--text-lg);
+  padding: var(--space-3) var(--space-5);
+}
+
+/* ─── Select ─────────────────────────────────────────────────────────────── */
+
+.select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23a3a3a3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--space-3) center;
+  background-size: 1rem;
+  padding-right: var(--space-10);
+}
+
+/* ─── Textarea ───────────────────────────────────────────────────────────── */
+
+.textarea {
+  min-height: 8rem;
+  resize: vertical;
+}
+
+.textarea-auto {
+  resize: none;
+  overflow: hidden;
+}
+
+/* ─── States ─────────────────────────────────────────────────────────────── */
+
+.input-error,
+.select-error,
+.textarea-error {
+  border-color: hsl(var(--color-error-500));
+}
+
+.input-error:focus,
+.select-error:focus,
+.textarea-error:focus {
+  border-color: hsl(var(--color-error-500));
+  box-shadow: var(--shadow-ring-error);
+}
+
+.input-success,
+.select-success {
+  border-color: hsl(var(--color-success-500));
+}
+
+/* ─── Form Group ─────────────────────────────────────────────────────────── */
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.form-label {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--fg-muted);
+}
+
+.form-helper {
+  font-size: var(--text-sm);
+  color: var(--fg-subtle);
+}
+
+.form-error {
+  font-size: var(--text-sm);
+  color: hsl(var(--color-error-400));
+}
+
+/* ─── Checkbox & Radio ───────────────────────────────────────────────────── */
+
+.checkbox,
+.radio {
+  width: 1.125rem;
+  height: 1.125rem;
+  appearance: none;
+  border: 1px solid var(--border-strong);
+  background-color: transparent;
+  cursor: pointer;
+  transition: var(--transition-all);
+  flex-shrink: 0;
+}
+
+.checkbox {
+  border-radius: var(--radius-sm);
+}
+
+.radio {
+  border-radius: var(--radius-full);
+}
+
+.checkbox:checked,
+.radio:checked {
+  background-color: var(--accent-default);
+  border-color: var(--accent-default);
+}
+
+.checkbox:checked {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m2 6 3 3 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.radio:checked {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Ccircle cx='4' cy='4' r='3' fill='%23fff'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.checkbox:focus-visible,
+.radio:focus-visible {
+  box-shadow: var(--shadow-ring);
+}

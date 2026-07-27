@@ -1,0 +1,137 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  SOCIAL_MEDIA
+  DESIGNER
+  VIDEOMAKER
+  CLIENT
+}
+
+/// Why a user is linked to a client (N:M).
+/// SOCIAL_MEDIA  → operador interno que atende a conta
+/// EXTERNAL      → cliente externo com acesso ao portal da empresa
+enum ClientLinkRole {
+  SOCIAL_MEDIA
+  EXTERNAL
+}
+
+enum DemandStatus {
+  OPEN
+  AVAILABLE
+  IN_PRODUCTION
+  IN_ADJUSTMENT
+  IN_REVIEW
+  APPROVED
+  PUBLISHED
+  DONE
+  CANCELLED
+}
+
+enum DemandPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+/// Setor operacional — a mesma Demand muda de visão conforme o setor.
+/// Nome `WorkSector` evita conflito com tabelas legado no Postgres.
+enum WorkSector {
+  SOCIAL
+  DESIGN
+  VIDEO
+  TRAFFIC
+}
+
+// ─── Models ──────────────────────────────────────────────────────────────────
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  clientLinks     ClientUser[]
+  assignedDemands Demand[]     @relation("DemandAssignee")
+
+  @@map("users")
+}
+
+model Client {
+  id            String   @id @default(uuid()) @db.Uuid
+  name          String
+  logo          String?
+  active        Boolean  @default(true)
+  contractScope String?
+  createdAt     DateTime @default(now())
+
+  users   ClientUser[]
+  demands Demand[]
+
+  @@map("clients")
+}
+
+/// Ponte N:M User ↔ Client.
+/// Um Social Media pode atender vários clientes; um CLIENT externo
+/// pertence a uma (ou mais) empresas — sem duplicar User.
+model ClientUser {
+  id        String         @id @default(uuid()) @db.Uuid
+  userId    String         @db.Uuid
+  clientId  String         @db.Uuid
+  linkRole  ClientLinkRole
+  createdAt DateTime       @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, clientId, linkRole])
+  @@index([clientId])
+  @@index([userId])
+  @@map("client_users")
+}
+
+/// Coração do Work OS — um único registro, múltiplas visualizações
+/// (quadro do cliente, quadro setorial, painel individual, portal).
+/// Segurança: `visibleToClient` controla exposição externa.
+model Demand {
+  id              String         @id @default(uuid()) @db.Uuid
+  title           String
+  description     String?
+  status          DemandStatus   @default(OPEN)
+  priority        DemandPriority @default(MEDIUM)
+  sector          WorkSector?
+  visibleToClient Boolean        @default(false)
+  materialUrl     String?
+  publishedUrl    String?
+  deadline        DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  clientId   String  @db.Uuid
+  assigneeId String? @db.Uuid
+
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  assignee User?  @relation("DemandAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+
+  @@index([clientId])
+  @@index([assigneeId])
+  @@index([sector])
+  @@index([status])
+  @@index([visibleToClient])
+  @@map("demands")
+}

@@ -1,0 +1,234 @@
+/* ==========================================================================
+   VIBE DESIGN SYSTEM — Button Component
+   Baseado nos CTAs do Luminal (border-spin, conic gradient, hover states)
+   ========================================================================== */
+
+/* ─── Base ────────────────────────────────────────────────────────────────── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  position: relative;
+  overflow: hidden;
+
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-none);
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-decoration: none;
+
+  padding: var(--space-2-5) var(--space-6);
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+
+  cursor: pointer;
+  user-select: none;
+  transition: var(--transition-all);
+  outline: none;
+}
+
+.btn:focus-visible {
+  box-shadow: var(--shadow-ring);
+}
+
+.btn:disabled,
+.btn[aria-disabled='true'] {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+/* ─── Sizes ──────────────────────────────────────────────────────────────── */
+
+.btn-xs {
+  font-size: var(--text-2xs);
+  padding: var(--space-1-5) var(--space-3);
+  gap: var(--space-1);
+}
+
+.btn-sm {
+  font-size: var(--text-2xs);
+  padding: var(--space-2) var(--space-4);
+  gap: var(--space-1-5);
+}
+
+.btn-md {
+  font-size: var(--text-xs);
+  padding: var(--space-2-5) var(--space-6);
+}
+
+.btn-lg {
+  font-size: var(--text-sm);
+  padding: var(--space-3) var(--space-8);
+  gap: var(--space-3);
+}
+
+.btn-xl {
+  font-size: var(--text-base);
+  padding: var(--space-4) var(--space-10);
+  gap: var(--space-3);
+}
+
+/* ─── Variants ───────────────────────────────────────────────────────────── */
+
+/* Primary — branco sólido (como CTA do nav do Luminal) */
+.btn-primary {
+  background-color: hsl(var(--color-neutral-0));
+  color: hsl(var(--color-neutral-950));
+  border-color: hsl(var(--color-neutral-0));
+}
+
+.btn-primary:hover {
+  background-color: hsl(var(--color-neutral-200));
+}
+
+.btn-primary:active {
+  background-color: hsl(var(--color-neutral-300));
+  transform: scale(0.98);
+}
+
+/* Accent — vermelho (CTA principal) */
+.btn-accent {
+  background-color: hsl(var(--color-primary-600));
+  color: hsl(var(--color-neutral-0));
+  border-color: hsl(var(--color-primary-600));
+}
+
+.btn-accent:hover {
+  background-color: hsl(var(--color-primary-500));
+  box-shadow: var(--shadow-glow-accent);
+}
+
+.btn-accent:active {
+  background-color: hsl(var(--color-primary-700));
+  transform: scale(0.98);
+}
+
+/* Secondary — fundo transparente, borda sutil */
+.btn-secondary {
+  background-color: transparent;
+  color: var(--fg-default);
+  border-color: var(--border-strong);
+}
+
+.btn-secondary:hover {
+  background-color: hsl(var(--color-neutral-0) / 0.05);
+  border-color: hsl(var(--color-neutral-0) / 0.3);
+}
+
+.btn-secondary:active {
+  background-color: hsl(var(--color-neutral-0) / 0.08);
+}
+
+/* Ghost — sem borda, sem fundo */
+.btn-ghost {
+  background-color: transparent;
+  color: var(--fg-muted);
+  border-color: transparent;
+}
+
+.btn-ghost:hover {
+  color: var(--fg-default);
+  background-color: hsl(var(--color-neutral-0) / 0.05);
+}
+
+.btn-ghost:active {
+  background-color: hsl(var(--color-neutral-0) / 0.08);
+}
+
+/* Danger / Destructive */
+.btn-danger {
+  background-color: hsl(var(--color-error-600));
+  color: hsl(var(--color-neutral-0));
+  border-color: hsl(var(--color-error-600));
+}
+
+.btn-danger:hover {
+  background-color: hsl(var(--color-error-500));
+}
+
+.btn-danger:active {
+  background-color: hsl(var(--color-error-700));
+  transform: scale(0.98);
+}
+
+/* ─── Animated Border Button (Luminal conic gradient) ────────────────────── */
+
+.btn-glow {
+  position: relative;
+  z-index: 1;
+  background-color: hsl(var(--color-neutral-950));
+  color: var(--fg-default);
+  border-color: transparent;
+  overflow: visible;
+}
+
+.btn-glow::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border-radius: inherit;
+  background: conic-gradient(
+    from 0deg at 50% 50%,
+    transparent 0deg,
+    transparent 300deg,
+    hsl(var(--color-primary-400)) 360deg
+  );
+  animation: border-spin 2s linear infinite;
+}
+
+.btn-glow::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  z-index: -1;
+  border-radius: inherit;
+  background-color: hsl(var(--color-neutral-950));
+}
+
+.btn-glow:hover {
+  color: hsl(var(--color-primary-400));
+}
+
+/* ─── Icon Button ────────────────────────────────────────────────────────── */
+
+.btn-icon {
+  padding: var(--space-2);
+  gap: 0;
+}
+
+.btn-icon.btn-sm {
+  padding: var(--space-1-5);
+}
+.btn-icon.btn-lg {
+  padding: var(--space-3);
+}
+
+/* ─── Full Width ─────────────────────────────────────────────────────────── */
+
+.btn-block {
+  width: 100%;
+}
+
+/* ─── Pill Shape ─────────────────────────────────────────────────────────── */
+
+.btn-pill {
+  border-radius: var(--radius-full);
+}
+
+/* ─── Animation: Border Spin ─────────────────────────────────────────────── */
+
+@keyframes border-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

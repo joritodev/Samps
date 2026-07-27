@@ -1,0 +1,89 @@
+/* ==========================================================================
+   VIBE DESIGN SYSTEM — Alert Component
+   ========================================================================== */
+
+.alert {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-default);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+}
+
+.alert-icon {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 0.125rem;
+}
+
+.alert-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.alert-title {
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-base);
+  margin-bottom: var(--space-1);
+}
+
+.alert-description {
+  font-size: var(--text-sm);
+  color: inherit;
+  opacity: 0.85;
+}
+
+/* ─── Variants ───────────────────────────────────────────────────────────── */
+
+.alert-info {
+  background-color: hsl(var(--color-accent-500) / 0.08);
+  border-color: hsl(var(--color-accent-500) / 0.2);
+  color: hsl(var(--color-accent-400));
+}
+
+.alert-success {
+  background-color: hsl(var(--color-success-500) / 0.08);
+  border-color: hsl(var(--color-success-500) / 0.2);
+  color: hsl(var(--color-success-400));
+}
+
+.alert-warning {
+  background-color: hsl(var(--color-warning-500) / 0.08);
+  border-color: hsl(var(--color-warning-500) / 0.2);
+  color: hsl(var(--color-warning-400));
+}
+
+.alert-error {
+  background-color: hsl(var(--color-error-500) / 0.08);
+  border-color: hsl(var(--color-error-500) / 0.2);
+  color: hsl(var(--color-error-400));
+}
+
+.alert-neutral {
+  background-color: var(--bg-elevated);
+  border-color: var(--border-default);
+  color: var(--fg-default);
+}
+
+/* ─── Dismissible ────────────────────────────────────────────────────────── */
+
+.alert-dismiss {
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: var(--space-1);
+  background: transparent;
+  border: none;
+  color: inherit;
+  opacity: 0.5;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: var(--transition-all);
+}
+
+.alert-dismiss:hover {
+  opacity: 1;
+  background-color: hsl(var(--color-neutral-0) / 0.05);
+}

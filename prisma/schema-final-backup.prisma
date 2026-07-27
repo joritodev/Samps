@@ -1,0 +1,961 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserType {
+  ADMIN
+  MANAGEMENT
+  SOCIAL_MEDIA
+  DESIGNER
+  VIDEOMAKER
+  VIDEO_EDITOR
+  OTHER
+  EXTERNAL_CLIENT
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  AWAY
+  BLOCKED
+  INVITE_PENDING
+}
+
+enum ClientStatus {
+  ACTIVE
+  INACTIVE
+  PAUSED
+}
+
+enum ContractStatus {
+  ACTIVE
+  INACTIVE
+  EXPIRED
+  DRAFT
+}
+
+enum DemandType {
+  FEED
+  STORY
+  REEL
+  VIDEO
+  DESIGN
+  COPY
+  FOLLOW_UP
+  EXTRA
+  PROJECT_TASK
+  OTHER
+}
+
+enum DemandOrigin {
+  CLIENT_BOARD
+  SOCIAL_PANEL
+  DESIGN_BOARD
+  VIDEO_BOARD
+  MANAGEMENT
+  PROJECT
+  EXTRA
+}
+
+enum DemandStatus {
+  BACKLOG
+  PENDING_PLANNING
+  PLANNING
+  OPEN
+  AVAILABLE
+  DEMANDED
+  IN_PRODUCTION
+  IN_REVIEW
+  ADJUSTMENTS
+  APPROVED
+  SCHEDULED
+  PUBLISHED
+  DELIVERED
+  DONE
+  OVERDUE
+  CANCELLED
+}
+
+enum BoardStatus {
+  ACTIVE
+  ARCHIVED
+  SUSPENDED
+}
+
+enum PortalStatus {
+  DRAFT
+  ACTIVE
+  SUSPENDED
+  ARCHIVED
+}
+
+enum CompetenceStatus {
+  OPEN
+  CLOSED
+  ARCHIVED
+}
+
+enum BoardListType {
+  FEEDS
+  STORIES
+  FOLLOW_UP
+  EXTRA
+  SHOOTS
+  PROJECTS
+  USEFUL_LINKS
+}
+
+enum DemandObjective {
+  AUTHORITY
+  EDUCATION
+  RELATIONSHIP
+  ENGAGEMENT
+  SALES
+  CONVERSION
+  LEAD_CAPTURE
+  SOCIAL_PROOF
+  INSTITUTIONAL
+  INFORMATIVE
+  PROMOTION
+  RETENTION
+  CAMPAIGN
+  OTHER
+}
+
+enum CommentType {
+  GENERAL
+  BRIEFING_CHANGE
+  ADJUSTMENT_REQUEST
+  ADJUSTMENT_RESPONSE
+  INTERNAL_APPROVAL
+  CLIENT_APPROVAL
+  MANAGEMENT_NOTE
+  CONTACT_LOG
+  BLOCKER
+}
+
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+enum ShootStatus {
+  PLANNED
+  SCHEDULED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum CommentVisibility {
+  INTERNAL
+  EXTERNAL
+}
+
+enum NotificationType {
+  NEW_DEMAND
+  DEMAND_ASSIGNED
+  RESPONSIBLE_CHANGED
+  DEADLINE_NEAR
+  DEMAND_OVERDUE
+  NEW_COMMENT
+  ADJUSTMENT_REQUESTED
+  PROJECT_UPDATED
+  SHOOT_SCHEDULED
+  INFO_RELEASED
+  USER_INVITE
+  OTHER
+}
+
+enum AuditAction {
+  USER_CREATED
+  USER_UPDATED
+  USER_DEACTIVATED
+  CLIENT_CREATED
+  CLIENT_UPDATED
+  BOARD_CREATED
+  PORTAL_CREATED
+  CARD_AUTO_CREATED
+  BRIEFING_DEMANDED
+  BRIEFING_LOCKED
+  PRODUCTION_COMPLETED
+  PUBLICATION_REGISTERED
+  DEMAND_CREATED
+  DEMAND_UPDATED
+  RESPONSIBLE_CHANGED
+  DEADLINE_CHANGED
+  STATUS_CHANGED
+  COMMENT_ADDED
+  LINK_ADDED
+  INFO_RELEASED
+  ACCESS_REVOKED
+  PROJECT_UPDATED
+  SHOOT_CREATED
+  BOARD_ARCHIVED
+  DEMAND_CLAIMED
+  DEMAND_ASSIGNED_SECTOR
+  WORK_SESSION_STARTED
+  WORK_SESSION_PAUSED
+  WORK_SESSION_RESUMED
+  WORK_SESSION_COMPLETED
+  PRIORITY_RECALCULATED
+  LOGIN
+  LOGIN_FAILED
+  OTHER
+}
+
+enum LinkType {
+  USER_CLIENT
+  USER_PROJECT
+}
+
+enum AssignmentStatus {
+  AVAILABLE
+  ASSIGNED
+  IN_PROGRESS
+  IN_REVIEW
+  ADJUSTMENT
+  DONE
+}
+
+enum AssignmentMethod {
+  SELF
+  LEADER
+  MANAGEMENT
+}
+
+enum WorkSessionStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+}
+
+enum WorkSessionStage {
+  PRODUCTION
+  ADJUSTMENT
+  OTHER
+}
+
+enum DistributionMethod {
+  SELF
+  LEADER
+  MANAGEMENT
+  MIXED
+}
+
+model User {
+  id                 String     @id @default(cuid())
+  email              String     @unique
+  passwordHash       String
+  name               String
+  phone              String?
+  avatarUrl          String?
+  userType           UserType
+  roleId             String
+  sectorId           String?
+  jobTitle           String?
+  status             UserStatus @default(INVITE_PENDING)
+  leaderId           String?
+  mustResetPassword  Boolean    @default(true)
+  termsAcceptedAt    DateTime?
+  internalNotes      String?
+  joinedAt           DateTime?
+  lastLoginAt        DateTime?
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+
+  role               Role       @relation(fields: [roleId], references: [id])
+  sector             Sector?    @relation(fields: [sectorId], references: [id])
+  leader             User?      @relation("UserLeader", fields: [leaderId], references: [id])
+  subordinates       User[]     @relation("UserLeader")
+
+  permissionOverrides UserPermissionOverride[]
+  clientLinks         UserClientLink[]
+  projectLinks        UserProjectLink[]
+  assignedDemands     Demand[]              @relation("DemandAssignee")
+  requestedDemands    Demand[]              @relation("DemandRequester")
+  ownedProjects       Project[]             @relation("ProjectOwner")
+  projectParticipants ProjectParticipant[]
+  shootParticipants   ShootParticipant[]
+  comments            Comment[]
+  notifications       Notification[]
+  auditLogs           AuditLog[]
+  accessAttempts      AccessAttemptLog[]
+  passwordResetTokens PasswordResetToken[]
+  invitesSent         UserInvite[]          @relation("InviteSender")
+  invitesReceived     UserInvite[]          @relation("InviteRecipient")
+  primaryClients      Client[]              @relation("ClientPrimaryResponsible")
+  socialClients       Client[]              @relation("ClientSocialMedia")
+  externalClients     Client[]              @relation("ClientExternalResponsible")
+  secondarySocialClients Client[]              @relation("ClientSecondarySocial")
+  accountLeaderClients   Client[]              @relation("ClientAccountLeader")
+  boardsCreated          ClientBoard[]         @relation("BoardCreator")
+  briefingLockedDemands  Demand[]              @relation("BriefingLocker")
+  portalContacts         ClientPortal[]        @relation("PortalContact")
+  releasedVisibility     ExternalVisibility[]
+  ledSectors             Sector[]              @relation("SectorLeader")
+  demandAssignments      DemandAssignment[]    @relation("AssignmentExecutor")
+  assignmentsMade        DemandAssignment[]    @relation("AssignmentAssigner")
+  workSessions           WorkSession[]
+
+  @@index([userType])
+  @@index([status])
+  @@index([roleId])
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  isSystem    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+
+  roles     RolePermission[]
+  overrides UserPermissionOverride[]
+}
+
+model RolePermission {
+  id           String @id @default(cuid())
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+}
+
+model UserPermissionOverride {
+  id           String  @id @default(cuid())
+  userId       String
+  permissionId String
+  granted      Boolean @default(true)
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, permissionId])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+}
+
+model UserInvite {
+  id          String   @id @default(cuid())
+  email       String
+  userId      String?
+  invitedById String
+  token       String   @unique
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  createdAt   DateTime @default(now())
+
+  invitedBy User  @relation("InviteSender", fields: [invitedById], references: [id])
+  user      User? @relation("InviteRecipient", fields: [userId], references: [id])
+}
+
+model AgencySettings {
+  id              String   @id @default("default")
+  name            String   @default("Samps Digital")
+  logoUrl         String?
+  timezone        String   @default("America/Sao_Paulo")
+  language        String   @default("pt-BR")
+  dateFormat      String   @default("dd/MM/yyyy")
+  workStartTime   String   @default("09:00")
+  workEndTime     String   @default("18:00")
+  workDays        String   @default("1,2,3,4,5")
+  holidays        Json     @default("[]")
+  portalName      String   @default("Portal do Cliente")
+  portalLogoUrl   String?
+  portalColor     String   @default("#0f172a")
+  updatedAt       DateTime @updatedAt
+}
+
+model Sector {
+  id                   String               @id @default(cuid())
+  name                 String               @unique
+  slug                 String               @unique
+  color                String?
+  isActive             Boolean              @default(true)
+  leaderId             String?
+  distributionMethod   DistributionMethod   @default(MIXED)
+  createdAt            DateTime             @default(now())
+
+  leader          User?              @relation("SectorLeader", fields: [leaderId], references: [id])
+  users           User[]
+  demands         Demand[]
+  assignments     DemandAssignment[]
+  priorityScores  PriorityScore[]
+}
+
+model ContentType {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  demands          Demand[]
+  contractServices ContractService[]
+}
+
+model PriorityLevel {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  color     String
+  weight    Int      @default(0)
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  demands Demand[]
+}
+
+model ActivityStatusConfig {
+  id           String     @id @default(cuid())
+  name         String
+  slug         String
+  color        String?
+  demandType   DemandType?
+  sortOrder    Int        @default(0)
+  isActive     Boolean    @default(true)
+  isFinal      Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+
+  @@unique([slug, demandType])
+}
+
+model Client {
+  id                      String       @id @default(cuid())
+  name                    String
+  legalName               String?
+  tradeName               String?
+  segment                 String?
+  email                   String?
+  phone                   String?
+  logoUrl                 String?
+  brandColor              String?
+  status                  ClientStatus @default(ACTIVE)
+  primaryResponsibleId    String?
+  socialMediaId           String?
+  secondarySocialMediaId  String?
+  accountLeaderId         String?
+  externalResponsibleId   String?
+  startedAt               DateTime?
+  internalNotes           String?
+  createdAt               DateTime     @default(now())
+  updatedAt               DateTime     @updatedAt
+
+  primaryResponsible    User?            @relation("ClientPrimaryResponsible", fields: [primaryResponsibleId], references: [id])
+  socialMedia           User?            @relation("ClientSocialMedia", fields: [socialMediaId], references: [id])
+  secondarySocialMedia  User?            @relation("ClientSecondarySocial", fields: [secondarySocialMediaId], references: [id])
+  accountLeader         User?            @relation("ClientAccountLeader", fields: [accountLeaderId], references: [id])
+  externalResponsible   User?            @relation("ClientExternalResponsible", fields: [externalResponsibleId], references: [id])
+  userLinks             UserClientLink[]
+  contracts             Contract[]
+  demands               Demand[]
+  projects              Project[]
+  shoots                Shoot[]
+  attachments           Attachment[]
+  externalVisibility    ExternalVisibility[]
+  board                 ClientBoard?
+  portal                ClientPortal?
+}
+
+model Contract {
+  id                       String         @id @default(cuid())
+  clientId                 String
+  planName                 String?
+  startDate                DateTime
+  endDate                  DateTime?
+  renewalDay               Int?
+  initialCompetenceMonth   Int?
+  initialCompetenceYear    Int?
+  status                   ContractStatus @default(ACTIVE)
+  notes                    String?
+  createdAt                DateTime       @default(now())
+  updatedAt                DateTime       @updatedAt
+
+  client   Client            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  services ContractService[]
+  boards   ClientBoard[]
+}
+
+model ContractService {
+  id            String     @id @default(cuid())
+  contractId    String
+  name          String
+  quantity      Int?
+  demandType    DemandType?
+  contentTypeId String?
+  periodicity   String     @default("monthly")
+  isActive      Boolean    @default(true)
+  notes         String?
+
+  contract    Contract     @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  contentType ContentType? @relation(fields: [contentTypeId], references: [id])
+  demands     Demand[]
+}
+
+model UserClientLink {
+  id         String   @id @default(cuid())
+  userId     String
+  clientId   String
+  linkType   LinkType @default(USER_CLIENT)
+  permission String?
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, clientId])
+}
+
+model UserProjectLink {
+  id        String   @id @default(cuid())
+  userId    String
+  projectId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, projectId])
+}
+
+model Demand {
+  id                    String          @id @default(cuid())
+  clientId              String
+  boardId               String?
+  listId                String?
+  competenceId          String?
+  contractServiceId     String?
+  title                 String
+  description           String?
+  type                  DemandType      @default(OTHER)
+  origin                DemandOrigin    @default(CLIENT_BOARD)
+  format                String?
+  objective             DemandObjective?
+  platform              String?
+  complexityLevel       Int?
+  sectorId              String?
+  assigneeId            String?
+  requesterId           String?
+  priorityId            String?
+  contentTypeId         String?
+  status                DemandStatus    @default(OPEN)
+  internalStatus        String?
+  externalStatus        String?
+  boardColumn           String          @default("open")
+  sortOrder             Int             @default(0)
+  cardCode              String?
+  cardIndex             Int?
+  cardTotalInType       Int?
+  isContractual         Boolean         @default(false)
+  dueDate               DateTime?
+  demandDeadline        DateTime?
+  deliveryDate          DateTime?
+  publishDate           DateTime?
+  briefingLockedAt      DateTime?
+  briefingLockedById    String?
+  slidesCount           Int?
+  screensCount          Int?
+  durationSeconds       Int?
+  orientation           String?
+  rawMaterialAvailable  Boolean?
+  scriptAvailable       Boolean?
+  productionStartedAt   DateTime?
+  productionCompletedAt DateTime?
+  publishedAt           DateTime?
+  publishedUrl          String?
+  deliveredAt           DateTime?
+  visibleToClient       Boolean         @default(false)
+  externalVisibleFields Json?
+  timerState            Json?
+  projectId             String?
+  materialUrl           String?
+  scheduledExecutionAt  DateTime?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  client          Client           @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  board           ClientBoard?     @relation(fields: [boardId], references: [id])
+  list            BoardList?       @relation(fields: [listId], references: [id])
+  competence      Competence?      @relation(fields: [competenceId], references: [id])
+  contractService ContractService? @relation(fields: [contractServiceId], references: [id])
+  sector          Sector?          @relation(fields: [sectorId], references: [id])
+  assignee        User?            @relation("DemandAssignee", fields: [assigneeId], references: [id])
+  requester       User?            @relation("DemandRequester", fields: [requesterId], references: [id])
+  briefingLockedBy User?           @relation("BriefingLocker", fields: [briefingLockedById], references: [id])
+  priority        PriorityLevel?   @relation(fields: [priorityId], references: [id])
+  contentType     ContentType?     @relation(fields: [contentTypeId], references: [id])
+  project         Project?         @relation(fields: [projectId], references: [id])
+  comments        Comment[]
+  attachments     Attachment[]
+  assignments     DemandAssignment[]
+  workSessions    WorkSession[]
+  priorityScores  PriorityScore[]
+
+  @@index([clientId])
+  @@index([boardId])
+  @@index([listId])
+  @@index([competenceId])
+  @@index([assigneeId])
+  @@index([sectorId])
+  @@index([status])
+  @@index([boardColumn])
+  @@index([dueDate])
+}
+
+model DemandAssignment {
+  id           String           @id @default(cuid())
+  demandId     String
+  sectorId     String
+  executorId   String?
+  assignedById String?
+  assignedAt   DateTime         @default(now())
+  status       AssignmentStatus @default(AVAILABLE)
+  method       AssignmentMethod?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  demand     Demand  @relation(fields: [demandId], references: [id], onDelete: Cascade)
+  sector     Sector  @relation(fields: [sectorId], references: [id])
+  executor   User?   @relation("AssignmentExecutor", fields: [executorId], references: [id])
+  assignedBy User?   @relation("AssignmentAssigner", fields: [assignedById], references: [id])
+
+  @@index([demandId])
+  @@index([sectorId])
+  @@index([executorId])
+  @@index([status])
+}
+
+model WorkSession {
+  id                 String            @id @default(cuid())
+  demandId           String
+  userId             String
+  stage              WorkSessionStage  @default(PRODUCTION)
+  status             WorkSessionStatus @default(ACTIVE)
+  startedAt          DateTime          @default(now())
+  endedAt            DateTime?
+  totalActiveSeconds Int               @default(0)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  demand Demand      @relation(fields: [demandId], references: [id], onDelete: Cascade)
+  user   User        @relation(fields: [userId], references: [id])
+  pauses WorkPause[]
+
+  @@index([demandId])
+  @@index([userId])
+  @@index([status])
+}
+
+model WorkPause {
+  id          String    @id @default(cuid())
+  sessionId   String
+  reason      String
+  description String?
+  startedAt   DateTime  @default(now())
+  endedAt     DateTime?
+  createdAt   DateTime  @default(now())
+
+  session WorkSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+}
+
+model PriorityScore {
+  id           String   @id @default(cuid())
+  demandId     String
+  sectorId     String
+  score        Float    @default(0)
+  rank         Int?
+  calculatedAt DateTime @default(now())
+  criteria     Json     @default("{}")
+
+  demand Demand @relation(fields: [demandId], references: [id], onDelete: Cascade)
+  sector Sector @relation(fields: [sectorId], references: [id])
+
+  @@unique([demandId, sectorId])
+  @@index([sectorId, score])
+}
+
+model ClientBoard {
+  id                   String      @id @default(cuid())
+  clientId             String      @unique
+  name                 String
+  status               BoardStatus @default(ACTIVE)
+  currentCompetenceId  String?
+  contractId           String?
+  designSectorId       String?
+  videoSectorId        String?
+  config               Json        @default("{}")
+  createdById          String
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+
+  client            Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  contract          Contract?    @relation(fields: [contractId], references: [id])
+  createdBy         User         @relation("BoardCreator", fields: [createdById], references: [id])
+  lists             BoardList[]
+  competences       Competence[]
+  demands           Demand[]
+  portal            ClientPortal?
+
+  @@index([status])
+}
+
+model BoardList {
+  id        String        @id @default(cuid())
+  boardId   String
+  name      String
+  type      BoardListType
+  sortOrder Int           @default(0)
+  active    Boolean       @default(true)
+  createdAt DateTime      @default(now())
+
+  board   ClientBoard @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  demands Demand[]
+
+  @@unique([boardId, type])
+}
+
+model Competence {
+  id        String           @id @default(cuid())
+  boardId   String
+  month     Int
+  year      Int
+  status    CompetenceStatus @default(OPEN)
+  openedAt  DateTime         @default(now())
+  closedAt  DateTime?
+
+  board   ClientBoard @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  demands Demand[]
+
+  @@unique([boardId, month, year])
+}
+
+model ClientPortal {
+  id                  String       @id @default(cuid())
+  clientId            String       @unique
+  boardId             String       @unique
+  displayName         String
+  logoUrl             String?
+  primaryColor        String?
+  status              PortalStatus @default(DRAFT)
+  agencyContactName   String?
+  agencyContactUserId String?
+  config              Json         @default("{}")
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  client            Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  board             ClientBoard @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  agencyContactUser User?       @relation("PortalContact", fields: [agencyContactUserId], references: [id])
+  visibility        ExternalVisibility[]
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  clientId    String
+  title       String
+  description String?
+  ownerId     String?
+  status      ProjectStatus @default(PLANNING)
+  progress    Int           @default(0)
+  startDate   DateTime?
+  dueDate     DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  client       Client               @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  owner        User?                @relation("ProjectOwner", fields: [ownerId], references: [id])
+  demands      Demand[]
+  checklist    ProjectChecklistItem[]
+  participants ProjectParticipant[]
+  userLinks    UserProjectLink[]
+}
+
+model ProjectChecklistItem {
+  id        String   @id @default(cuid())
+  projectId String
+  title     String
+  isDone    Boolean  @default(false)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model ProjectParticipant {
+  id        String @id @default(cuid())
+  projectId String
+  userId    String
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+}
+
+model Shoot {
+  id          String      @id @default(cuid())
+  clientId    String
+  title       String
+  date        DateTime
+  startTime   String?
+  endTime     String?
+  location    String?
+  ownerId     String?
+  shootType   String?
+  status      ShootStatus @default(PLANNED)
+  notes       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  client       Client             @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  participants ShootParticipant[]
+}
+
+model ShootParticipant {
+  id      String @id @default(cuid())
+  shootId String
+  userId  String
+
+  shoot Shoot @relation(fields: [shootId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([shootId, userId])
+}
+
+model Comment {
+  id         String            @id @default(cuid())
+  userId     String
+  demandId   String?
+  entityType String?
+  entityId   String?
+  text       String
+  commentType CommentType      @default(GENERAL)
+  visibility CommentVisibility @default(INTERNAL)
+  createdAt  DateTime          @default(now())
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  demand Demand? @relation(fields: [demandId], references: [id], onDelete: Cascade)
+}
+
+model Attachment {
+  id              String   @id @default(cuid())
+  clientId        String?
+  demandId        String?
+  entityType      String?
+  entityId        String?
+  name            String
+  url             String
+  fileType        String?
+  visibleToClient Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  client Client? @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  demand Demand? @relation(fields: [demandId], references: [id], onDelete: Cascade)
+}
+
+model ExternalVisibility {
+  id             String    @id @default(cuid())
+  entityType     String
+  entityId       String
+  clientId       String
+  portalId       String?
+  visible        Boolean   @default(true)
+  visibleFields  Json?
+  releasedAt     DateTime  @default(now())
+  releasedById   String?
+  removedAt      DateTime?
+
+  client     Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  portal     ClientPortal? @relation(fields: [portalId], references: [id])
+  releasedBy User?         @relation(fields: [releasedById], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([clientId])
+}
+
+model AuditLog {
+  id           String      @id @default(cuid())
+  userId       String?
+  action       AuditAction
+  entityType   String?
+  entityId     String?
+  previousValue Json?
+  newValue     Json?
+  origin       String?
+  ipAddress    String?
+  createdAt    DateTime    @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  link      String?
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+}
+
+model AccessAttemptLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  email     String?
+  success   Boolean
+  reason    String?
+  ipAddress String?
+  path      String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+}

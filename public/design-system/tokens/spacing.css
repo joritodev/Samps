@@ -1,0 +1,154 @@
+/* ==========================================================================
+   VIBE DESIGN SYSTEM — Spacing, Radius, Shadows, Borders & Z-Index Tokens
+   ========================================================================== */
+
+:root {
+  /* ───────────────────────────────────────────────────────────────────────
+     SPACING SCALE  (4px base unit — extraído dos gap/padding mais usados)
+     ─────────────────────────────────────────────────────────────────────── */
+  --space-0: 0;
+  --space-px: 1px;
+  --space-0-5: 0.125rem; /*  2px */
+  --space-1: 0.25rem; /*  4px */
+  --space-1-5: 0.375rem; /*  6px */
+  --space-2: 0.5rem; /*  8px  ★ */
+  --space-2-5: 0.625rem; /* 10px */
+  --space-3: 0.75rem; /* 12px  ★ */
+  --space-4: 1rem; /* 16px  ★ */
+  --space-5: 1.25rem; /* 20px  ★ */
+  --space-6: 1.5rem; /* 24px  ★ */
+  --space-8: 2rem; /* 32px  ★ */
+  --space-10: 2.5rem; /* 40px  ★ */
+  --space-12: 3rem; /* 48px  ★ */
+  --space-16: 4rem; /* 64px  ★ */
+  --space-20: 5rem; /* 80px  ★ */
+  --space-24: 6rem; /* 96px */
+  --space-32: 8rem; /* 128px */
+  --space-40: 10rem; /* 160px */
+  --space-48: 12rem; /* 192px */
+  --space-64: 16rem; /* 256px */
+
+  /* Spacing semântico — seções */
+  --space-section-sm: var(--space-16); /* 64px */
+  --space-section-md: var(--space-24); /* 96px */
+  --space-section-lg: var(--space-32); /* 128px */
+  --space-section-xl: var(--space-48); /* 192px */
+
+  /* ───────────────────────────────────────────────────────────────────────
+     BORDER RADIUS
+     ─────────────────────────────────────────────────────────────────────── */
+  --radius-none: 0;
+  --radius-sm: 0.25rem; /*  4px — botões compactos */
+  --radius-md: 0.375rem; /*  6px */
+  --radius-base: 0.5rem; /*  8px — --radius padrão (shadcn) */
+  --radius-lg: 0.75rem; /* 12px */
+  --radius-xl: 1rem; /* 16px */
+  --radius-2xl: 1.5rem; /* 24px — cards maiores */
+  --radius-3xl: 2rem; /* 32px */
+  --radius-full: 9999px; /* pills, avatares */
+
+  /* Shadcn compatibility */
+  --radius: var(--radius-base);
+
+  /* ───────────────────────────────────────────────────────────────────────
+     BOX SHADOWS
+     ─────────────────────────────────────────────────────────────────────── */
+
+  /* Sombras neutras (elevação) */
+  --shadow-xs: 0 1px 2px hsl(0 0% 0% / 0.05);
+  --shadow-sm:
+    0 1px 1px hsl(0 0% 0% / 0.03), 0 0 2px hsl(0 0% 0% / 0.1),
+    0 5px 5px hsl(0 0% 0% / 0.03);
+  --shadow-md: 0 2px 4px hsl(0 0% 0% / 0.05), inset 0 0.5px hsl(0 0% 47%);
+  --shadow-lg: 0 3px 6px hsl(0 0% 0% / 0.15);
+  --shadow-xl:
+    0 5px 10px hsl(0 0% 0% / 0.05), 0 15px 30px hsl(0 0% 0% / 0.15),
+    0 20px 40px hsl(0 0% 0% / 0.25), inset 0 -1px hsl(0 0% 0% / 0.1);
+  --shadow-2xl:
+    0 1px hsl(0 0% 0% / 0.05), 0 4px 4px hsl(0 0% 0% / 0.1),
+    0 10px 10px hsl(0 0% 0% / 0.15), inset 0 -1px hsl(0 0% 0% / 0.1);
+  --shadow-none: none;
+
+  /* Sombras de brand / glow */
+  --shadow-glow-primary: inset 0 -1ex 2rem 4px hsl(217 91% 60%);
+  --shadow-glow-accent: 0 0 20px hsl(0 84% 60% / 0.3);
+  --shadow-inner-subtle: inset 0 0 0 1px hsl(0 0% 10%);
+
+  /* Sombras de interação (ring) */
+  --shadow-ring: 0 0 0 2px var(--bg-base), 0 0 0 4px var(--accent-default);
+  --shadow-ring-error:
+    0 0 0 2px var(--bg-base), 0 0 0 4px hsl(var(--color-error-500));
+
+  /* ───────────────────────────────────────────────────────────────────────
+     BORDERS
+     ─────────────────────────────────────────────────────────────────────── */
+  --border-width-thin: 1px;
+  --border-width-default: 1px;
+  --border-width-thick: 2px;
+
+  /* ───────────────────────────────────────────────────────────────────────
+     Z-INDEX SCALE
+     ─────────────────────────────────────────────────────────────────────── */
+  --z-behind: -1;
+  --z-base: 0;
+  --z-raised: 10;
+  --z-dropdown: 20;
+  --z-sticky: 30;
+  --z-overlay: 40;
+  --z-modal: 50;
+  --z-popover: 60;
+  --z-toast: 70;
+  --z-tooltip: 80;
+  --z-max: 9999;
+
+  /* ───────────────────────────────────────────────────────────────────────
+     BACKDROP / BLUR
+     ─────────────────────────────────────────────────────────────────────── */
+  --blur-sm: 4px;
+  --blur-md: 8px;
+  --blur-lg: 12px;
+  --blur-xl: 24px;
+  --blur-2xl: 40px;
+  --blur-3xl: 64px;
+
+  /* ───────────────────────────────────────────────────────────────────────
+     TRANSITIONS / MOTION
+     ─────────────────────────────────────────────────────────────────────── */
+
+  /* Easing */
+  --ease-default: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-bounce: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Durations */
+  --duration-fast: 150ms;
+  --duration-default: 300ms;
+  --duration-slow: 500ms;
+  --duration-slower: 800ms;
+
+  /* Presets de transição */
+  --transition-colors:
+    color var(--duration-default) var(--ease-default),
+    background-color var(--duration-default) var(--ease-default),
+    border-color var(--duration-default) var(--ease-default);
+  --transition-opacity: opacity var(--duration-default) var(--ease-default);
+  --transition-transform: transform var(--duration-default) var(--ease-default);
+  --transition-all: all var(--duration-fast) ease;
+  --transition-smooth: all var(--duration-slower) var(--ease-bounce);
+
+  /* ───────────────────────────────────────────────────────────────────────
+     CONTAINER / LAYOUT
+     ─────────────────────────────────────────────────────────────────────── */
+  --container-sm: 640px;
+  --container-md: 768px;
+  --container-lg: 1024px;
+  --container-xl: 1280px;
+  --container-2xl: 1536px;
+  --container-max: 1920px; /* max-w do Luminal */
+
+  --gutter: 1.5rem; /* 24px — padding lateral padrão */
+  --gutter-md: 2rem; /* 32px — md:px-8 */
+}

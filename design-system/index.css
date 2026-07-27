@@ -1,0 +1,26 @@
+/* ==========================================================================
+   VIBE DESIGN SYSTEM — Main Entry Point
+   Importe este arquivo para usar o design system completo
+   ========================================================================== */
+
+/* 1. Tokens */
+@import './tokens/colors.css';
+@import './tokens/typography.css';
+@import './tokens/spacing.css';
+
+/* 2. Base */
+@import './base/reset.css';
+@import './base/typography.css';
+@import './base/layout.css';
+@import './base/animations.css';
+@import './base/utilities.css';
+
+/* 3. Components */
+@import './components/button.css';
+@import './components/input.css';
+@import './components/card.css';
+@import './components/badge.css';
+@import './components/alert.css';
+@import './components/modal.css';
+@import './components/navbar.css';
+@import './components/misc.css';

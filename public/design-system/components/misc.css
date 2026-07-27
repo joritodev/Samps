@@ -1,0 +1,199 @@
+/* ==========================================================================
+   VIBE DESIGN SYSTEM — Footer Component
+   Baseado no footer do Luminal
+   ========================================================================== */
+
+.footer {
+  position: relative;
+  width: 100%;
+  border-top: 1px solid var(--border-default);
+  background-color: var(--bg-base);
+  z-index: var(--z-raised);
+}
+
+.footer-inner {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: var(--space-16) var(--gutter);
+}
+
+@media (min-width: 768px) {
+  .footer-inner {
+    padding: var(--space-16) var(--gutter-md);
+  }
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-10);
+}
+
+@media (min-width: 768px) {
+  .footer-grid {
+    grid-template-columns: 2fr repeat(3, 1fr);
+  }
+}
+
+/* ─── Footer Links ───────────────────────────────────────────────────────── */
+
+.footer-heading {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-ultra);
+  text-transform: uppercase;
+  color: var(--fg-default);
+  margin-bottom: var(--space-4);
+}
+
+.footer-link {
+  display: block;
+  font-size: var(--text-base);
+  color: var(--fg-subtle);
+  padding: var(--space-1) 0;
+  transition: color var(--duration-default) var(--ease-default);
+}
+
+.footer-link:hover {
+  color: hsl(var(--color-neutral-0));
+}
+
+/* ─── Footer Bottom ──────────────────────────────────────────────────────── */
+
+.footer-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  border-top: 1px solid var(--border-default);
+  padding-top: var(--space-8);
+  margin-top: var(--space-12);
+}
+
+@media (min-width: 768px) {
+  .footer-bottom {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.footer-copyright {
+  font-size: var(--text-sm);
+  color: var(--fg-subtle);
+}
+
+/* ==========================================================================
+   VIBE DESIGN SYSTEM — Tooltip
+   ========================================================================== */
+
+.tooltip {
+  position: relative;
+}
+
+.tooltip-content {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-0.5rem);
+  padding: var(--space-1-5) var(--space-3);
+  background-color: hsl(var(--color-neutral-0));
+  color: hsl(var(--color-neutral-950));
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  border-radius: var(--radius-base);
+  white-space: nowrap;
+  z-index: var(--z-tooltip);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-default);
+  box-shadow: var(--shadow-lg);
+}
+
+.tooltip:hover .tooltip-content {
+  opacity: 1;
+}
+
+/* ==========================================================================
+   VIBE DESIGN SYSTEM — Avatar
+   ========================================================================== */
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  background-color: var(--bg-elevated);
+  color: var(--fg-muted);
+  font-weight: var(--weight-medium);
+  flex-shrink: 0;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-xs {
+  width: 1.5rem;
+  height: 1.5rem;
+  font-size: var(--text-2xs);
+}
+.avatar-sm {
+  width: 2rem;
+  height: 2rem;
+  font-size: var(--text-xs);
+}
+.avatar-md {
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: var(--text-sm);
+}
+.avatar-lg {
+  width: 3rem;
+  height: 3rem;
+  font-size: var(--text-base);
+}
+.avatar-xl {
+  width: 4rem;
+  height: 4rem;
+  font-size: var(--text-lg);
+}
+.avatar-2xl {
+  width: 6rem;
+  height: 6rem;
+  font-size: var(--text-2xl);
+}
+
+/* Avatar group */
+.avatar-group {
+  display: flex;
+}
+
+.avatar-group .avatar {
+  border: 2px solid var(--bg-base);
+  margin-left: -0.5rem;
+}
+
+.avatar-group .avatar:first-child {
+  margin-left: 0;
+}
+
+/* ==========================================================================
+   VIBE DESIGN SYSTEM — Divider / Separator
+   ========================================================================== */
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--border-default);
+  margin: var(--space-6) 0;
+}
+
+.divider-subtle {
+  border-color: var(--border-subtle);
+}
+
+.divider-strong {
+  border-color: var(--border-strong);
+}

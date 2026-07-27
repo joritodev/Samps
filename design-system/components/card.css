@@ -1,0 +1,132 @@
+/* ==========================================================================
+   VIBE DESIGN SYSTEM — Card Component
+   Baseado nos cards do Luminal (glass panels, hover effects, borders)
+   ========================================================================== */
+
+/* ─── Base Card ──────────────────────────────────────────────────────────── */
+
+.card {
+  position: relative;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: var(--transition-all);
+}
+
+.card-body {
+  padding: var(--space-6);
+}
+
+.card-header {
+  padding: var(--space-6) var(--space-6) 0;
+}
+
+.card-footer {
+  padding: 0 var(--space-6) var(--space-6);
+}
+
+/* ─── Variants ───────────────────────────────────────────────────────────── */
+
+/* Elevated — with shadow */
+.card-elevated {
+  background-color: var(--bg-elevated);
+  box-shadow: var(--shadow-sm);
+}
+
+.card-elevated:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+/* Glass — translúcido com blur (padrão Luminal header) */
+.card-glass {
+  background-color: hsl(var(--color-neutral-950) / 0.8);
+  backdrop-filter: blur(var(--blur-lg));
+  -webkit-backdrop-filter: blur(var(--blur-lg));
+  border-color: hsl(var(--color-neutral-0) / 0.1);
+}
+
+/* Bordered — variante com borda mais evidente */
+.card-bordered {
+  background-color: transparent;
+  border: 1px solid var(--border-strong);
+}
+
+/* Flat — sem borda, sem sombra */
+.card-flat {
+  background-color: var(--bg-surface);
+  border: none;
+  box-shadow: none;
+}
+
+/* Interactive */
+.card-interactive {
+  cursor: pointer;
+}
+
+.card-interactive:hover {
+  background-color: hsl(var(--color-neutral-0) / 0.02);
+  border-color: hsl(var(--color-neutral-0) / 0.15);
+}
+
+/* Accent hover (como team cards do Luminal) */
+.card-accent-hover:hover {
+  border-color: hsl(var(--color-primary-500) / 0.5);
+}
+
+.card-accent-hover:hover .card-accent-text {
+  color: hsl(var(--color-primary-400));
+}
+
+/* ─── Sizes ──────────────────────────────────────────────────────────────── */
+
+.card-sm .card-body {
+  padding: var(--space-4);
+}
+.card-lg .card-body {
+  padding: var(--space-8);
+}
+.card-xl .card-body {
+  padding: var(--space-12);
+}
+
+/* ─── Card with Image ────────────────────────────────────────────────────── */
+
+.card-image {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.card-image-top {
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+/* ─── Flashlight Card (mouse-tracking highlight) ─────────────────────────── */
+
+.card-flashlight {
+  --mouse-x: 50%;
+  --mouse-y: 50%;
+  position: relative;
+}
+
+.card-flashlight::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    400px circle at var(--mouse-x) var(--mouse-y),
+    hsl(var(--color-neutral-0) / 0.06),
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity var(--duration-default) var(--ease-default);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.card-flashlight:hover::before {
+  opacity: 1;
+}

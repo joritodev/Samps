@@ -1,0 +1,177 @@
+/* ==========================================================================
+   VIBE DESIGN SYSTEM — Utilities
+   Classes utilitárias que complementam os tokens
+   ========================================================================== */
+
+/* ─── Visibilidade ───────────────────────────────────────────────────────── */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ─── Cursor ─────────────────────────────────────────────────────────────── */
+
+.cursor-pointer {
+  cursor: pointer;
+}
+.cursor-default {
+  cursor: default;
+}
+.pointer-events-none {
+  pointer-events: none;
+}
+
+/* ─── Overflow ───────────────────────────────────────────────────────────── */
+
+.overflow-hidden {
+  overflow: hidden;
+}
+.overflow-x-hidden {
+  overflow-x: hidden;
+}
+.overflow-auto {
+  overflow: auto;
+}
+
+/* ─── Position ───────────────────────────────────────────────────────────── */
+
+.relative {
+  position: relative;
+}
+.absolute {
+  position: absolute;
+}
+.fixed {
+  position: fixed;
+}
+.sticky {
+  position: sticky;
+}
+.inset-0 {
+  inset: 0;
+}
+
+/* ─── Sizing ─────────────────────────────────────────────────────────────── */
+
+.w-full {
+  width: 100%;
+}
+.h-full {
+  height: 100%;
+}
+.min-h-screen {
+  min-height: 100vh;
+}
+
+/* ─── Text Alignment ─────────────────────────────────────────────────────── */
+
+.text-left {
+  text-align: left;
+}
+.text-center {
+  text-align: center;
+}
+.text-right {
+  text-align: right;
+}
+
+/* ─── Truncação ──────────────────────────────────────────────────────────── */
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ─── Opacity ────────────────────────────────────────────────────────────── */
+
+.opacity-0 {
+  opacity: 0;
+}
+.opacity-50 {
+  opacity: 0.5;
+}
+.opacity-75 {
+  opacity: 0.75;
+}
+.opacity-90 {
+  opacity: 0.9;
+}
+.opacity-100 {
+  opacity: 1;
+}
+
+/* ─── Backdrop Blur ──────────────────────────────────────────────────────── */
+
+.backdrop-blur-sm {
+  backdrop-filter: blur(var(--blur-sm));
+  -webkit-backdrop-filter: blur(var(--blur-sm));
+}
+.backdrop-blur-md {
+  backdrop-filter: blur(var(--blur-md));
+  -webkit-backdrop-filter: blur(var(--blur-md));
+}
+.backdrop-blur-lg {
+  backdrop-filter: blur(var(--blur-lg));
+  -webkit-backdrop-filter: blur(var(--blur-lg));
+}
+.backdrop-blur-xl {
+  backdrop-filter: blur(var(--blur-xl));
+  -webkit-backdrop-filter: blur(var(--blur-xl));
+}
+
+/* ─── Aspect Ratios ──────────────────────────────────────────────────────── */
+
+.aspect-square {
+  aspect-ratio: 1 / 1;
+}
+.aspect-video {
+  aspect-ratio: 16 / 9;
+}
+.aspect-photo {
+  aspect-ratio: 4 / 3;
+}
+
+/* ─── Transition Utilities ───────────────────────────────────────────────── */
+
+.transition-colors {
+  transition: var(--transition-colors);
+}
+.transition-opacity {
+  transition: var(--transition-opacity);
+}
+.transition-transform {
+  transition: var(--transition-transform);
+}
+.transition-all {
+  transition: var(--transition-all);
+}
+
+/* ─── Selection ──────────────────────────────────────────────────────────── */
+
+.selection-accent ::selection {
+  background-color: var(--selection-bg);
+  color: var(--selection-fg);
+}
