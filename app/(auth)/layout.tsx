@@ -1,3 +1,4 @@
+import { SessionProvider } from "next-auth/react";
 import { VibeAuthShell } from "@/components/auth/vibe-auth-shell";
 
 /**
@@ -9,5 +10,9 @@ export default function AuthLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <VibeAuthShell>{children}</VibeAuthShell>;
+  return (
+    <SessionProvider>
+      <VibeAuthShell>{children}</VibeAuthShell>
+    </SessionProvider>
+  );
 }

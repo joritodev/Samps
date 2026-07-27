@@ -1,51 +1,34 @@
-import { UserRole } from "@prisma/client";
-import { db } from "@/lib/db";
-
-/** E-mail preferencial do mock de sessão (seed). */
-export const AGENCY_MOCK_EMAIL = "gestao@samps.digital";
+import { requireAuth } from "@/lib/permissions/check";
+import type { SessionUser } from "@/types/auth";
 
 export type AgencyUserProfile = {
   id: string;
   name: string;
   email: string;
-  avatar: string | null;
-  role: string;
+  avatarUrl: string | null;
+  userType: SessionUser["userType"];
+  roleName: string;
+  sectorName: string | null;
+  permissions: string[];
+  clientIds: string[];
 };
 
-export async function getCurrentAgencyUser(): Promise<AgencyUserProfile | null> {
-  try {
-    const select = {
-      id: true,
-      name: true,
-      email: true,
-      avatar: true,
-      role: true,
-    } as const;
+/**
+ * Usuário logado no shell da agência. Redireciona para /login quando não há
+ * sessão — o middleware já barra antes, isto é a segunda linha de defesa.
+ */
+export async function getCurrentAgencyUser(): Promise<AgencyUserProfile> {
+  const user = await requireAuth();
 
-    const byEmail = await db.user.findUnique({
-      where: { email: AGENCY_MOCK_EMAIL },
-      select,
-    });
-    if (byEmail) return byEmail;
-
-    // Fallback se o e-mail do perfil foi alterado — seed tem 1 MANAGER.
-    return await db.user.findFirst({
-      where: { role: UserRole.MANAGER },
-      orderBy: { createdAt: "asc" },
-      select,
-    });
-  } catch (error) {
-    console.error("getCurrentAgencyUser", error);
-    return null;
-  }
-}
-
-export function userInitials(name: string) {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase();
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    avatarUrl: user.avatarUrl ?? null,
+    userType: user.userType,
+    roleName: user.roleName,
+    sectorName: user.sectorName ?? null,
+    permissions: user.permissions,
+    clientIds: user.clientIds,
+  };
 }

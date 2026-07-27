@@ -1,10 +1,11 @@
 import bcrypt from "bcryptjs";
-import { UserStatus, UserType } from "@prisma/client";
+import { AuditAction, UserStatus, UserType } from "@prisma/client";
 import { db } from "@/lib/db";
 import {
   resolveUserClientIds,
   resolveUserPermissions,
 } from "@/lib/permissions/resolve";
+import { logAudit } from "@/lib/services/audit.service";
 
 export async function validateCredentials(email: string, password: string) {
   const user = await db.user.findUnique({
@@ -59,6 +60,13 @@ export async function validateCredentials(email: string, password: string) {
 
   await db.accessAttemptLog.create({
     data: { userId: user.id, email, success: true },
+  });
+
+  await logAudit({
+    userId: user.id,
+    action: AuditAction.LOGIN,
+    entityType: "User",
+    entityId: user.id,
   });
 
   return {

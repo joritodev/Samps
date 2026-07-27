@@ -10,17 +10,19 @@ export function getPostLoginRedirect(
 }
 
 export const INTERNAL_ROUTES_PREFIX = [
-  "/gestao",
-  "/painel",
-  "/dashboard",
+  "/painel-gestao",
+  "/meu-painel",
+  "/setores",
+  "/demandas",
   "/clientes",
-  "/quadros",
-  "/calendario",
+  "/agenda",
+  "/performance",
   "/projetos",
   "/captacoes",
   "/equipe",
-  "/usuarios",
-  "/relatorios",
+  "/perfil",
+  "/historico",
+  "/pesquisa",
   "/configuracoes",
   "/notificacoes",
 ];
@@ -44,6 +46,7 @@ export function isAuthRoute(pathname: string) {
     pathname === "/login" ||
     pathname.startsWith("/forgot-password") ||
     pathname.startsWith("/reset-password") ||
+    pathname.startsWith("/convite") ||
     pathname === "/first-access"
   );
 }
