@@ -63,20 +63,21 @@ export function getDashboardPath(userType: UserType): string {
   switch (userType) {
     case "ADMIN":
     case "MANAGEMENT":
-      return "/gestao";
+      return "/painel-gestao";
     case "SOCIAL_MEDIA":
-      return "/painel/social-media";
+      return "/meu-painel/social";
     case "DESIGNER":
-      return "/painel/design";
+      return "/setores/design";
+    // Vídeo e tráfego usam a lista de setores → quadro do próprio slug.
     case "VIDEOMAKER":
     case "VIDEO_EDITOR":
-      return "/painel/video";
+      return "/setores/video";
     case "OTHER":
-      return "/painel/trafego";
+      return "/setores/trafego";
     case "EXTERNAL_CLIENT":
       return "/portal";
     default:
-      return "/dashboard";
+      return "/demandas";
   }
 }
 

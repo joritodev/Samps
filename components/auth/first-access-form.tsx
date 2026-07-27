@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Loader2 } from "lucide-react";
 import { submitFirstAccess } from "@/lib/actions/auth.actions";
+import { getDashboardPath } from "@/types/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,9 +13,18 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-export function FirstAccessForm({ userId }: { userId: string }) {
+export function FirstAccessForm({
+  userId,
+  defaultName,
+  email,
+}: {
+  userId: string;
+  defaultName?: string;
+  email?: string;
+}) {
   const router = useRouter();
-  const [name, setName] = useState("");
+  const { data: session, update } = useSession();
+  const [name, setName] = useState(defaultName ?? "");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -37,21 +48,31 @@ export function FirstAccessForm({ userId }: { userId: string }) {
       termsAccepted,
     });
 
-    setLoading(false);
-
     if (result.error) {
+      setLoading(false);
       setError(result.error);
       return;
     }
 
-    router.push("/login");
+    // Sem atualizar o token o middleware continuaria devolvendo o usuário
+    // para o primeiro acesso.
+    const updated = await update({
+      refreshed: { name, mustResetPassword: false },
+    });
+    const userType = updated?.user?.userType ?? session?.user?.userType;
+    router.replace(userType ? getDashboardPath(userType) : "/login");
+    router.refresh();
   }
 
   return (
     <Card className="w-full max-w-md rounded-2xl shadow-lg border-0">
       <CardHeader className="text-center">
         <CardTitle className="text-2xl">Primeiro acesso</CardTitle>
-        <CardDescription>Complete seu cadastro para continuar</CardDescription>
+        <CardDescription>
+          {email
+            ? `Confirme seus dados e crie uma senha para ${email}.`
+            : "Complete seu cadastro para continuar"}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">

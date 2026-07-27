@@ -7,22 +7,33 @@ export type ClientTeamMember = {
 export type ClientListItem = {
   id: string;
   name: string;
-  logo: string | null;
+  logoUrl: string | null;
   active: boolean;
   openDemands: number;
+  hasBoard: boolean;
   team: ClientTeamMember[];
+};
+
+export type ClientContractService = {
+  id: string;
+  name: string;
+  quantity: number | null;
+  periodicity: string;
 };
 
 export type ClientDetail = {
   id: string;
   name: string;
-  logo: string | null;
+  logoUrl: string | null;
   active: boolean;
-  contractScope: string | null;
+  segment: string | null;
+  planName: string | null;
+  contractServices: ClientContractService[];
   createdAt: string;
   openDemands: number;
   totalDemands: number;
   publishedDemands: number;
+  hasBoard: boolean;
   team: ClientTeamMember[];
   demands: {
     id: string;
@@ -30,6 +41,6 @@ export type ClientDetail = {
     status: string;
     sector: string | null;
     priority: string;
-    deadline: string | null;
+    dueDate: string | null;
   }[];
 };

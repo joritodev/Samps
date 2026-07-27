@@ -1,14 +1,12 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import NextAuth from "next-auth";
+import { authConfig } from "@/auth.config";
 
 /**
- * Auth middleware desativado temporariamente.
- * Login simulado na UI — NextAuth/Supabase na próxima etapa.
+ * Usa apenas `authConfig` (sem o provider de credenciais) porque o middleware
+ * roda no edge runtime, onde Prisma e bcrypt não funcionam.
  */
-export function middleware(_req: NextRequest) {
-  return NextResponse.next();
-}
+export default NextAuth(authConfig).auth;
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|fonts).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|fonts|design-system).*)"],
 };

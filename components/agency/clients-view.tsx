@@ -36,7 +36,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { ClientListItem } from "@/types/clients-ui";
 
-function ClientAvatar({ name, logo }: { name: string; logo: string | null }) {
+function ClientAvatar({
+  name,
+  logoUrl,
+}: {
+  name: string;
+  logoUrl: string | null;
+}) {
   const initials = name
     .split(" ")
     .slice(0, 2)
@@ -44,11 +50,11 @@ function ClientAvatar({ name, logo }: { name: string; logo: string | null }) {
     .join("")
     .toUpperCase();
 
-  if (logo) {
+  if (logoUrl) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
-        src={logo}
+        src={logoUrl}
         alt=""
         className="h-10 w-10 rounded-xl object-cover ring-1 ring-border"
       />
@@ -71,12 +77,16 @@ function NewClientSheet({
 }) {
   const [name, setName] = useState("");
   const [status, setStatus] = useState<"active" | "paused">("active");
+  const [segment, setSegment] = useState("");
+  const [planName, setPlanName] = useState("");
   const [scope, setScope] = useState("");
   const [pending, startTransition] = useTransition();
 
   function reset() {
     setName("");
     setStatus("active");
+    setSegment("");
+    setPlanName("");
     setScope("");
   }
 
@@ -90,7 +100,9 @@ function NewClientSheet({
       const result = await createClient({
         name,
         active: status === "active",
-        contractScope: scope,
+        segment,
+        planName,
+        contractNotes: scope,
       });
 
       if (result.error) {
@@ -148,6 +160,26 @@ function NewClientSheet({
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="client-segment">Segmento</Label>
+            <Input
+              id="client-segment"
+              placeholder="Ex: Odontologia"
+              value={segment}
+              onChange={(e) => setSegment(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="client-plan">Plano contratado</Label>
+            <Input
+              id="client-plan"
+              placeholder="Ex: Plano Essencial"
+              value={planName}
+              onChange={(e) => setPlanName(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="client-scope">Escopo do contrato</Label>
             <Textarea
               id="client-scope"
@@ -156,6 +188,10 @@ function NewClientSheet({
               onChange={(e) => setScope(e.target.value)}
               className="min-h-[120px] resize-none"
             />
+            <p className="text-xs text-muted-foreground">
+              Os itens quantificados do contrato são cadastrados na tela do
+              cliente.
+            </p>
           </div>
         </div>
 
@@ -174,7 +210,13 @@ function NewClientSheet({
   );
 }
 
-export function ClientsView({ clients }: { clients: ClientListItem[] }) {
+export function ClientsView({
+  clients,
+  canCreate,
+}: {
+  clients: ClientListItem[];
+  canCreate: boolean;
+}) {
   const [sheetOpen, setSheetOpen] = useState(false);
 
   return (
@@ -188,10 +230,20 @@ export function ClientsView({ clients }: { clients: ClientListItem[] }) {
             Contas ativas e operação alocada
           </p>
         </div>
-        <Button onClick={() => setSheetOpen(true)}>
-          <Plus className="h-4 w-4" />
-          Novo Cliente
-        </Button>
+        {canCreate ? (
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" asChild>
+              <Link href="/clientes/quadro/criar">
+                <Plus className="h-4 w-4" />
+                Criar quadro
+              </Link>
+            </Button>
+            <Button onClick={() => setSheetOpen(true)}>
+              <Plus className="h-4 w-4" />
+              Novo Cliente
+            </Button>
+          </div>
+        ) : null}
       </header>
 
       <div className="p-6">
@@ -202,12 +254,16 @@ export function ClientsView({ clients }: { clients: ClientListItem[] }) {
               Nenhum cliente cadastrado
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Crie o primeiro cliente para começar a operação.
+              {canCreate
+                ? "Crie o primeiro cliente para começar a operação."
+                : "Nenhuma conta atribuída a você até o momento."}
             </p>
-            <Button className="mt-4" onClick={() => setSheetOpen(true)}>
-              <Plus className="h-4 w-4" />
-              Novo Cliente
-            </Button>
+            {canCreate ? (
+              <Button className="mt-4" onClick={() => setSheetOpen(true)}>
+                <Plus className="h-4 w-4" />
+                Novo Cliente
+              </Button>
+            ) : null}
           </div>
         ) : (
           <div className="overflow-hidden rounded-xl border border-border bg-card">
@@ -217,6 +273,7 @@ export function ClientsView({ clients }: { clients: ClientListItem[] }) {
                   <TableHead className="pl-6">Cliente</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Demandas em aberto</TableHead>
+                  <TableHead>Quadro</TableHead>
                   <TableHead className="pr-6">Equipe</TableHead>
                 </TableRow>
               </TableHeader>
@@ -228,7 +285,10 @@ export function ClientsView({ clients }: { clients: ClientListItem[] }) {
                         href={`/clientes/${client.id}`}
                         className="flex items-center gap-3"
                       >
-                        <ClientAvatar name={client.name} logo={client.logo} />
+                        <ClientAvatar
+                          name={client.name}
+                          logoUrl={client.logoUrl}
+                        />
                         <span className="font-medium text-foreground group-hover:text-foreground/80">
                           {client.name}
                         </span>
@@ -251,6 +311,27 @@ export function ClientsView({ clients }: { clients: ClientListItem[] }) {
                       <span className="tabular-nums text-foreground/80">
                         {client.openDemands}
                       </span>
+                    </TableCell>
+                    <TableCell>
+                      {client.hasBoard ? (
+                        <Link
+                          href={`/clientes/${client.id}/quadro`}
+                          className="text-sm font-medium text-primary hover:underline"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Abrir
+                        </Link>
+                      ) : canCreate ? (
+                        <Link
+                          href={`/clientes/quadro/criar?clientId=${client.id}`}
+                          className="text-sm text-muted-foreground hover:text-foreground hover:underline"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Criar
+                        </Link>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
                     </TableCell>
                     <TableCell className="pr-6">
                       {client.team.length === 0 ? (

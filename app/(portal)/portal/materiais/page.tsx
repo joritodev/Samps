@@ -11,7 +11,7 @@ export default async function PortalMateriaisPage() {
   const user = await requireAuth();
   const clientId = await getPortalClientId(user);
   if (!clientId) {
-    return <p className="text-sm text-slate-500">Portal indisponível.</p>;
+    return <p className="text-sm text-muted-foreground">Portal indisponível.</p>;
   }
 
   const demands = await listDemands(user, { context: "portal", clientId });
@@ -27,7 +27,7 @@ export default async function PortalMateriaisPage() {
               <CardContent className="flex items-center justify-between py-4 text-sm">
                 <div>
                   <p className="font-medium">{demand.title}</p>
-                  <p className="text-xs text-slate-500">{demand.type}</p>
+                  <p className="text-xs text-muted-foreground">{demand.type}</p>
                 </div>
                 <div className="flex gap-2">
                   <Badge variant="secondary">{demand.status}</Badge>
@@ -42,7 +42,7 @@ export default async function PortalMateriaisPage() {
           ))
         ) : (
           <Card className="rounded-xl shadow-sm">
-            <CardContent className="py-12 text-center text-sm text-slate-500">
+            <CardContent className="py-12 text-center text-sm text-muted-foreground">
               Nenhum material concluído.
             </CardContent>
           </Card>

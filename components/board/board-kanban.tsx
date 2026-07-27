@@ -22,7 +22,10 @@ import { moveCardAction } from "@/lib/actions/cards.actions";
 import { cn } from "@/lib/utils";
 
 type Column = { id: string; title: string };
-type Demand = Parameters<typeof DemandCard>[0]["demand"] & { id: string; listId?: string | null };
+type Demand = Parameters<typeof DemandCard>[0]["demand"] & {
+  id: string;
+  listId?: string | null;
+};
 
 function SortableDemandCard({
   demand,
@@ -103,39 +106,57 @@ export function BoardKanban({
       onDragStart={(e) => setActiveId(String(e.active.id))}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex gap-4 overflow-x-auto pb-4">
-        {columns.map((col) => (
-          <div
-            key={col.id}
-            className="flex w-72 shrink-0 flex-col rounded-xl border border-border/60 bg-card p-3 shadow-soft"
-          >
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-foreground">{col.title}</h3>
-              <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
-                {(itemsByColumn[col.id] ?? []).length}
-              </span>
-            </div>
-            <SortableContext
-              id={col.id}
-              items={(itemsByColumn[col.id] ?? []).map((d) => d.id)}
-              strategy={verticalListSortingStrategy}
+      <div className="flex h-full min-h-0 gap-4 overflow-x-auto overflow-y-hidden p-6">
+        {columns.map((col) => {
+          const cards = itemsByColumn[col.id] ?? [];
+          return (
+            <section
+              key={col.id}
+              className="flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-muted/80"
             >
-              <div className="min-h-[80px] space-y-2" data-list-id={col.id}>
-                {(itemsByColumn[col.id] ?? []).map((demand) => (
-                  <SortableDemandCard
-                    key={demand.id}
-                    demand={demand}
-                    onSelect={onCardSelect}
-                  />
-                ))}
-              </div>
-            </SortableContext>
-          </div>
-        ))}
+              <header className="flex shrink-0 items-center justify-between px-4 py-3.5">
+                <h3 className="text-sm font-semibold text-foreground">
+                  {col.title}
+                </h3>
+                <span className="rounded-md border border-border bg-card px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                  {cards.length}
+                </span>
+              </header>
+              <SortableContext
+                id={col.id}
+                items={cards.map((d) => d.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div
+                  className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-2 pb-3"
+                  data-list-id={col.id}
+                >
+                  {cards.length > 0 ? (
+                    cards.map((demand) => (
+                      <SortableDemandCard
+                        key={demand.id}
+                        demand={demand}
+                        onSelect={onCardSelect}
+                      />
+                    ))
+                  ) : (
+                    <div className="rounded-md border border-dashed border-border px-3 py-6 text-center text-xs text-muted-foreground">
+                      Nenhum cartão
+                    </div>
+                  )}
+                </div>
+              </SortableContext>
+            </section>
+          );
+        })}
       </div>
       <DragOverlay>
         {activeItem ? (
-          <DemandCard demand={activeItem} showOrigin className="rotate-2 opacity-90" />
+          <DemandCard
+            demand={activeItem}
+            showOrigin
+            className="rotate-2 opacity-90"
+          />
         ) : null}
       </DragOverlay>
     </DndContext>

@@ -4,6 +4,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+const selectClass =
+  "h-9 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground";
+
 export function BoardFilters({
   lists,
 }: {
@@ -20,33 +23,35 @@ export function BoardFilters({
   }
 
   return (
-    <div className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-border/60 bg-card p-4 shadow-soft">
-      <div className="space-y-1">
-        <Label className="text-xs">Pesquisar</Label>
+    <div className="flex flex-wrap items-end gap-3">
+      <div className="min-w-40 flex-1 space-y-1 sm:max-w-56">
+        <Label className="text-xs text-muted-foreground">Pesquisar</Label>
         <Input
           placeholder="Título..."
-          className="h-9 w-48"
-          defaultValue={params.get("search") ?? ""}
-          onChange={(e) => update("search", e.target.value)}
+          className="h-9"
+          defaultValue={params.get("busca") ?? ""}
+          onChange={(e) => update("busca", e.target.value)}
         />
       </div>
-      <div className="space-y-1">
-        <Label className="text-xs">Lista</Label>
+      <div className="w-40 space-y-1">
+        <Label className="text-xs text-muted-foreground">Lista</Label>
         <select
-          className="h-9 rounded-md border px-2 text-sm"
-          value={params.get("listId") ?? ""}
-          onChange={(e) => update("listId", e.target.value)}
+          className={selectClass}
+          value={params.get("lista") ?? ""}
+          onChange={(e) => update("lista", e.target.value)}
         >
           <option value="">Todas</option>
           {lists.map((l) => (
-            <option key={l.id} value={l.id}>{l.name}</option>
+            <option key={l.id} value={l.id}>
+              {l.name}
+            </option>
           ))}
         </select>
       </div>
-      <div className="space-y-1">
-        <Label className="text-xs">Status</Label>
+      <div className="w-44 space-y-1">
+        <Label className="text-xs text-muted-foreground">Status</Label>
         <select
-          className="h-9 rounded-md border px-2 text-sm"
+          className={selectClass}
           value={params.get("status") ?? ""}
           onChange={(e) => update("status", e.target.value)}
         >
@@ -59,12 +64,12 @@ export function BoardFilters({
           <option value="DONE">Concluída</option>
         </select>
       </div>
-      <div className="space-y-1">
-        <Label className="text-xs">Visível cliente</Label>
+      <div className="w-36 space-y-1">
+        <Label className="text-xs text-muted-foreground">Visível cliente</Label>
         <select
-          className="h-9 rounded-md border px-2 text-sm"
-          value={params.get("visible") ?? ""}
-          onChange={(e) => update("visible", e.target.value)}
+          className={selectClass}
+          value={params.get("visivel") ?? ""}
+          onChange={(e) => update("visivel", e.target.value)}
         >
           <option value="">Todos</option>
           <option value="true">Sim</option>

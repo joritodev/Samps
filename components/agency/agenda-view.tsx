@@ -227,6 +227,8 @@ export function AgendaView() {
     (event) => event.day === selectedDay
   );
 
+  const weekCount = Math.ceil(cells.length / 7);
+
   const selectedDateLabel = new Date(year, month, selectedDay).toLocaleDateString(
     "pt-BR",
     { day: "numeric", month: "long", year: "numeric" }
@@ -237,8 +239,8 @@ export function AgendaView() {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-y-auto bg-[#F8F9FA]">
-      <header className="shrink-0 border-b border-border bg-card px-6 py-5">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#F8F9FA]">
+      <header className="shrink-0 border-b border-border bg-card px-6 py-4">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
           Agenda
         </h1>
@@ -247,8 +249,8 @@ export function AgendaView() {
         </p>
       </header>
 
-      <div className="space-y-6 p-6">
-        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 p-4">
+        <section className="grid shrink-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {KPIS.map((kpi) => {
             const Icon = kpi.icon;
             return (
@@ -256,10 +258,10 @@ export function AgendaView() {
                 key={kpi.id}
                 className={cn("rounded-2xl shadow-none", kpi.className)}
               >
-                <CardContent className="flex items-center gap-4 p-5">
+                <CardContent className="flex items-center gap-3 p-4">
                   <div
                     className={cn(
-                      "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
+                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
                       kpi.iconClass
                     )}
                   >
@@ -267,7 +269,7 @@ export function AgendaView() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm text-muted-foreground">{kpi.label}</p>
-                    <p className="mt-0.5 text-2xl font-semibold tracking-tight text-foreground">
+                    <p className="mt-0.5 text-xl font-semibold tracking-tight text-foreground">
                       {kpi.value}
                     </p>
                   </div>
@@ -277,16 +279,16 @@ export function AgendaView() {
           })}
         </section>
 
-        <section className="grid grid-cols-1 gap-6 xl:grid-cols-12">
+        <section className="grid min-h-0 flex-1 grid-cols-1 gap-4 xl:grid-cols-12">
           {/* Filtros */}
-          <aside className="xl:col-span-2">
+          <aside className="min-h-0 xl:col-span-2">
             <Card className="rounded-2xl shadow-none">
-              <CardHeader className="pb-3">
+              <CardHeader className="pb-3 pt-4">
                 <CardTitle className="text-sm font-semibold tracking-tight">
                   Filtros
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-5">
                 <div className="space-y-3">
                   <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                     Setores
@@ -349,9 +351,9 @@ export function AgendaView() {
           </aside>
 
           {/* Calendário */}
-          <div className="xl:col-span-7">
-            <Card className="rounded-2xl shadow-none">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <div className="flex min-h-0 flex-col xl:col-span-7">
+            <Card className="flex h-full min-h-0 flex-col rounded-2xl shadow-none">
+              <CardHeader className="flex shrink-0 flex-row items-center justify-between space-y-0 pb-3 pt-4">
                 <CardTitle className="text-base font-semibold capitalize tracking-tight">
                   {monthLabel(year, month)}
                 </CardTitle>
@@ -376,19 +378,24 @@ export function AgendaView() {
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="grid grid-cols-7 gap-px">
+              <CardContent className="flex min-h-0 flex-1 flex-col gap-2 pt-0">
+                <div className="grid shrink-0 grid-cols-7 gap-px">
                   {WEEKDAYS.map((day) => (
                     <div
                       key={day}
-                      className="px-2 py-1.5 text-center text-xs font-medium text-muted-foreground"
+                      className="px-2 py-1 text-center text-xs font-medium text-muted-foreground"
                     >
                       {day}
                     </div>
                   ))}
                 </div>
 
-                <div className="grid grid-cols-7 gap-px overflow-hidden rounded-xl border border-border bg-border">
+                <div
+                  className="grid min-h-0 flex-1 grid-cols-7 gap-px overflow-hidden rounded-xl border border-border bg-border"
+                  style={{
+                    gridTemplateRows: `repeat(${weekCount}, minmax(0, 1fr))`,
+                  }}
+                >
                   {cells.map((cell) => {
                     const dayEvents = cell.day
                       ? filteredEvents.filter((e) => e.day === cell.day)
@@ -406,7 +413,7 @@ export function AgendaView() {
                         disabled={!cell.day}
                         onClick={() => cell.day && setSelectedDay(cell.day)}
                         className={cn(
-                          "min-h-[120px] bg-card p-2 text-left transition-colors",
+                          "flex min-h-0 flex-col overflow-hidden bg-card p-1.5 text-left transition-colors",
                           cell.day && "hover:bg-muted",
                           !cell.day && "bg-muted/80",
                           isSelected && "ring-2 ring-inset ring-green-400/70",
@@ -417,18 +424,18 @@ export function AgendaView() {
                           <>
                             <span
                               className={cn(
-                                "inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium text-muted-foreground",
+                                "inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-medium text-muted-foreground",
                                 isToday && "bg-green-600 text-white"
                               )}
                             >
                               {cell.day}
                             </span>
-                            <div className="mt-1.5 space-y-1">
+                            <div className="mt-1 min-h-0 flex-1 space-y-0.5 overflow-hidden">
                               {dayEvents.slice(0, 2).map((event) => (
                                 <div
                                   key={event.id}
                                   className={cn(
-                                    "truncate rounded-md px-1.5 py-1 text-[10px] font-medium leading-tight",
+                                    "truncate rounded-md px-1.5 py-0.5 text-[10px] font-medium leading-tight",
                                     TONE_CHIP[event.tone]
                                   )}
                                 >
@@ -455,15 +462,15 @@ export function AgendaView() {
           </div>
 
           {/* Detalhes */}
-          <aside className="xl:col-span-3">
-            <Card className="rounded-2xl shadow-none">
-              <CardHeader className="pb-3">
+          <aside className="flex min-h-0 flex-col xl:col-span-3">
+            <Card className="flex h-full min-h-0 flex-col rounded-2xl shadow-none">
+              <CardHeader className="shrink-0 pb-3 pt-4">
                 <CardTitle className="text-sm font-semibold tracking-tight">
                   Detalhes da Demanda
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">{selectedDateLabel}</p>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="min-h-0 flex-1 space-y-3 overflow-y-auto">
                 {selectedEvents.length === 0 ? (
                   <div className="rounded-xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
                     Nenhuma entrega neste dia.

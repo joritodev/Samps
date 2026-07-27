@@ -1,33 +1,48 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { DemandStatus, UserRole } from "@prisma/client";
+import { AuditAction, DemandStatus } from "@prisma/client";
 import { db } from "@/lib/db";
+import { requireAuth, requirePermission } from "@/lib/permissions/check";
+import { logAudit } from "@/lib/services/audit.service";
 
 /**
- * Assumir demanda no quadro de Design.
+ * Assumir demanda no quadro do setor.
  * Atualiza o mesmo registro Demand → aparece em "Em produção" no setor
  * e continua existindo no quadro do cliente (um registro, várias views).
  */
 export async function assumirDemanda(demandId: string) {
-  try {
-    let assigneeId: string | undefined;
+  const actor = await requireAuth();
 
-    const designer = await db.user.findFirst({
-      where: { role: UserRole.DESIGNER },
-      select: { id: true },
+  try {
+    const previous = await db.demand.findUniqueOrThrow({
+      where: { id: demandId },
+      select: { status: true, assigneeId: true },
     });
-    assigneeId = designer?.id;
+
+    if (previous.assigneeId && previous.assigneeId !== actor.id) {
+      return { error: "Esta demanda já tem um responsável." };
+    }
 
     await db.demand.update({
       where: { id: demandId },
       data: {
         status: DemandStatus.IN_PRODUCTION,
-        ...(assigneeId ? { assigneeId } : {}),
+        assigneeId: actor.id,
+        productionStartedAt: new Date(),
       },
     });
 
-    revalidatePath("/setores/design");
+    await logAudit({
+      userId: actor.id,
+      action: AuditAction.DEMAND_CLAIMED,
+      entityType: "Demand",
+      entityId: demandId,
+      previousValue: previous,
+      newValue: { status: DemandStatus.IN_PRODUCTION, assigneeId: actor.id },
+    });
+
+    revalidatePath("/setores", "layout");
     revalidatePath("/demandas");
     return { success: true };
   } catch (error) {
@@ -37,24 +52,41 @@ export async function assumirDemanda(demandId: string) {
 }
 
 /**
- * Finaliza produção do Design: exige link do material e envia para revisão.
+ * Finaliza produção do setor: exige link do material e envia para revisão.
  */
 export async function concluirProducao(demandId: string, materialUrl: string) {
+  const actor = await requirePermission("demands.edit");
+
   const url = materialUrl?.trim();
   if (!url) {
     return { error: "O link do material é obrigatório" };
   }
 
   try {
+    const previous = await db.demand.findUniqueOrThrow({
+      where: { id: demandId },
+      select: { status: true, materialUrl: true },
+    });
+
     await db.demand.update({
       where: { id: demandId },
       data: {
         materialUrl: url,
         status: DemandStatus.IN_REVIEW,
+        productionCompletedAt: new Date(),
       },
     });
 
-    revalidatePath("/setores/design");
+    await logAudit({
+      userId: actor.id,
+      action: AuditAction.PRODUCTION_COMPLETED,
+      entityType: "Demand",
+      entityId: demandId,
+      previousValue: previous,
+      newValue: { status: DemandStatus.IN_REVIEW, materialUrl: url },
+    });
+
+    revalidatePath("/setores", "layout");
     revalidatePath("/demandas");
     return { success: true };
   } catch (error) {

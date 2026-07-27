@@ -74,7 +74,11 @@ export function PortalSidebar({
           </Avatar>
           <div>
             <p className="text-sm font-medium">{user.name}</p>
-            <p className="text-xs text-muted-foreground">Cliente externo</p>
+            <p className="text-xs text-muted-foreground">
+              {user.userType === "EXTERNAL_CLIENT"
+                ? "Cliente externo"
+                : "Visualizando como cliente"}
+            </p>
           </div>
         </div>
         <Button

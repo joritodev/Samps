@@ -11,7 +11,7 @@ export default async function PortalOverviewPage() {
   const overview = await getPortalOverview(user);
 
   if (!overview) {
-    return <p className="text-sm text-slate-500">Portal indisponível.</p>;
+    return <p className="text-sm text-muted-foreground">Portal indisponível.</p>;
   }
 
   const { client, stats, demands, isPreview } = overview;
@@ -50,7 +50,7 @@ export default async function PortalOverviewPage() {
               </div>
             ))
           ) : (
-            <p className="text-sm text-slate-500">Nenhum conteúdo disponível.</p>
+            <p className="text-sm text-muted-foreground">Nenhum conteúdo disponível.</p>
           )}
         </CardContent>
       </Card>

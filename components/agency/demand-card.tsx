@@ -22,26 +22,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { concluirBriefing } from "@/app/actions/demand";
-import type { BoardDemand } from "@/types/board-ui";
-
-const priorityLabel: Record<string, string> = {
-  LOW: "Baixa",
-  MEDIUM: "Média",
-  HIGH: "Alta",
-  URGENT: "Urgente",
-};
-
-const statusLabel: Record<string, string> = {
-  OPEN: "Pendente",
-  AVAILABLE: "Disponível",
-  IN_PRODUCTION: "Em produção",
-  IN_ADJUSTMENT: "Em ajuste",
-  IN_REVIEW: "Em revisão",
-  APPROVED: "Aprovado",
-  PUBLISHED: "Publicada",
-  DONE: "Concluída",
-  CANCELLED: "Cancelada",
-};
+import type { BoardDemand, BoardTaxonomy } from "@/types/board-ui";
 
 function formatDeadline(iso: string | null) {
   if (!iso) return null;
@@ -59,7 +40,7 @@ export function DemandCard({
   demand: BoardDemand;
   onOpen: (demand: BoardDemand) => void;
 }) {
-  const deadline = formatDeadline(demand.deadline);
+  const deadline = formatDeadline(demand.dueDate);
 
   return (
     <button
@@ -80,7 +61,7 @@ export function DemandCard({
           </Badge>
         ) : null}
         <Badge variant="outline" className="text-[10px] font-medium">
-          {priorityLabel[demand.priority] ?? demand.priority}
+          {demand.priority}
         </Badge>
         {deadline ? (
           <span className="text-[10px] text-muted-foreground">{deadline}</span>
@@ -92,24 +73,36 @@ export function DemandCard({
 
 export function DemandDetailSheet({
   demand,
+  taxonomy,
   open,
   onOpenChange,
 }: {
   demand: BoardDemand | null;
+  taxonomy: BoardTaxonomy;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
   const [description, setDescription] = useState("");
-  const [sector, setSector] = useState("DESIGN");
-  const [priority, setPriority] = useState("HIGH");
+  const [sector, setSector] = useState("");
+  const [priority, setPriority] = useState("");
   const [pending, startTransition] = useTransition();
 
   useEffect(() => {
     if (!demand) return;
     setDescription(demand.description ?? "");
-    setSector(demand.sector ?? "DESIGN");
-    setPriority(demand.priority ?? "MEDIUM");
-  }, [demand]);
+    // O cartão carrega os nomes; as actions aceitam id ou nome, então o
+    // match por nome resolve o valor já selecionado.
+    setSector(
+      taxonomy.sectors.find((s) => s.name === demand.sector)?.id ??
+        taxonomy.sectors[0]?.id ??
+        ""
+    );
+    setPriority(
+      taxonomy.priorities.find((p) => p.name === demand.priority)?.id ??
+        taxonomy.priorities[0]?.id ??
+        ""
+    );
+  }, [demand, taxonomy]);
 
   function handleSubmit() {
     if (!demand) return;
@@ -158,10 +151,11 @@ export function DemandDetailSheet({
                     <SelectValue placeholder="Selecione o setor" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="SOCIAL">Social</SelectItem>
-                    <SelectItem value="DESIGN">Design</SelectItem>
-                    <SelectItem value="VIDEO">Vídeo</SelectItem>
-                    <SelectItem value="TRAFFIC">Tráfego</SelectItem>
+                    {taxonomy.sectors.map((option) => (
+                      <SelectItem key={option.id} value={option.id}>
+                        {option.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -172,17 +166,18 @@ export function DemandDetailSheet({
                     <SelectValue placeholder="Prioridade" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="LOW">Baixa</SelectItem>
-                    <SelectItem value="MEDIUM">Média</SelectItem>
-                    <SelectItem value="HIGH">Alta</SelectItem>
-                    <SelectItem value="URGENT">Urgente</SelectItem>
+                    {taxonomy.priorities.map((option) => (
+                      <SelectItem key={option.id} value={option.id}>
+                        {option.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label>Prazo</Label>
                 <div className="flex h-10 items-center rounded-md border border-border bg-muted px-3 text-sm text-muted-foreground">
-                  {formatDeadline(demand.deadline) ?? "Sem prazo"}
+                  {formatDeadline(demand.dueDate) ?? "Sem prazo"}
                 </div>
               </div>
             </div>

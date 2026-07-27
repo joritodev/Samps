@@ -4,11 +4,13 @@ import { randomBytes } from "crypto";
 import { db } from "@/lib/db";
 import { hashPassword } from "@/lib/auth/credentials";
 import { completeFirstAccess } from "@/lib/services/users.service";
+import { appUrl, emailLayout, sendEmail } from "@/lib/mail/send";
 
 export async function requestPasswordReset(email: string) {
   const user = await db.user.findUnique({
     where: { email: email.toLowerCase().trim() },
   });
+  // Resposta idêntica para e-mail inexistente, para não revelar quem tem conta.
   if (!user) return { success: true };
 
   const token = randomBytes(32).toString("hex");
@@ -20,8 +22,19 @@ export async function requestPasswordReset(email: string) {
     },
   });
 
-  // Resend integration when RESEND_API_KEY is configured
-  console.log(`Reset link: /reset-password/${token}`);
+  const link = appUrl(`/reset-password/${token}`);
+  await sendEmail({
+    to: user.email,
+    subject: "Redefinição de senha — Samps Digital",
+    html: emailLayout({
+      title: "Redefinir sua senha",
+      intro: `Olá, ${user.name}. Recebemos um pedido para redefinir a sua senha. O link abaixo vale por 1 hora.`,
+      ctaLabel: "Criar nova senha",
+      ctaUrl: link,
+    }),
+    fallbackLog: `Link de redefinição: ${link}`,
+  });
+
   return { success: true };
 }
 

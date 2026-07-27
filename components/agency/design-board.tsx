@@ -298,7 +298,13 @@ function DesignDemandSheet({
   );
 }
 
-export function DesignBoard({ columns }: { columns: BoardColumn[] }) {
+export function DesignBoard({
+  columns,
+  sectorName,
+}: {
+  columns: BoardColumn[];
+  sectorName: string;
+}) {
   const [selected, setSelected] = useState<BoardDemand | null>(null);
   const [mode, setMode] = useState<SheetMode>(null);
   const [open, setOpen] = useState(false);
@@ -313,13 +319,18 @@ export function DesignBoard({ columns }: { columns: BoardColumn[] }) {
     <div className="flex h-full min-h-0 flex-col bg-card">
       <header className="flex shrink-0 items-center justify-between gap-4 border-b border-border bg-card px-6 py-5">
         <div className="min-w-0">
-          <p className="text-xs text-muted-foreground">Setor</p>
+          <Link
+            href="/setores"
+            className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Setores
+          </Link>
           <h1 className="truncate text-lg font-semibold tracking-tight text-foreground">
-            Quadro Geral do Design
+            Quadro · {sectorName}
           </h1>
         </div>
         <Button variant="outline" size="sm" asChild>
-          <Link href="/meu-painel/social">Painel Social</Link>
+          <Link href="/setores">Todos os setores</Link>
         </Button>
       </header>
 

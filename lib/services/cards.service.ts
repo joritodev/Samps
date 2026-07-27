@@ -77,7 +77,8 @@ export async function completeBriefingAndDemand(
   if (card.briefingLockedAt) throw new Error("Briefing já bloqueado");
 
   for (const field of BRIEFING_REQUIRED) {
-    if (!data[field as keyof typeof data]) {
+    const value = data[field as keyof typeof data];
+    if (typeof value !== "string" || !value.trim()) {
       throw new Error(`Campo obrigatório: ${field}`);
     }
   }
@@ -197,6 +198,44 @@ export async function registerPublicationAndComplete(
     entityId: cardId,
     newValue: { publishedUrl: data.publishedUrl },
   });
+
+  const demand = await db.demand.findUnique({
+    where: { id: cardId },
+    select: {
+      title: true,
+      clientId: true,
+      requesterId: true,
+    },
+  });
+
+  if (demand?.requesterId && demand.requesterId !== user.id) {
+    await createNotification({
+      userId: demand.requesterId,
+      type: NotificationType.OTHER,
+      title: "Conteúdo publicado",
+      message: demand.title,
+      link: `/clientes/${demand.clientId}/quadro`,
+    });
+  }
+
+  const managers = await db.user.findMany({
+    where: {
+      status: "ACTIVE",
+      userType: { in: ["ADMIN", "MANAGEMENT"] },
+    },
+    select: { id: true },
+    take: 10,
+  });
+  for (const m of managers) {
+    if (m.id === user.id || m.id === demand?.requesterId) continue;
+    await createNotification({
+      userId: m.id,
+      type: NotificationType.OTHER,
+      title: "Conteúdo publicado",
+      message: demand?.title ?? "Publicação registrada",
+      link: `/clientes/${demand?.clientId}/quadro`,
+    });
+  }
 
   return updated;
 }

@@ -159,12 +159,13 @@ export function CardDetailSheet({
                   <Input value={title} onChange={(e) => setTitle(e.target.value)} disabled={locked} />
                 </div>
                 <div className="space-y-1">
-                  <Label>Descrição</Label>
+                  <Label>Descrição *</Label>
                   <Textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     disabled={locked}
                     rows={5}
+                    placeholder="Descreva o briefing antes de demandar"
                   />
                 </div>
                 {fmt.includes("carrossel") && (
@@ -190,13 +191,26 @@ export function CardDetailSheet({
                     disabled={pending}
                     onClick={() =>
                       startTransition(async () => {
+                        if (!title.trim()) {
+                          toast.error("Informe o título do briefing");
+                          return;
+                        }
+                        if (!description.trim()) {
+                          toast.error("Informe a descrição do briefing");
+                          return;
+                        }
                         const r = await demandBriefingAction(card.id, clientId, {
-                          title,
-                          description,
+                          title: title.trim(),
+                          description: description.trim(),
                           format: card.format ?? "Feed",
                         });
-                        if (r.success) toast.success("Briefing demandado");
-                        else toast.error("Erro ao demandar");
+                        if ("success" in r && r.success) {
+                          toast.success("Briefing demandado");
+                        } else if ("error" in r && r.error) {
+                          toast.error(r.error);
+                        } else {
+                          toast.error("Erro ao demandar");
+                        }
                       })
                     }
                   >

@@ -16,8 +16,9 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
+import { canSeeSettingsSection } from "@/lib/agency/settings-access";
 
-export const SETTINGS_SECTIONS: {
+const SETTINGS_SECTIONS: {
   href: string;
   label: string;
   description: string;
@@ -91,7 +92,11 @@ export const SETTINGS_SECTIONS: {
   },
 ];
 
-export function SettingsHub() {
+export function SettingsHub({ permissions }: { permissions: string[] }) {
+  const sections = SETTINGS_SECTIONS.filter((item) =>
+    canSeeSettingsSection(permissions, item.href)
+  );
+
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">
       <header className="shrink-0 border-b border-border bg-card px-6 py-5">
@@ -99,12 +104,12 @@ export function SettingsHub() {
           Configurações
         </h1>
         <p className="mt-0.5 text-sm text-muted-foreground">
-          Parâmetros e cadastros do sistema
+          Preferências pessoais e parâmetros do sistema
         </p>
       </header>
 
       <div className="grid gap-4 bg-muted/30 p-6 sm:grid-cols-2 lg:grid-cols-3">
-        {SETTINGS_SECTIONS.map((item) => {
+        {sections.map((item) => {
           const Icon = item.icon;
           return (
             <Link
@@ -122,7 +127,9 @@ export function SettingsHub() {
                   </h2>
                   <ChevronRight className="h-4 w-4 text-muted-foreground/60 opacity-0 transition-opacity group-hover:opacity-100" />
                 </div>
-                <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {item.description}
+                </p>
               </div>
             </Link>
           );

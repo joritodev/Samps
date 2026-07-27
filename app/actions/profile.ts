@@ -1,10 +1,12 @@
 "use server";
 
 import bcrypt from "bcryptjs";
+import { AuditAction } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getCurrentAgencyUser } from "@/lib/agency/current-user";
 import { db } from "@/lib/db";
+import { logAudit } from "@/lib/services/audit.service";
 
 const updateProfileSchema = z.object({
   name: z.string().trim().min(2, "Informe pelo menos 2 caracteres."),
@@ -38,9 +40,6 @@ export async function updateCurrentUser(
   formData: FormData
 ): Promise<UpdateProfileState> {
   const current = await getCurrentAgencyUser();
-  if (!current) {
-    return { error: "Usuário da sessão não encontrado. Rode o seed." };
-  }
 
   const parsed = updateProfileSchema.safeParse({
     name: formData.get("name"),
@@ -69,15 +68,34 @@ export async function updateCurrentUser(
   }
 
   try {
+    const previous = await db.user.findUniqueOrThrow({
+      where: { id: current.id },
+      select: { name: true, email: true, avatarUrl: true },
+    });
+
     await db.user.update({
       where: { id: current.id },
       data: {
         name,
         email: normalizedEmail,
-        avatar: avatar ? avatar : null,
+        avatarUrl: avatar ? avatar : null,
         ...(password
-          ? { password: await bcrypt.hash(password, 12) }
+          ? { passwordHash: await bcrypt.hash(password, 12) }
           : {}),
+      },
+    });
+
+    await logAudit({
+      userId: current.id,
+      action: AuditAction.USER_UPDATED,
+      entityType: "User",
+      entityId: current.id,
+      previousValue: previous,
+      newValue: {
+        name,
+        email: normalizedEmail,
+        avatarUrl: avatar || null,
+        passwordChanged: Boolean(password),
       },
     });
 

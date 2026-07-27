@@ -8,7 +8,11 @@ import {
   DemandCard,
   DemandDetailSheet,
 } from "@/components/agency/demand-card";
-import type { BoardColumn, BoardDemand } from "@/types/board-ui";
+import type {
+  BoardColumn,
+  BoardDemand,
+  BoardTaxonomy,
+} from "@/types/board-ui";
 
 function BoardColumnView({
   column,
@@ -46,10 +50,12 @@ export function DemandBoard({
   title,
   subtitle,
   columns,
+  taxonomy,
 }: {
   title: string;
   subtitle: string;
   columns: BoardColumn[];
+  taxonomy: BoardTaxonomy;
 }) {
   const [selected, setSelected] = useState<BoardDemand | null>(null);
   const [open, setOpen] = useState(false);
@@ -103,6 +109,7 @@ export function DemandBoard({
 
       <DemandDetailSheet
         demand={selected}
+        taxonomy={taxonomy}
         open={open}
         onOpenChange={setOpen}
       />

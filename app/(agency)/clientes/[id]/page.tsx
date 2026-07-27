@@ -1,12 +1,14 @@
 import { notFound } from "next/navigation";
-import { DemandStatus } from "@prisma/client";
+import { ClientStatus, ContractStatus, DemandStatus } from "@prisma/client";
 import { db } from "@/lib/db";
 import { ClientDetailView } from "@/components/agency/client-detail-view";
+import { requireClientAccess } from "@/lib/permissions/check";
 import type { ClientDetail } from "@/types/clients-ui";
 
 const CLOSED: DemandStatus[] = [
   DemandStatus.DONE,
   DemandStatus.PUBLISHED,
+  DemandStatus.DELIVERED,
   DemandStatus.CANCELLED,
 ];
 
@@ -15,36 +17,60 @@ export default async function ClienteDetailPage({
 }: {
   params: { id: string };
 }) {
+  const user = await requireClientAccess(params.id);
+
   let client: ClientDetail | null = null;
 
   try {
     const row = await db.client.findUnique({
       where: { id: params.id },
       include: {
-        users: {
-          include: { user: { select: { id: true, name: true } } },
+        userLinks: {
+          where: { isActive: true },
+          include: {
+            user: {
+              select: { id: true, name: true, role: { select: { name: true } } },
+            },
+          },
         },
+        contracts: {
+          where: { status: ContractStatus.ACTIVE },
+          orderBy: { startDate: "desc" },
+          take: 1,
+          include: { services: { where: { isActive: true } } },
+        },
+        board: { select: { id: true } },
         demands: {
           orderBy: { updatedAt: "desc" },
           select: {
             id: true,
             title: true,
             status: true,
-            sector: true,
-            priority: true,
-            deadline: true,
+            dueDate: true,
+            sector: { select: { name: true } },
+            priority: { select: { name: true } },
           },
         },
       },
     });
 
     if (row) {
+      const contract = row.contracts[0] ?? null;
+
       client = {
         id: row.id,
         name: row.name,
-        logo: row.logo,
-        active: row.active,
-        contractScope: row.contractScope,
+        logoUrl: row.logoUrl,
+        active: row.status === ClientStatus.ACTIVE,
+        segment: row.segment,
+        planName: contract?.planName ?? null,
+        contractServices:
+          contract?.services.map((s) => ({
+            id: s.id,
+            name: s.name,
+            quantity: s.quantity,
+            periodicity: s.periodicity,
+          })) ?? [],
         createdAt: row.createdAt.toISOString(),
         openDemands: row.demands.filter((d) => !CLOSED.includes(d.status))
           .length,
@@ -54,18 +80,19 @@ export default async function ClienteDetailPage({
             d.status === DemandStatus.PUBLISHED ||
             d.status === DemandStatus.DONE
         ).length,
-        team: row.users.map((link) => ({
+        hasBoard: Boolean(row.board),
+        team: row.userLinks.map((link) => ({
           id: link.user.id,
           name: link.user.name,
-          role: link.linkRole,
+          role: link.user.role.name,
         })),
         demands: row.demands.map((d) => ({
           id: d.id,
           title: d.title,
           status: d.status,
-          sector: d.sector,
-          priority: d.priority,
-          deadline: d.deadline?.toISOString() ?? null,
+          sector: d.sector?.name ?? null,
+          priority: d.priority?.name ?? "—",
+          dueDate: d.dueDate?.toISOString() ?? null,
         })),
       };
     }
@@ -75,5 +102,11 @@ export default async function ClienteDetailPage({
 
   if (!client) notFound();
 
-  return <ClientDetailView client={client} />;
+  return (
+    <ClientDetailView
+      client={client}
+      canViewAsClient={user.permissions.includes("portal.view_as_client")}
+      canCreateBoard={user.permissions.includes("clients.create")}
+    />
+  );
 }

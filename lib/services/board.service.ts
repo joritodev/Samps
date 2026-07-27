@@ -387,7 +387,12 @@ export async function getBoardKpis(boardId: string, competenceId: string) {
 export async function groupBoardDemandsByList(
   boardId: string,
   competenceId: string,
-  filters?: { search?: string; listId?: string }
+  filters?: {
+    search?: string;
+    listId?: string;
+    status?: string;
+    visibleToClient?: boolean;
+  }
 ) {
   const lists = await db.boardList.findMany({
     where: { boardId, active: true, ...(filters?.listId ? { id: filters.listId } : {}) },
@@ -399,6 +404,12 @@ export async function groupBoardDemandsByList(
       boardId,
       competenceId,
       ...(filters?.listId ? { listId: filters.listId } : {}),
+      ...(filters?.status
+        ? { status: filters.status as DemandStatus }
+        : {}),
+      ...(filters?.visibleToClient !== undefined
+        ? { visibleToClient: filters.visibleToClient }
+        : {}),
       ...(filters?.search
         ? { title: { contains: filters.search, mode: "insensitive" } }
         : {}),
@@ -412,9 +423,31 @@ export async function groupBoardDemandsByList(
     orderBy: [{ sortOrder: "asc" }, { cardIndex: "asc" }, { createdAt: "asc" }],
   });
 
+  const listByType = Object.fromEntries(lists.map((l) => [l.type, l.id]));
+
+  // Cartões sem listId (seed antigo / migração) caem na lista do tipo correspondente.
+  function resolveListId(demand: (typeof demands)[number]) {
+    if (demand.listId && lists.some((l) => l.id === demand.listId)) {
+      return demand.listId;
+    }
+    const byType: Partial<Record<string, string>> = {
+      FEED: listByType.FEEDS,
+      REEL: listByType.FEEDS,
+      DESIGN: listByType.FEEDS,
+      STORY: listByType.STORIES,
+      VIDEO: listByType.SHOOTS ?? listByType.FOLLOW_UP,
+    };
+    return byType[demand.type] ?? listByType.FOLLOW_UP ?? lists[0]?.id ?? null;
+  }
+
   const grouped: Record<string, typeof demands> = {};
   for (const list of lists) {
-    grouped[list.id] = demands.filter((d) => d.listId === list.id);
+    grouped[list.id] = [];
+  }
+  for (const demand of demands) {
+    const listId = resolveListId(demand);
+    if (!listId || !grouped[listId]) continue;
+    grouped[listId].push({ ...demand, listId });
   }
   return { lists, grouped };
 }

@@ -19,9 +19,9 @@ export default async function PortalArquivosPage() {
               <CardContent className="flex items-center justify-between py-4 text-sm">
                 <div>
                   <p className="font-medium">{file.name}</p>
-                  <p className="text-xs text-slate-500">{file.fileType ?? "Arquivo"}</p>
+                  <p className="text-xs text-muted-foreground">{file.fileType ?? "Arquivo"}</p>
                 </div>
-                <span className="text-xs text-slate-400">
+                <span className="text-xs text-muted-foreground">
                   {format(new Date(file.createdAt), "dd/MM/yyyy", { locale: ptBR })}
                 </span>
               </CardContent>
@@ -29,7 +29,7 @@ export default async function PortalArquivosPage() {
           ))
         ) : (
           <Card className="rounded-xl shadow-sm">
-            <CardContent className="py-12 text-center text-sm text-slate-500">
+            <CardContent className="py-12 text-center text-sm text-muted-foreground">
               Nenhum arquivo disponível.
             </CardContent>
           </Card>

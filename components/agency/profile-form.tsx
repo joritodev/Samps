@@ -7,7 +7,7 @@ import {
   updateCurrentUser,
   type UpdateProfileState,
 } from "@/app/actions/profile";
-import { userInitials } from "@/lib/agency/current-user";
+import { userInitials } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,8 +18,8 @@ type ProfileFormProps = {
     id: string;
     name: string;
     email: string;
-    avatar: string | null;
-    role: string;
+    avatarUrl: string | null;
+    roleName: string;
   };
 };
 
@@ -59,7 +59,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
       <div className="mx-auto w-full max-w-lg p-6">
         <div className="mb-6 flex items-center gap-4 rounded-xl border border-border bg-muted/80 px-4 py-3">
           <Avatar className="h-12 w-12 border border-border">
-            {user.avatar ? <AvatarImage src={user.avatar} alt="" /> : null}
+            {user.avatarUrl ? <AvatarImage src={user.avatarUrl} alt="" /> : null}
             <AvatarFallback className="bg-primary text-sm font-medium text-primary-foreground">
               {userInitials(user.name)}
             </AvatarFallback>
@@ -68,7 +68,9 @@ export function ProfileForm({ user }: ProfileFormProps) {
             <p className="truncate text-sm font-medium text-foreground">
               {user.name}
             </p>
-            <p className="truncate text-xs text-muted-foreground">{user.role}</p>
+            <p className="truncate text-xs text-muted-foreground">
+              {user.roleName}
+            </p>
           </div>
         </div>
 
@@ -104,7 +106,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
               type="text"
               inputMode="url"
               placeholder="https://…"
-              defaultValue={user.avatar ?? ""}
+              defaultValue={user.avatarUrl ?? ""}
               autoComplete="off"
             />
             <p className="text-xs text-muted-foreground">Opcional.</p>

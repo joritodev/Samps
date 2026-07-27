@@ -19,25 +19,22 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { demandStatusLabel } from "@/lib/agency/labels";
 import { cn } from "@/lib/utils";
 import type { ClientDetail } from "@/types/clients-ui";
-
-const statusLabel: Record<string, string> = {
-  OPEN: "Pendente",
-  AVAILABLE: "Disponível",
-  IN_PRODUCTION: "Em produção",
-  IN_ADJUSTMENT: "Em ajuste",
-  IN_REVIEW: "Em revisão",
-  APPROVED: "Aprovado",
-  PUBLISHED: "Publicada",
-  DONE: "Concluída",
-  CANCELLED: "Cancelada",
-};
 
 const tabTriggerClass =
   "rounded-none border-b-2 border-transparent bg-transparent px-4 py-2.5 text-muted-foreground shadow-none data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none";
 
-export function ClientDetailView({ client }: { client: ClientDetail }) {
+export function ClientDetailView({
+  client,
+  canViewAsClient,
+  canCreateBoard,
+}: {
+  client: ClientDetail;
+  canViewAsClient: boolean;
+  canCreateBoard: boolean;
+}) {
   const initials = client.name
     .split(" ")
     .slice(0, 2)
@@ -51,10 +48,10 @@ export function ClientDetailView({ client }: { client: ClientDetail }) {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex min-w-0 items-start gap-4">
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-muted text-base font-semibold text-foreground/80 ring-1 ring-border">
-              {client.logo ? (
+              {client.logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={client.logo}
+                  src={client.logoUrl}
                   alt=""
                   className="h-full w-full rounded-2xl object-cover"
                 />
@@ -80,6 +77,7 @@ export function ClientDetailView({ client }: { client: ClientDetail }) {
                 </Badge>
               </div>
               <p className="mt-1 text-sm text-muted-foreground">
+                {client.segment ? `${client.segment} · ` : ""}
                 Cliente desde{" "}
                 {new Date(client.createdAt).toLocaleDateString("pt-BR", {
                   month: "long",
@@ -88,9 +86,26 @@ export function ClientDetailView({ client }: { client: ClientDetail }) {
               </p>
             </div>
           </div>
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/clientes">Voltar à lista</Link>
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            {client.hasBoard ? (
+              <Button size="sm" asChild>
+                <Link href={`/clientes/${client.id}/quadro`}>
+                  <LayoutDashboard className="h-4 w-4" />
+                  Abrir quadro
+                </Link>
+              </Button>
+            ) : canCreateBoard ? (
+              <Button size="sm" asChild>
+                <Link href={`/clientes/quadro/criar?clientId=${client.id}`}>
+                  <LayoutDashboard className="h-4 w-4" />
+                  Criar quadro
+                </Link>
+              </Button>
+            ) : null}
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/clientes">Voltar à lista</Link>
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -175,9 +190,7 @@ export function ClientDetailView({ client }: { client: ClientDetail }) {
                           {member.name}
                         </span>
                         <span className="text-xs text-muted-foreground">
-                          {member.role === "SOCIAL_MEDIA"
-                            ? "Social Media"
-                            : "Cliente externo"}
+                          {member.role}
                         </span>
                       </li>
                     ))}
@@ -213,13 +226,13 @@ export function ClientDetailView({ client }: { client: ClientDetail }) {
                           </p>
                           <p className="mt-0.5 text-xs text-muted-foreground">
                             {demand.sector ?? "Sem setor"}
-                            {demand.deadline
-                              ? ` · Prev. ${new Date(demand.deadline).toLocaleDateString("pt-BR")}`
+                            {demand.dueDate
+                              ? ` · Prev. ${new Date(demand.dueDate).toLocaleDateString("pt-BR")}`
                               : ""}
                           </p>
                         </div>
                         <Badge variant="outline" className="shrink-0 font-normal">
-                          {statusLabel[demand.status] ?? demand.status}
+                          {demandStatusLabel(demand.status)}
                         </Badge>
                       </li>
                     ))}
@@ -237,14 +250,34 @@ export function ClientDetailView({ client }: { client: ClientDetail }) {
                   <CardTitle className="text-base">Contrato / Regras</CardTitle>
                 </div>
                 <CardDescription>
-                  Escopo acordado para a operação desta conta
+                  {client.planName
+                    ? `Plano ${client.planName}`
+                    : "Escopo acordado para a operação desta conta"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="whitespace-pre-wrap rounded-xl border border-border bg-muted/80 p-4 text-sm leading-relaxed text-foreground/80">
-                  {client.contractScope?.trim() ||
-                    "Nenhum escopo de contrato cadastrado ainda."}
-                </div>
+                {client.contractServices.length === 0 ? (
+                  <p className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
+                    Nenhum item de contrato cadastrado ainda.
+                  </p>
+                ) : (
+                  <ul className="divide-y divide-border rounded-xl border border-border bg-muted/80">
+                    {client.contractServices.map((service) => (
+                      <li
+                        key={service.id}
+                        className="flex items-center justify-between gap-4 px-4 py-3"
+                      >
+                        <span className="text-sm font-medium text-foreground">
+                          {service.name}
+                        </span>
+                        <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                          {service.quantity ?? "—"}
+                          {service.periodicity === "monthly" ? " / mês" : ""}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -265,12 +298,32 @@ export function ClientDetailView({ client }: { client: ClientDetail }) {
                   O portal exibe apenas entregas e calendário — sem atrasos,
                   responsáveis internos ou comentários da operação.
                 </p>
-                <Button asChild>
-                  <Link href={`/portal/${client.id}`} target="_blank">
-                    <ExternalLink className="h-4 w-4" />
-                    Abrir portal do cliente
-                  </Link>
-                </Button>
+                {canViewAsClient && client.hasBoard ? (
+                  <Button asChild>
+                    <Link href={`/portal/${client.id}`} target="_blank">
+                      <ExternalLink className="h-4 w-4" />
+                      Visualizar como cliente
+                    </Link>
+                  </Button>
+                ) : !client.hasBoard ? (
+                  <div className="space-y-3">
+                    <p className="text-sm text-muted-foreground">
+                      O portal é criado junto com o quadro interno.
+                    </p>
+                    {canCreateBoard ? (
+                      <Button asChild>
+                        <Link href={`/clientes/quadro/criar?clientId=${client.id}`}>
+                          Criar quadro e portal
+                        </Link>
+                      </Button>
+                    ) : null}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Você não tem permissão para visualizar o portal como
+                    cliente.
+                  </p>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

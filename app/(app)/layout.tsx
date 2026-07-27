@@ -8,6 +8,7 @@ import { Providers } from "@/components/providers";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { requireAuth } from "@/lib/permissions/check";
+import { allowedSearchTypes } from "@/lib/services/search.service";
 
 export default async function AppLayout({
   children,
@@ -26,7 +27,7 @@ export default async function AppLayout({
         <AppSidebar user={user} />
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-border bg-card/90 px-4 backdrop-blur-sm lg:px-6">
-            <GlobalSearch user={user} />
+            <GlobalSearch types={allowedSearchTypes(user)} />
             <div className="ml-auto flex items-center gap-2">
               {canDemand && (
                 <Button asChild size="sm" className="hidden sm:inline-flex">
