@@ -11,7 +11,7 @@ export default async function PortalEntregasPage() {
   const user = await requireAuth();
   const clientId = await getPortalClientId(user);
   if (!clientId) {
-    return <p className="text-sm text-slate-500">Portal indisponível.</p>;
+    return <p className="text-sm text-muted-foreground">Portal indisponível.</p>;
   }
 
   const demands = await listDemands(user, { context: "portal", clientId });
@@ -29,7 +29,7 @@ export default async function PortalEntregasPage() {
               <CardContent className="flex items-center justify-between py-4 text-sm">
                 <div>
                   <p className="font-medium">{demand.title}</p>
-                  <p className="text-xs text-slate-500">{demand.type}</p>
+                  <p className="text-xs text-muted-foreground">{demand.type}</p>
                 </div>
                 <Badge>
                   {format(new Date(demand.deliveryDate!), "dd/MM/yyyy", { locale: ptBR })}
@@ -39,7 +39,7 @@ export default async function PortalEntregasPage() {
           ))
         ) : (
           <Card className="rounded-xl shadow-sm">
-            <CardContent className="py-12 text-center text-sm text-slate-500">
+            <CardContent className="py-12 text-center text-sm text-muted-foreground">
               Nenhuma entrega programada.
             </CardContent>
           </Card>

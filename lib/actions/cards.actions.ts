@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAuth } from "@/lib/permissions/check";
+import { revalidateOperationalViews } from "@/lib/revalidate-operational";
 import {
   addCardComment,
   completeBriefingAndDemand,
@@ -25,14 +26,15 @@ export async function demandBriefingAction(
   data: Parameters<typeof completeBriefingAndDemand>[2]
 ) {
   const user = await requireAuth();
-  await completeBriefingAndDemand(cardId, user, data);
-  revalidatePath(`/clientes/${clientId}/quadro`);
-  revalidatePath("/quadros/design");
-  revalidatePath("/quadros/video");
-  revalidatePath("/painel/design");
-  revalidatePath("/painel/video");
-  revalidatePath("/gestao");
-  return { success: true };
+  try {
+    await completeBriefingAndDemand(cardId, user, data);
+    revalidateOperationalViews(clientId);
+    return { success: true as const };
+  } catch (e) {
+    return {
+      error: e instanceof Error ? e.message : "Erro ao demandar briefing",
+    };
+  }
 }
 
 export async function completeProductionAction(
@@ -42,12 +44,7 @@ export async function completeProductionAction(
 ) {
   const user = await requireAuth();
   await completeProductionAndReview(cardId, user, materialUrl);
-  revalidatePath(`/clientes/${clientId}/quadro`);
-  revalidatePath("/quadros/design");
-  revalidatePath("/quadros/video");
-  revalidatePath("/painel/design");
-  revalidatePath("/painel/video");
-  revalidatePath("/gestao");
+  revalidateOperationalViews(clientId);
   return { success: true };
 }
 
@@ -57,9 +54,15 @@ export async function registerPublicationAction(
   data: { publishedUrl: string; publishedAt?: Date }
 ) {
   const user = await requireAuth();
-  await registerPublicationAndComplete(cardId, user, data);
-  revalidatePath(`/clientes/${clientId}/quadro`);
-  return { success: true };
+  try {
+    await registerPublicationAndComplete(cardId, user, data);
+    revalidateOperationalViews(clientId);
+    return { success: true as const };
+  } catch (e) {
+    return {
+      error: e instanceof Error ? e.message : "Erro ao registrar publicação",
+    };
+  }
 }
 
 export async function moveCardAction(

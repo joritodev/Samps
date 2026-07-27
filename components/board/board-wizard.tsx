@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
-import { DemandType, PortalStatus, type BoardListType } from "@prisma/client";
+import type { BoardListType, DemandType, PortalStatus } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,11 +23,15 @@ const STEPS = [
   "Revisão",
 ];
 
-const DEFAULT_SERVICES = [
-  { name: "Estático", quantity: 8, demandType: DemandType.FEED },
-  { name: "Carrossel", quantity: 4, demandType: DemandType.FEED },
-  { name: "Reel", quantity: 4, demandType: DemandType.REEL },
-  { name: "Stories", quantity: 12, demandType: DemandType.STORY },
+const DEFAULT_SERVICES: {
+  name: string;
+  quantity: number;
+  demandType: DemandType;
+}[] = [
+  { name: "Estático", quantity: 8, demandType: "FEED" },
+  { name: "Carrossel", quantity: 4, demandType: "FEED" },
+  { name: "Reel", quantity: 4, demandType: "REEL" },
+  { name: "Stories", quantity: 12, demandType: "STORY" },
 ];
 
 export function BoardWizard({
@@ -70,7 +74,7 @@ export function BoardWizard({
       calendarEnabled: true,
       completedVisible: true,
       upcomingVisible: true,
-      status: PortalStatus.DRAFT,
+      status: "DRAFT" as PortalStatus,
     },
     createdById: "",
   });
@@ -96,7 +100,11 @@ export function BoardWizard({
           <div
             key={label}
             className={`flex-1 rounded-lg px-2 py-2 text-center text-xs font-medium ${
-              i === step ? "bg-slate-900 text-white" : i < step ? "bg-slate-200" : "bg-slate-100 text-slate-500"
+              i === step
+                ? "bg-primary text-primary-foreground"
+                : i < step
+                  ? "bg-secondary text-foreground"
+                  : "bg-muted text-muted-foreground"
             }`}
           >
             {label}

@@ -1,35 +1,9 @@
 import { DemandStatus, Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { DemandBoard } from "@/components/agency/demand-board";
+import { boardDemandSelect, toBoardDemand } from "@/lib/agency/board-mapper";
+import { clientScopeFilter, requireAuth } from "@/lib/permissions/check";
 import type { BoardColumn, BoardDemand } from "@/types/board-ui";
-
-type MockRole = "ADMIN" | "MANAGER" | "DESIGNER" | "SOCIAL_MEDIA" | "MEMBER";
-
-function toBoardDemand(demand: {
-  id: string;
-  title: string;
-  description: string | null;
-  status: string;
-  priority: string;
-  sector: string | null;
-  deadline: Date | null;
-  materialUrl: string | null;
-  publishedUrl: string | null;
-  client: { name: string };
-}): BoardDemand {
-  return {
-    id: demand.id,
-    title: demand.title,
-    description: demand.description,
-    status: demand.status,
-    priority: demand.priority,
-    sector: demand.sector,
-    deadline: demand.deadline?.toISOString() ?? null,
-    materialUrl: demand.materialUrl,
-    publishedUrl: demand.publishedUrl,
-    clientName: demand.client.name,
-  };
-}
 
 /** Colunas do Kanban global — por status operacional, não por entregável. */
 function groupIntoStatusColumns(demands: BoardDemand[]): BoardColumn[] {
@@ -39,7 +13,9 @@ function groupIntoStatusColumns(demands: BoardDemand[]): BoardColumn[] {
       title: "Disponíveis / A Fazer",
       cards: demands.filter(
         (d) =>
-          d.status === DemandStatus.OPEN || d.status === DemandStatus.AVAILABLE
+          d.status === DemandStatus.OPEN ||
+          d.status === DemandStatus.AVAILABLE ||
+          d.status === DemandStatus.DEMANDED
       ),
     },
     {
@@ -48,7 +24,7 @@ function groupIntoStatusColumns(demands: BoardDemand[]): BoardColumn[] {
       cards: demands.filter(
         (d) =>
           d.status === DemandStatus.IN_PRODUCTION ||
-          d.status === DemandStatus.IN_ADJUSTMENT
+          d.status === DemandStatus.ADJUSTMENTS
       ),
     },
     {
@@ -65,48 +41,50 @@ function groupIntoStatusColumns(demands: BoardDemand[]): BoardColumn[] {
       title: "Concluídas",
       cards: demands.filter(
         (d) =>
-          d.status === DemandStatus.DONE || d.status === DemandStatus.PUBLISHED
+          d.status === DemandStatus.DONE ||
+          d.status === DemandStatus.PUBLISHED ||
+          d.status === DemandStatus.DELIVERED
       ),
     },
   ];
 }
 
 export default async function DemandasPage() {
-  // Mock do usuário logado — NextAuth na próxima etapa.
-  // Troque role para 'DESIGNER' / 'SOCIAL_MEDIA' e use um UUID real do seed para testar RBAC.
-  const currentUser = { id: "ID_DO_USUARIO_AQUI", role: "ADMIN" as MockRole };
+  const user = await requireAuth();
+  const seesEveryone = user.permissions.includes("clients.view_all");
 
-  const isManagement =
-    currentUser.role === "ADMIN" || currentUser.role === "MANAGER";
+  const [sectors, priorities] = await Promise.all([
+    db.sector.findMany({
+      where: { isActive: true },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
+    db.priorityLevel.findMany({
+      where: { isActive: true },
+      orderBy: { sortOrder: "asc" },
+      select: { id: true, name: true },
+    }),
+  ]);
 
   let demands: BoardDemand[] = [];
 
   try {
-    let where: Prisma.DemandWhereInput | undefined;
-
-    if (isManagement) {
-      where = undefined;
-    } else {
-      // Resolve UUID real do seed quando o placeholder ainda estiver ativo
-      let assigneeId = currentUser.id;
-      if (assigneeId === "ID_DO_USUARIO_AQUI") {
-        const seeded = await db.user.findFirst({
-          where: {
-            role:
-              currentUser.role === "MEMBER"
-                ? "DESIGNER"
-                : (currentUser.role as "DESIGNER" | "SOCIAL_MEDIA"),
-          },
-          select: { id: true },
-        });
-        assigneeId = seeded?.id ?? currentUser.id;
-      }
-      where = { assigneeId };
-    }
+    const scope = clientScopeFilter(user);
+    const where: Prisma.DemandWhereInput = seesEveryone
+      ? {}
+      : // Quem não enxerga a operação inteira vê o que executa mais o que
+        // pertence às contas em que está alocado.
+        {
+          OR: [
+            { assigneeId: user.id },
+            { requesterId: user.id },
+            ...(scope ? [{ clientId: scope }] : []),
+          ],
+        };
 
     const rows = await db.demand.findMany({
       where,
-      include: { client: { select: { name: true } } },
+      select: boardDemandSelect,
       orderBy: { updatedAt: "desc" },
     });
 
@@ -121,11 +99,10 @@ export default async function DemandasPage() {
     <DemandBoard
       title="Quadro Geral de Demandas"
       subtitle={
-        isManagement
-          ? "Visão global da operação"
-          : "Minhas tarefas atribuídas"
+        seesEveryone ? "Visão global da operação" : "Minhas tarefas e contas"
       }
       columns={columns}
+      taxonomy={{ sectors, priorities }}
     />
   );
 }

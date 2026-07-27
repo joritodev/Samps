@@ -1,340 +1,224 @@
 import Link from "next/link";
 import {
-  AlertCircle,
-  CheckCircle2,
-  FolderOpen,
-  LayoutDashboard,
-  UserRoundSearch,
+  AlertTriangle,
+  Camera,
+  FolderKanban,
+  Kanban,
+  Users,
 } from "lucide-react";
-import { DemandStatus, WorkSector } from "@prisma/client";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { requireAuth } from "@/lib/permissions/check";
+import { getManagementOverview } from "@/lib/services/management.service";
+import { DemandCard } from "@/components/shared/demand-card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { db } from "@/lib/db";
 import { cn } from "@/lib/utils";
 
-const CLOSED_STATUSES: DemandStatus[] = [
-  DemandStatus.DONE,
-  DemandStatus.PUBLISHED,
-  DemandStatus.CANCELLED,
+const sectorColors = [
+  "bg-primary",
+  "bg-violet-500",
+  "bg-blue-500",
+  "bg-amber-500",
+  "bg-teal-500",
+  "bg-rose-500",
 ];
 
-/** Capacidade planejada (MVP) — substitui por config real depois. */
-const SECTOR_CAPACITY: Record<WorkSector, number> = {
-  SOCIAL: 12,
-  DESIGN: 10,
-  VIDEO: 8,
-  TRAFFIC: 6,
-};
-
-const SECTOR_LABEL: Record<WorkSector, string> = {
-  SOCIAL: "Social Media",
-  DESIGN: "Design",
-  VIDEO: "Vídeo",
-  TRAFFIC: "Tráfego",
-};
-
-const SECTOR_ORDER: WorkSector[] = [
-  WorkSector.SOCIAL,
-  WorkSector.DESIGN,
-  WorkSector.VIDEO,
-];
-
-function formatTodayLabel(date: Date) {
-  return date.toLocaleDateString("pt-BR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+function sectorHref(slug: string) {
+  if (slug === "social-media" || slug === "social") return "/setores/social";
+  if (slug === "trafego") return "/setores/trafego";
+  if (slug === "video") return "/setores/video";
+  return "/setores/design";
 }
 
-function capacityRatio(inProduction: number, capacity: number) {
-  if (capacity <= 0) return 0;
-  return Math.min(inProduction / capacity, 1.5);
-}
-
-function capacityTone(inProduction: number, capacity: number) {
-  const ratio = capacityRatio(inProduction, capacity);
-  if (ratio > 1) return "text-red-600";
-  if (ratio >= 0.85) return "text-amber-600";
-  return "text-emerald-600";
-}
-
-function sectorLabel(sector: WorkSector | null) {
-  if (!sector) return "Sem setor";
-  return SECTOR_LABEL[sector];
+function Metric({
+  label,
+  value,
+  tone = "default",
+}: {
+  label: string;
+  value: number;
+  tone?: "default" | "danger" | "teal" | "primary";
+}) {
+  return (
+    <div
+      className={cn(
+        "rounded-lg border bg-card px-3 py-2.5",
+        tone === "default" && "border-border",
+        tone === "danger" &&
+          "border-destructive/40 dark:border-destructive/35 dark:bg-destructive/10",
+        tone === "teal" &&
+          "border-emerald-500/35 bg-emerald-500/5 dark:border-emerald-400/30 dark:bg-emerald-400/10",
+        tone === "primary" &&
+          "border-primary/35 bg-primary/5 dark:border-primary/40 dark:bg-primary/10"
+      )}
+    >
+      <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
+      <p
+        className={cn(
+          "mt-0.5 text-xl font-semibold tabular-nums tracking-tight text-foreground",
+          tone === "danger" && "text-destructive",
+          tone === "primary" && "text-primary",
+          tone === "teal" && "text-emerald-700 dark:text-emerald-300"
+        )}
+      >
+        {value}
+      </p>
+    </div>
+  );
 }
 
 export default async function PainelGestaoPage() {
-  const todayLabel = formatTodayLabel(new Date());
-  const weekAgo = new Date();
-  weekAgo.setDate(weekAgo.getDate() - 7);
-  const now = new Date();
+  const user = await requireAuth();
+  const overview = await getManagementOverview(user);
+  const { kpis, sectorStats, priorityDemands } = overview;
 
-  let demandasEmAberto = 0;
-  let concluidasNaSemana = 0;
-  let demandasAtrasadas = 0;
-  let demandasSemResponsavel = 0;
-  let sectors = SECTOR_ORDER.map((sector) => ({
-    id: sector,
-    name: SECTOR_LABEL[sector],
-    inProduction: 0,
-    capacity: SECTOR_CAPACITY[sector],
-  }));
-  let criticalDemands: {
-    id: string;
-    title: string;
-    sector: WorkSector | null;
-  }[] = [];
+  const maxOpen = Math.max(...sectorStats.map((s) => s.openCount), 1);
 
-  try {
-    const [
-      openCount,
-      completedWeekCount,
-      overdueCount,
-      unassignedCount,
-      operacaoPorSetor,
-      criticas,
-    ] = await Promise.all([
-      db.demand.count({
-        where: { status: { notIn: CLOSED_STATUSES } },
-      }),
-      db.demand.count({
-        where: {
-          status: {
-            in: [DemandStatus.DONE, DemandStatus.PUBLISHED],
-          },
-          updatedAt: { gte: weekAgo },
-        },
-      }),
-      db.demand.count({
-        where: {
-          status: { notIn: CLOSED_STATUSES },
-          deadline: { lt: now },
-        },
-      }),
-      db.demand.count({
-        where: { assigneeId: null },
-      }),
-      db.demand.groupBy({
-        by: ["sector"],
-        where: {
-          status: DemandStatus.IN_PRODUCTION,
-          sector: { not: null },
-        },
-        _count: { _all: true },
-      }),
-      db.demand.findMany({
-        where: { status: { notIn: CLOSED_STATUSES } },
-        orderBy: { createdAt: "asc" },
-        take: 5,
-        select: {
-          id: true,
-          title: true,
-          sector: true,
-        },
-      }),
-    ]);
+  const shortcuts = [
+    { href: "/setores/social", label: "Social", icon: Kanban },
+    { href: "/setores/design", label: "Design", icon: Kanban },
+    { href: "/setores/video", label: "Vídeo", icon: Kanban },
+    { href: "/setores/trafego", label: "Tráfego", icon: Kanban },
+    { href: "/projetos", label: "Projetos", icon: FolderKanban },
+    { href: "/captacoes", label: "Captações", icon: Camera },
+    { href: "/clientes", label: "Clientes", icon: Users },
+  ];
 
-    demandasEmAberto = openCount;
-    concluidasNaSemana = completedWeekCount;
-    demandasAtrasadas = overdueCount;
-    demandasSemResponsavel = unassignedCount;
-    criticalDemands = criticas;
-
-    const productionBySector = new Map(
-      operacaoPorSetor
-        .filter((row) => row.sector !== null)
-        .map((row) => [row.sector as WorkSector, row._count._all])
-    );
-
-    sectors = SECTOR_ORDER.map((sector) => ({
-      id: sector,
-      name: SECTOR_LABEL[sector],
-      inProduction: productionBySector.get(sector) ?? 0,
-      capacity: SECTOR_CAPACITY[sector],
-    }));
-  } catch (error) {
-    console.error("painel-gestao queries", error);
-  }
-
-  const kpiCards = [
-    {
-      id: "open",
-      label: "Demandas em aberto",
-      value: demandasEmAberto,
-      icon: FolderOpen,
-      iconClass: "text-muted-foreground",
-    },
-    {
-      id: "done",
-      label: "Concluídas na semana",
-      value: concluidasNaSemana,
-      icon: CheckCircle2,
-      iconClass: "text-emerald-600",
-    },
-    {
-      id: "overdue",
-      label: "Demandas atrasadas",
-      value: demandasAtrasadas,
-      icon: AlertCircle,
-      iconClass: "text-red-600",
-    },
-    {
-      id: "unassigned",
-      label: "Sem responsável",
-      value: demandasSemResponsavel,
-      icon: UserRoundSearch,
-      iconClass: "text-muted-foreground",
-    },
-  ] as const;
+  const alerts = [
+    kpis.overdue > 0 && `${kpis.overdue} atrasadas`,
+    kpis.unassigned > 0 && `${kpis.unassigned} sem responsável`,
+    kpis.inReview > 0 && `${kpis.inReview} em revisão`,
+    kpis.adjustments > 0 && `${kpis.adjustments} em ajuste`,
+    kpis.awaitingPublication > 0 &&
+      `${kpis.awaitingPublication} aguardando publicação`,
+    kpis.activeTimers > 0 && `${kpis.activeTimers} cronômetros ativos`,
+  ].filter(Boolean) as string[];
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-y-auto bg-card">
-      <header className="shrink-0 border-b border-border bg-card">
-        <div className="flex items-center justify-between gap-4 px-6 py-5">
-          <div className="flex min-w-0 items-start gap-3">
-            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-muted">
-              <LayoutDashboard className="h-4 w-4 text-foreground/80" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-xl font-semibold tracking-tight text-foreground">
-                Painel da Gestão
-              </h1>
-              <p className="mt-0.5 text-sm capitalize text-muted-foreground">
-                {todayLabel}
-              </p>
-            </div>
-          </div>
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/demandas">Quadro interno</Link>
+    <div className="flex h-full min-h-0 flex-col overflow-hidden p-4 sm:p-5">
+      <header className="flex shrink-0 flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">
+            Painel da Gestão
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Visão consolidada da operação
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {shortcuts.map((s) => (
+            <Button
+              key={s.href}
+              variant="outline"
+              size="sm"
+              className="h-8"
+              asChild
+            >
+              <Link href={s.href}>
+                <s.icon className="h-3.5 w-3.5" />
+                {s.label}
+              </Link>
+            </Button>
+          ))}
+          <Button size="sm" className="h-8" asChild>
+            <Link href="/clientes/quadro/criar">Criar quadro</Link>
           </Button>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-7xl flex-1 space-y-8 bg-background p-6">
-        <section className="space-y-4">
-          <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Indicadores principais
-          </h2>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {kpiCards.map((kpi) => {
-              const Icon = kpi.icon;
-              return (
-                <Card key={kpi.id}>
-                  <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      {kpi.label}
-                    </CardTitle>
-                    <Icon className={cn("h-4 w-4", kpi.iconClass)} />
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-semibold tracking-tight text-foreground">
-                      {kpi.value}
-                    </p>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </section>
+      <div className="mt-3 grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-8">
+        <Metric label="Em aberto" value={kpis.open} tone="primary" />
+        <Metric label="Atrasadas" value={kpis.overdue} tone="danger" />
+        <Metric label="Hoje" value={kpis.doneToday} />
+        <Metric label="Produção" value={kpis.inProduction} tone="teal" />
+        <Metric label="Revisão" value={kpis.inReview} tone="teal" />
+        <Metric label="Ajustes" value={kpis.adjustments} tone="danger" />
+        <Metric label="Publicação" value={kpis.awaitingPublication} tone="primary" />
+        <Metric label="Sem resp." value={kpis.unassigned} />
+      </div>
 
-        <section className="grid gap-6 lg:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base font-semibold tracking-tight text-foreground">
-                Operação por Setor
-              </CardTitle>
-              <CardDescription>
-                Carga em produção versus capacidade planejada
-              </CardDescription>
+      <div className="mt-3 grid min-h-0 flex-1 gap-3 lg:grid-cols-12">
+        <div className="flex min-h-0 flex-col gap-3 lg:col-span-4">
+          <Card className="shrink-0 shadow-none">
+            <CardHeader className="space-y-0 px-4 py-3">
+              <CardTitle className="text-sm font-semibold">Carga por setor</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {sectors.map((sector) => {
-                const ratio = Math.min(
-                  capacityRatio(sector.inProduction, sector.capacity),
-                  1
-                );
-                const overloaded = sector.inProduction > sector.capacity;
-
+            <CardContent className="space-y-3 px-4 pb-4 pt-0">
+              {sectorStats.map((s, i) => {
+                const pct = Math.round((s.openCount / maxOpen) * 100);
                 return (
-                  <div
-                    key={sector.id}
-                    className="rounded-lg border border-border px-4 py-3.5"
+                  <Link
+                    key={s.id}
+                    href={sectorHref(s.slug)}
+                    className="block space-y-1.5"
                   >
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-sm font-medium text-foreground">
-                        {sector.name}
-                      </p>
-                      <p
-                        className={cn(
-                          "text-xs font-medium",
-                          capacityTone(sector.inProduction, sector.capacity)
-                        )}
-                      >
-                        {sector.inProduction} em produção · cap.{" "}
-                        {sector.capacity}
-                        {overloaded ? " · acima" : ""}
-                      </p>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium text-foreground">{s.name}</span>
+                      <span className="tabular-nums text-muted-foreground">
+                        {s.openCount}
+                      </span>
                     </div>
-                    <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-muted">
+                    <div className="h-2 overflow-hidden rounded-full bg-secondary">
                       <div
                         className={cn(
-                          "h-full rounded-full transition-all",
-                          overloaded ? "bg-red-500/80" : "bg-muted-foreground/50"
+                          "h-full rounded-full",
+                          sectorColors[i % sectorColors.length]
                         )}
-                        style={{ width: `${ratio * 100}%` }}
+                        style={{ width: `${Math.max(pct, 4)}%` }}
                       />
                     </div>
-                  </div>
+                  </Link>
                 );
               })}
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base font-semibold tracking-tight text-foreground">
-                Demandas Críticas / Atrasadas
-              </CardTitle>
-              <CardDescription>
-                Itens mais antigos ainda em aberto
-              </CardDescription>
+          <Card className="min-h-0 flex-1 shadow-none">
+            <CardHeader className="shrink-0 space-y-0 px-4 py-3">
+              <CardTitle className="text-sm font-semibold">Alertas</CardTitle>
             </CardHeader>
-            <CardContent>
-              {criticalDemands.length === 0 ? (
-                <p className="rounded-lg border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
-                  Nenhuma demanda crítica no momento.
-                </p>
+            <CardContent className="min-h-0 space-y-1.5 overflow-y-auto px-4 pb-4 pt-0">
+              {alerts.length ? (
+                alerts.map((alert) => (
+                  <div
+                    key={alert}
+                    className="flex items-center gap-2 rounded-md border border-amber-500/25 bg-amber-500/10 px-2.5 py-1.5 text-xs text-amber-900 dark:border-amber-400/25 dark:bg-amber-400/10 dark:text-amber-200"
+                  >
+                    <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-300" />
+                    {alert}
+                  </div>
+                ))
               ) : (
-                <ul className="divide-y divide-border">
-                  {criticalDemands.map((demand) => (
-                    <li
-                      key={demand.id}
-                      className="flex items-start justify-between gap-4 py-3.5 first:pt-0 last:pb-0"
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-foreground">
-                          {demand.title}
-                        </p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">
-                          {sectorLabel(demand.sector)}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                <p className="text-sm text-muted-foreground">
+                  Nenhum alerta no momento.
+                </p>
               )}
             </CardContent>
           </Card>
-        </section>
-      </main>
+        </div>
+
+        <Card className="flex min-h-0 flex-col shadow-none lg:col-span-8">
+          <CardHeader className="shrink-0 space-y-0 px-4 py-3">
+            <CardTitle className="text-sm font-semibold">
+              Prioridades gerais
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-0">
+            {priorityDemands.length ? (
+              <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                {priorityDemands.slice(0, 6).map((d) => (
+                  <DemandCard key={d.id} demand={d} showOrigin />
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Nenhuma prioridade aberta.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

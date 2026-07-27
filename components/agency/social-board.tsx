@@ -202,7 +202,7 @@ export function SocialBoard({ columns }: { columns: BoardColumn[] }) {
           </h1>
         </div>
         <Button variant="outline" size="sm" asChild>
-          <Link href="/setores/design">Quadro Design</Link>
+          <Link href="/setores">Setores</Link>
         </Button>
       </header>
 

@@ -160,10 +160,11 @@ export async function assignDemand(
     title: "Demanda atribuída a você",
     message: demand.title,
     link: demand.sectorId
-      ? (await db.sector.findUnique({ where: { id: demand.sectorId } }))?.slug === "video"
-        ? "/painel/video"
-        : "/painel/design"
-      : "/gestao",
+      ? (await db.sector.findUnique({ where: { id: demand.sectorId } }))?.slug ===
+        "video"
+        ? "/meu-painel/video"
+        : "/meu-painel/design"
+      : "/painel-gestao",
   });
 
   await recalculateSectorPriorities(demand.sectorId);

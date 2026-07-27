@@ -6,7 +6,9 @@ import { signOut } from "next-auth/react";
 import {
   Building2,
   CalendarDays,
+  Camera,
   FolderKanban,
+  History,
   LayoutDashboard,
   LineChart,
   ListTodo,
@@ -15,9 +17,14 @@ import {
   Settings,
   UserRound,
   Users,
+  type LucideIcon,
 } from "lucide-react";
 import type { AgencyUserProfile } from "@/lib/agency/current-user";
-import { userInitials } from "@/lib/agency/current-user";
+import { GlobalSearch } from "@/components/layout/global-search";
+import { NotificationBell } from "@/components/layout/notification-bell";
+import type { SearchType } from "@/lib/agency/search-types";
+import type { PermissionCode } from "@/lib/permissions/codes";
+import { userInitials } from "@/lib/utils";
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -31,39 +38,103 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
-const NAV_ITEMS = [
-  { href: "/painel-gestao", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/clientes", label: "Clientes", icon: Building2 },
+type NavItem = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  /** Visível quando o usuário tem ao menos uma destas. Ausente = sempre. */
+  anyOf?: PermissionCode[];
+};
+
+const NAV_ITEMS: NavItem[] = [
+  {
+    href: "/painel-gestao",
+    label: "Dashboard",
+    icon: LayoutDashboard,
+    anyOf: ["indicators.view"],
+  },
+  {
+    href: "/clientes",
+    label: "Clientes",
+    icon: Building2,
+    anyOf: ["clients.view_all", "clients.view_assigned"],
+  },
   { href: "/demandas", label: "Demandas", icon: ListTodo },
-  { href: "/setores/design", label: "Setores", icon: Layers },
+  { href: "/setores", label: "Setores", icon: Layers },
   { href: "/agenda", label: "Agenda", icon: CalendarDays },
   { href: "/projetos", label: "Projetos", icon: FolderKanban },
-  { href: "/performance", label: "Performance", icon: LineChart },
-  { href: "/equipe", label: "Equipe", icon: Users },
-] as const;
+  { href: "/captacoes", label: "Captações", icon: Camera },
+  {
+    href: "/performance",
+    label: "Performance",
+    icon: LineChart,
+    anyOf: ["productivity.view"],
+  },
+  {
+    href: "/equipe",
+    label: "Equipe",
+    icon: Users,
+    anyOf: ["users.edit", "users.create"],
+  },
+];
 
-const FOOTER_NAV = [
-  { href: "/configuracoes", label: "Configurações", icon: Settings },
-] as const;
+function panelNavForUser(userType: AgencyUserProfile["userType"]): NavItem[] {
+  switch (userType) {
+    case "DESIGNER":
+      return [{ href: "/meu-painel/design", label: "Meu Painel", icon: ListTodo }];
+    case "VIDEOMAKER":
+    case "VIDEO_EDITOR":
+      return [{ href: "/meu-painel/video", label: "Meu Painel", icon: ListTodo }];
+    case "SOCIAL_MEDIA":
+      return [{ href: "/meu-painel/social", label: "Meu Painel", icon: ListTodo }];
+    case "OTHER":
+      return [{ href: "/meu-painel/trafego", label: "Meu Painel", icon: ListTodo }];
+    default:
+      return [];
+  }
+}
+
+const FOOTER_NAV: NavItem[] = [
+  {
+    href: "/historico",
+    label: "Histórico",
+    icon: History,
+    anyOf: ["history.view"],
+  },
+  {
+    href: "/configuracoes",
+    label: "Configurações",
+    icon: Settings,
+  },
+];
+
+function visibleTo(permissions: string[]) {
+  return (item: NavItem) =>
+    !item.anyOf || item.anyOf.some((code) => permissions.includes(code));
+}
 
 function isActive(pathname: string, href: string) {
   if (href === "/painel-gestao") {
     return pathname === href;
   }
-  if (href === "/setores/design") {
-    return pathname.startsWith("/setores");
+  if (href === "/setores") {
+    return pathname === "/setores" || pathname.startsWith("/setores/");
   }
   if (href === "/demandas") {
-    return pathname === "/demandas" || pathname.startsWith("/meu-painel");
+    return pathname === "/demandas";
+  }
+  if (href.startsWith("/meu-painel")) {
+    return pathname === href || pathname.startsWith(`${href}/`);
   }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 type AgencySidebarProps = {
-  user: AgencyUserProfile | null;
+  user: AgencyUserProfile;
+  searchTypes: SearchType[];
 };
 
-export function AgencySidebar({ user }: AgencySidebarProps) {
+export function AgencySidebar({ user, searchTypes }: AgencySidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { resolvedTheme, setTheme } = useTheme();
@@ -73,17 +144,21 @@ export function AgencySidebar({ user }: AgencySidebarProps) {
     setMounted(true);
   }, []);
 
-  const displayName = user?.name ?? "Gestão Samps";
-  const displayEmail = user?.email ?? "gestao@samps.digital";
-  const initials = userInitials(displayName);
+  const initials = userInitials(user.name);
   const theme = resolvedTheme === "dark" ? "dark" : "light";
 
+  const canSee = visibleTo(user.permissions);
+  const navItems = [
+    ...NAV_ITEMS.filter(canSee).flatMap((item) =>
+      item.href === "/demandas"
+        ? [item, ...panelNavForUser(user.userType)]
+        : [item]
+    ),
+  ];
+  const footerItems = FOOTER_NAV.filter(canSee);
+
   async function handleLogout() {
-    try {
-      await signOut({ redirect: false });
-    } catch {
-      // Auth ainda opcional na agency
-    }
+    await signOut({ redirect: false });
     router.push("/login");
     router.refresh();
   }
@@ -113,12 +188,21 @@ export function AgencySidebar({ user }: AgencySidebarProps) {
         </p>
       </div>
 
+      <div className="px-3 pt-4">
+        <div className="flex items-center gap-2">
+          <div className="min-w-0 flex-1">
+            <GlobalSearch types={searchTypes} />
+          </div>
+          <NotificationBell />
+        </div>
+      </div>
+
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         <p className="mb-2 px-3 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
           Central de Gestão
         </p>
         <ul className="space-y-0.5">
-          {NAV_ITEMS.map((item) => {
+          {navItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(pathname, item.href);
 
@@ -150,7 +234,7 @@ export function AgencySidebar({ user }: AgencySidebarProps) {
 
       <div className="space-y-3 border-t border-border p-4">
         <ul className="space-y-0.5">
-          {FOOTER_NAV.map((item) => {
+          {footerItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(pathname, item.href);
 
@@ -205,8 +289,8 @@ export function AgencySidebar({ user }: AgencySidebarProps) {
               )}
             >
               <Avatar className="h-8 w-8 border border-border">
-                {user?.avatar ? (
-                  <AvatarImage src={user.avatar} alt="" />
+                {user.avatarUrl ? (
+                  <AvatarImage src={user.avatarUrl} alt="" />
                 ) : null}
                 <AvatarFallback className="bg-primary text-[10px] font-medium text-primary-foreground">
                   {initials}
@@ -214,10 +298,10 @@ export function AgencySidebar({ user }: AgencySidebarProps) {
               </Avatar>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-foreground">
-                  {displayName}
+                  {user.name}
                 </p>
                 <p className="truncate text-xs text-muted-foreground">
-                  {displayEmail}
+                  {user.roleName}
                 </p>
               </div>
             </button>

@@ -1,52 +1,20 @@
-import { ClientPortalView } from "@/components/portal/client-portal-view";
-import type { ClientPortalOverview } from "@/types/portal-ui";
+import { PortalImpersonationRedirect } from "@/components/clients/portal-impersonation-redirect";
+import { requireClientAccess } from "@/lib/permissions/check";
 
-/** Mock tipado — espelho seguro. Sem atrasos, responsáveis ou comentários internos. */
-function getMockPortal(clientId: string): ClientPortalOverview {
-  return {
-    clientId,
-    clientName: "Clínica Sorriso",
-    competenceLabel: "Julho/2026",
-    stats: {
-      planned: 12,
-      inProduction: 4,
-      published: 8,
-    },
-    materials: [
-      {
-        id: "m1",
-        title: "Carrossel — cuidados pós-clareamento",
-        format: "Feed · Carrossel",
-        scheduledDate: "2026-07-28T12:00:00.000Z",
-        status: "AWAITING_APPROVAL",
-        materialUrl: "https://example.com/materiais/clareamento",
-      },
-      {
-        id: "m2",
-        title: "Reels — rotina de higiene oral",
-        format: "Reels",
-        scheduledDate: "2026-07-30T12:00:00.000Z",
-        status: "IN_PRODUCTION",
-        materialUrl: null,
-      },
-      {
-        id: "m3",
-        title: "Stories — depoimento paciente",
-        format: "Stories",
-        scheduledDate: "2026-07-22T12:00:00.000Z",
-        status: "PUBLISHED",
-        materialUrl: "https://example.com/materiais/depoimento",
-      },
-    ],
-  };
-}
-
-export default function PortalClientPage({
+/**
+ * Entrada de "Visualizar como cliente": marca a impersonação na sessão e
+ * devolve o usuário ao portal real, que passa a ler os dados desse cliente.
+ */
+export default async function PortalAsClientPage({
   params,
 }: {
   params: { clientId: string };
 }) {
-  const data = getMockPortal(params.clientId);
+  await requireClientAccess(params.clientId);
 
-  return <ClientPortalView data={data} />;
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center">
+      <PortalImpersonationRedirect clientId={params.clientId} />
+    </div>
+  );
 }

@@ -1,5 +1,5 @@
 import { PortalStatus } from "@prisma/client";
-import { db } from "@/lib/db";
+import { db, withUserScope } from "@/lib/db";
 import type { SessionUser } from "@/types/auth";
 import { hasPermission } from "@/lib/permissions/resolve";
 
@@ -80,25 +80,28 @@ export async function getPortalOverview(user: SessionUser) {
     upcomingVisible?: boolean;
   };
 
-  const demands = await db.demand.findMany({
-    where: {
-      clientId,
-      visibleToClient: true,
-      boardId: portal.boardId,
-    },
-    select: {
-      id: true,
-      title: true,
-      type: true,
-      status: true,
-      externalStatus: true,
-      deliveryDate: true,
-      publishDate: true,
-      format: true,
-      dueDate: true,
-    },
-    orderBy: { publishDate: "asc" },
-  });
+  // Sob escopo: mesmo que `clientId` viesse errado, o RLS recorta as linhas.
+  const demands = await withUserScope(user.id, (tx) =>
+    tx.demand.findMany({
+      where: {
+        clientId,
+        visibleToClient: true,
+        boardId: portal.boardId,
+      },
+      select: {
+        id: true,
+        title: true,
+        type: true,
+        status: true,
+        externalStatus: true,
+        deliveryDate: true,
+        publishDate: true,
+        format: true,
+        dueDate: true,
+      },
+      orderBy: { publishDate: "asc" },
+    })
+  );
 
   const sanitized = demands.map(sanitizePortalDemand);
   const now = new Date();
@@ -164,10 +167,12 @@ export async function getPortalFiles(user: SessionUser) {
     return [];
   }
 
-  return db.attachment.findMany({
-    where: { clientId, visibleToClient: true },
-    orderBy: { createdAt: "desc" },
-  });
+  return withUserScope(user.id, (tx) =>
+    tx.attachment.findMany({
+      where: { clientId, visibleToClient: true },
+      orderBy: { createdAt: "desc" },
+    })
+  );
 }
 
 export async function getPortalCalendarDemands(user: SessionUser) {

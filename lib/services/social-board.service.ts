@@ -1,5 +1,6 @@
 import { DemandOrigin, DemandStatus, DemandType } from "@prisma/client";
 import { db } from "@/lib/db";
+import { getTop5ForSector } from "@/lib/services/priority.service";
 import { formatElapsed } from "@/lib/services/work-session.service";
 import type { SessionUser } from "@/types/auth";
 import { hasPermission } from "@/lib/permissions/resolve";
@@ -143,7 +144,26 @@ export async function getSocialBoardData(
     }
   }
 
-  const top5 = enriched.slice(0, 5);
+  const top5Scores = await (async () => {
+    const socialSector = await db.sector.findFirst({
+      where: { OR: [{ slug: "social" }, { slug: "social-media" }] },
+      select: { id: true },
+    });
+    if (!socialSector) return [];
+    return getTop5ForSector(socialSector.id);
+  })();
+
+  const top5FromScores = top5Scores
+    .map((t) => enriched.find((d) => d.id === t.demandId))
+    .filter(Boolean) as typeof enriched;
+
+  const top5 =
+    top5FromScores.length > 0
+      ? top5FromScores
+      : enriched
+          .slice()
+          .sort((a, b) => (b.priority?.weight ?? 0) - (a.priority?.weight ?? 0))
+          .slice(0, 5);
 
   const kpis = {
     priorityCount: top5.length,

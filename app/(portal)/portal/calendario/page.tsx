@@ -11,7 +11,7 @@ export default async function PortalCalendarioPage() {
   const user = await requireAuth();
   const clientId = await getPortalClientId(user);
   if (!clientId) {
-    return <p className="text-sm text-slate-500">Portal indisponível.</p>;
+    return <p className="text-sm text-muted-foreground">Portal indisponível.</p>;
   }
 
   const demands = await listDemands(user, { context: "portal", clientId });
@@ -45,7 +45,7 @@ export default async function PortalCalendarioPage() {
           ))
         ) : (
           <Card className="rounded-xl shadow-sm">
-            <CardContent className="py-12 text-center text-sm text-slate-500">
+            <CardContent className="py-12 text-center text-sm text-muted-foreground">
               Nenhum evento no calendário.
             </CardContent>
           </Card>

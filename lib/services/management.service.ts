@@ -91,7 +91,7 @@ export async function getManagementOverview(user: SessionUser) {
   });
 
   const sectors = await db.sector.findMany({
-    where: { slug: { in: ["social-media", "design", "video", "trafego"] } },
+    where: { slug: { in: ["social", "social-media", "design", "video", "trafego"] } },
     select: { id: true, name: true, slug: true, color: true },
   });
 

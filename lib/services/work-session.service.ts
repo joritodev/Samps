@@ -2,12 +2,14 @@ import {
   AssignmentStatus,
   AuditAction,
   DemandStatus,
+  NotificationType,
   WorkSessionStage,
   WorkSessionStatus,
 } from "@prisma/client";
 import { db } from "@/lib/db";
 import { logAudit } from "@/lib/services/audit.service";
 import { getActiveAssignment } from "@/lib/services/assignment.service";
+import { createNotification } from "@/lib/services/notifications.service";
 import { recalculateSectorPriorities } from "@/lib/services/priority.service";
 import type { SessionUser } from "@/types/auth";
 import { PAUSE_REASONS } from "@/lib/constants/work-session";
@@ -264,6 +266,24 @@ export async function completeWorkSession(
 
   if (assignment?.sectorId) {
     await recalculateSectorPriorities(assignment.sectorId);
+  }
+
+  const demand = await db.demand.findUnique({
+    where: { id: demandId },
+    select: {
+      title: true,
+      clientId: true,
+      client: { select: { socialMediaId: true } },
+    },
+  });
+  if (demand?.client?.socialMediaId) {
+    await createNotification({
+      userId: demand.client.socialMediaId,
+      type: NotificationType.OTHER,
+      title: "Material aguardando revisão",
+      message: demand.title,
+      link: "/meu-painel/social",
+    });
   }
 
   return updated;

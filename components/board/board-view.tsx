@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { Suspense, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { BoardHeader } from "@/components/board/board-header";
+import { useSearchParams } from "next/navigation";
+import { BoardHeader, BoardInsights } from "@/components/board/board-header";
 import { BoardFilters } from "@/components/board/board-filters";
 import { BoardKanban } from "@/components/board/board-kanban";
 import { BoardCalendar } from "@/components/board/board-calendar";
@@ -32,6 +33,93 @@ type Demand = {
 
 type CardDetail = NonNullable<Parameters<typeof CardDetailSheet>[0]["card"]>;
 
+function useActiveFilterCount() {
+  const params = useSearchParams();
+  return useMemo(() => {
+    let n = 0;
+    if (params.get("busca")) n += 1;
+    if (params.get("lista")) n += 1;
+    if (params.get("status")) n += 1;
+    if (params.get("visivel")) n += 1;
+    return n;
+  }, [params]);
+}
+
+function BoardToolbar({
+  clientId,
+  boardId,
+  clientName,
+  logoUrl,
+  brandColor,
+  contractStatus,
+  competences,
+  currentCompetenceId,
+  view,
+  onViewChange,
+  filtersOpen,
+  onFiltersOpenChange,
+  insightsOpen,
+  onInsightsOpenChange,
+  lists,
+  kpis,
+}: {
+  clientId: string;
+  boardId: string;
+  clientName: string;
+  logoUrl?: string | null;
+  brandColor?: string | null;
+  contractStatus?: string;
+  competences: Competence[];
+  currentCompetenceId: string;
+  view: "kanban" | "calendar";
+  onViewChange: (v: "kanban" | "calendar") => void;
+  filtersOpen: boolean;
+  onFiltersOpenChange: (open: boolean) => void;
+  insightsOpen: boolean;
+  onInsightsOpenChange: (open: boolean) => void;
+  lists: List[];
+  kpis: {
+    feedsContracted: number;
+    feedsDemanded: number;
+    feedsPublished: number;
+    storiesContracted: number;
+    overdue: number;
+    unassigned: number;
+  };
+}) {
+  const activeFilterCount = useActiveFilterCount();
+
+  return (
+    <>
+      <BoardHeader
+        clientId={clientId}
+        boardId={boardId}
+        clientName={clientName}
+        logoUrl={logoUrl}
+        brandColor={brandColor}
+        contractStatus={contractStatus}
+        competences={competences}
+        currentCompetenceId={currentCompetenceId}
+        view={view}
+        onViewChange={onViewChange}
+        filtersOpen={filtersOpen}
+        onFiltersOpenChange={onFiltersOpenChange}
+        insightsOpen={insightsOpen}
+        onInsightsOpenChange={onInsightsOpenChange}
+        activeFilterCount={activeFilterCount}
+      />
+
+      {insightsOpen ? <BoardInsights kpis={kpis} /> : null}
+
+      {filtersOpen ? (
+        <div className="shrink-0 border-b border-border px-4 py-3 sm:px-6">
+          <BoardFilters lists={lists} />
+        </div>
+      ) : null}
+    </>
+  );
+}
+
 export function BoardView({
   clientId,
   boardId,
@@ -39,8 +127,6 @@ export function BoardView({
   logoUrl,
   brandColor,
   contractStatus,
-  socialName,
-  managerName,
   competences,
   currentCompetenceId,
   lists,
@@ -71,6 +157,8 @@ export function BoardView({
   };
 }) {
   const [view, setView] = useState<"kanban" | "calendar">("kanban");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [insightsOpen, setInsightsOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState<CardDetail | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [, startTransition] = useTransition();
@@ -93,35 +181,52 @@ export function BoardView({
   }
 
   return (
-    <div>
-      <BoardHeader
-        clientId={clientId}
-        boardId={boardId}
-        clientName={clientName}
-        logoUrl={logoUrl}
-        brandColor={brandColor}
-        contractStatus={contractStatus}
-        socialName={socialName}
-        managerName={managerName}
-        competences={competences}
-        currentCompetenceId={currentCompetenceId}
-        view={view}
-        onViewChange={setView}
-        kpis={kpis}
-      />
-
-      <BoardFilters lists={lists} />
-
-      {view === "kanban" ? (
-        <BoardKanban
+    <div className="flex h-full min-h-0 flex-col bg-card">
+      <Suspense
+        fallback={
+          <div className="shrink-0 border-b border-border px-6 py-4 text-sm text-muted-foreground">
+            Carregando…
+          </div>
+        }
+      >
+        <BoardToolbar
           clientId={clientId}
-          columns={columns}
-          itemsByColumn={grouped}
-          onCardSelect={openCard}
+          boardId={boardId}
+          clientName={clientName}
+          logoUrl={logoUrl}
+          brandColor={brandColor}
+          contractStatus={contractStatus}
+          competences={competences}
+          currentCompetenceId={currentCompetenceId}
+          view={view}
+          onViewChange={setView}
+          filtersOpen={filtersOpen}
+          onFiltersOpenChange={setFiltersOpen}
+          insightsOpen={insightsOpen}
+          onInsightsOpenChange={setInsightsOpen}
+          lists={lists}
+          kpis={kpis}
         />
-      ) : (
-        <BoardCalendar demands={calendarDemands} onSelect={openCard} />
-      )}
+      </Suspense>
+
+      <main className="min-h-0 flex-1 overflow-hidden bg-background">
+        {view === "kanban" ? (
+          <BoardKanban
+            clientId={clientId}
+            columns={columns}
+            itemsByColumn={grouped}
+            onCardSelect={openCard}
+          />
+        ) : (
+          <div className="h-full min-h-0 overflow-hidden bg-[#F8F9FA] p-4">
+            <BoardCalendar
+              demands={calendarDemands}
+              onSelect={openCard}
+              clientName={clientName}
+            />
+          </div>
+        )}
+      </main>
 
       <CardDetailSheet
         clientId={clientId}
