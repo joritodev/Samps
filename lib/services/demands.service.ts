@@ -36,7 +36,7 @@ const demandInclude = {
   requester: { select: { id: true, name: true } },
   priority: { select: { id: true, name: true, color: true, weight: true } },
   contentType: { select: { id: true, name: true } },
-  sector: { select: { id: true, name: true, color: true } },
+  sector: { select: { id: true, name: true, slug: true, color: true } },
 } satisfies Prisma.DemandInclude;
 
 export function buildContextWhere(
@@ -91,6 +91,21 @@ export function buildContextWhere(
       };
     case "management":
       return base;
+    case "calendar": {
+      const isMgmt =
+        user.userType === "ADMIN" || user.userType === "MANAGEMENT";
+      if (isMgmt) return base;
+      const scopeOr: Prisma.DemandWhereInput[] = [
+        { assigneeId: user.id },
+      ];
+      if (user.sectorId) {
+        scopeOr.push({ sectorId: user.sectorId });
+      }
+      return {
+        ...base,
+        OR: scopeOr,
+      };
+    }
     default:
       return base;
   }
