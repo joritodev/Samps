@@ -71,7 +71,7 @@ function Metric({
 export default async function PainelGestaoPage() {
   const user = await requireAuth();
   const overview = await getManagementOverview(user);
-  const { kpis, sectorStats, priorityDemands, recentDelays } = overview;
+  const { kpis, sectorStats, priorityDemands } = overview;
 
   const maxOpen = Math.max(...sectorStats.map((s) => s.openCount), 1);
 
@@ -175,63 +175,24 @@ export default async function PainelGestaoPage() {
             </CardContent>
           </Card>
 
-          <Card className="shrink-0 shadow-none">
-            <CardHeader className="space-y-0 px-4 py-3">
+          <Card className="min-h-0 flex-1 shadow-none">
+            <CardHeader className="shrink-0 space-y-0 px-4 py-3">
               <CardTitle className="text-sm font-semibold">Alertas</CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-2 gap-1.5 px-4 pb-4 pt-0">
+            <CardContent className="min-h-0 space-y-1.5 overflow-y-auto px-4 pb-4 pt-0">
               {alerts.length ? (
                 alerts.map((alert) => (
                   <div
                     key={alert}
-                    className="flex min-w-0 items-center gap-1.5 rounded-md border border-amber-500/25 bg-amber-500/10 px-2 py-1.5 text-[11px] leading-tight text-amber-900 dark:border-amber-400/25 dark:bg-amber-400/10 dark:text-amber-200"
+                    className="flex items-center gap-2 rounded-md border border-amber-500/25 bg-amber-500/10 px-2.5 py-1.5 text-xs text-amber-900 dark:border-amber-400/25 dark:bg-amber-400/10 dark:text-amber-200"
                   >
-                    <AlertTriangle className="h-3 w-3 shrink-0 text-amber-600 dark:text-amber-300" />
-                    <span className="truncate">{alert}</span>
+                    <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-300" />
+                    {alert}
                   </div>
                 ))
               ) : (
-                <p className="col-span-2 text-sm text-muted-foreground">
-                  Nenhum alerta no momento.
-                </p>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="flex min-h-0 flex-1 flex-col shadow-none">
-            <CardHeader className="shrink-0 space-y-0 px-4 py-3">
-              <CardTitle className="text-sm font-semibold">
-                Últimos atrasos
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="min-h-0 flex-1 space-y-2 overflow-y-auto px-4 pb-4 pt-0">
-              {recentDelays.length ? (
-                recentDelays.map((d) => {
-                  const href = d.demand.clientId
-                    ? `/clientes/${d.demand.clientId}/quadro`
-                    : d.demand.sector?.slug
-                      ? `/setores/${d.demand.sector.slug === "social-media" ? "social" : d.demand.sector.slug}`
-                      : "#";
-                  return (
-                    <Link
-                      key={d.id}
-                      href={href}
-                      className="block rounded-md border border-border px-2.5 py-2 text-xs hover:bg-muted/50"
-                    >
-                      <p className="font-medium text-foreground line-clamp-1">
-                        {d.demand.title}
-                      </p>
-                      <p className="text-muted-foreground">
-                        {d.demand.client.name} · {d.daysOverdue} dia
-                        {d.daysOverdue === 1 ? "" : "s"}
-                        {d.resolvedAt ? " · resolvido" : " · aberto"}
-                      </p>
-                    </Link>
-                  );
-                })
-              ) : (
                 <p className="text-sm text-muted-foreground">
-                  Nenhum atraso registrado.
+                  Nenhum alerta no momento.
                 </p>
               )}
             </CardContent>

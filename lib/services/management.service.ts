@@ -4,7 +4,6 @@ import type { SessionUser } from "@/types/auth";
 import { buildContextWhere } from "@/lib/services/demands.service";
 import {
   countDelaysInMonth,
-  listRecentDelays,
   syncDemandDelays,
 } from "@/lib/services/delay.service";
 
@@ -122,10 +121,7 @@ export async function getManagementOverview(user: SessionUser) {
 
   await syncDemandDelays();
 
-  const [delaysThisMonth, recentDelays] = await Promise.all([
-    countDelaysInMonth(today),
-    listRecentDelays(8),
-  ]);
+  const delaysThisMonth = await countDelaysInMonth(today);
 
   return {
     kpis: {
@@ -146,6 +142,5 @@ export async function getManagementOverview(user: SessionUser) {
     },
     sectorStats,
     priorityDemands,
-    recentDelays,
   };
 }
