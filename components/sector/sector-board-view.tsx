@@ -5,6 +5,7 @@ import {
   BarChart3,
   CalendarDays,
   Kanban,
+  List,
   ListOrdered,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -70,7 +71,7 @@ export function SectorBoardView({
     client?: { name: string } | null;
   }[];
 }) {
-  const [view, setView] = useState<"kanban" | "calendar">("kanban");
+  const [view, setView] = useState<"kanban" | "calendar" | "list">("kanban");
   const [insightsOpen, setInsightsOpen] = useState(false);
   const [top5Open, setTop5Open] = useState(false);
   const [selected, setSelected] = useState<DemandItem | null>(null);
@@ -103,6 +104,14 @@ export function SectorBoardView({
             >
               <CalendarDays className="mr-1 h-4 w-4" />
               Calendário
+            </Button>
+            <Button
+              variant={view === "list" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setView("list")}
+            >
+              <List className="mr-1 h-4 w-4" />
+              Lista
             </Button>
           </div>
           <Button
@@ -194,7 +203,7 @@ export function SectorBoardView({
               </div>
             ))}
           </div>
-        ) : (
+        ) : view === "calendar" ? (
           <BoardCalendar
             demands={calendarDemands}
             onSelect={(id) => {
@@ -202,6 +211,39 @@ export function SectorBoardView({
               if (d) setSelected(d);
             }}
           />
+        ) : (
+          <div className="space-y-4 pb-1">
+            {columns.map((col) => {
+              const demands = grouped[col.id] ?? [];
+              if (demands.length === 0) return null;
+
+              return (
+                <section
+                  key={col.id}
+                  className="rounded-xl border border-border/60 bg-card p-3 shadow-soft"
+                >
+                  <div className="mb-2 flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-foreground">
+                      {col.title}
+                    </h3>
+                    <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
+                      {demands.length}
+                    </span>
+                  </div>
+                  <div className="space-y-2">
+                    {demands.map((demand) => (
+                      <DemandCard
+                        key={demand.id}
+                        demand={demand}
+                        showOrigin
+                        onClick={() => setSelected(demand)}
+                      />
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
+          </div>
         )}
       </main>
 
