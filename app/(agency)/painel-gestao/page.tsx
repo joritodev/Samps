@@ -140,7 +140,7 @@ export default async function PainelGestaoPage() {
       </div>
 
       <div className="mt-3 grid min-h-0 flex-1 gap-3 lg:grid-cols-12">
-        <div className="flex min-h-0 flex-col gap-3 overflow-y-auto lg:col-span-4">
+        <div className="flex min-h-0 flex-col gap-3 lg:col-span-4">
           <Card className="shrink-0 shadow-none">
             <CardHeader className="space-y-0 px-4 py-3">
               <CardTitle className="text-sm font-semibold">Carga por setor</CardTitle>
@@ -179,32 +179,32 @@ export default async function PainelGestaoPage() {
             <CardHeader className="space-y-0 px-4 py-3">
               <CardTitle className="text-sm font-semibold">Alertas</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-1.5 px-4 pb-4 pt-0">
+            <CardContent className="grid grid-cols-2 gap-1.5 px-4 pb-4 pt-0">
               {alerts.length ? (
                 alerts.map((alert) => (
                   <div
                     key={alert}
-                    className="flex items-center gap-2 rounded-md border border-amber-500/25 bg-amber-500/10 px-2.5 py-1.5 text-xs text-amber-900 dark:border-amber-400/25 dark:bg-amber-400/10 dark:text-amber-200"
+                    className="flex min-w-0 items-center gap-1.5 rounded-md border border-amber-500/25 bg-amber-500/10 px-2 py-1.5 text-[11px] leading-tight text-amber-900 dark:border-amber-400/25 dark:bg-amber-400/10 dark:text-amber-200"
                   >
-                    <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-300" />
-                    {alert}
+                    <AlertTriangle className="h-3 w-3 shrink-0 text-amber-600 dark:text-amber-300" />
+                    <span className="truncate">{alert}</span>
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-muted-foreground">
+                <p className="col-span-2 text-sm text-muted-foreground">
                   Nenhum alerta no momento.
                 </p>
               )}
             </CardContent>
           </Card>
 
-          <Card className="shrink-0 shadow-none">
-            <CardHeader className="space-y-0 px-4 py-3">
+          <Card className="flex min-h-0 flex-1 flex-col shadow-none">
+            <CardHeader className="shrink-0 space-y-0 px-4 py-3">
               <CardTitle className="text-sm font-semibold">
                 Últimos atrasos
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2 px-4 pb-4 pt-0">
+            <CardContent className="min-h-0 flex-1 space-y-2 overflow-y-auto px-4 pb-4 pt-0">
               {recentDelays.length ? (
                 recentDelays.map((d) => {
                   const href = d.demand.clientId
