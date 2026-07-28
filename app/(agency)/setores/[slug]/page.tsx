@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { requireAuth } from "@/lib/permissions/check";
 import { hasPermission } from "@/lib/permissions/resolve";
 import {
@@ -8,6 +8,7 @@ import {
 } from "@/lib/services/sector-board.service";
 import { getSocialBoardData } from "@/lib/services/social-board.service";
 import { SectorBoardView } from "@/components/sector/sector-board-view";
+import { getDashboardPath, isSectorCollaborator } from "@/types/auth";
 
 const OPERATIONAL_SLUGS = new Set<SectorSlug>(["design", "video", "trafego"]);
 
@@ -32,6 +33,10 @@ export default async function SectorBoardPage({
   params: { slug: string };
 }) {
   const user = await requireAuth();
+
+  if (isSectorCollaborator(user.userType)) {
+    redirect(getDashboardPath(user.userType));
+  }
 
   if (params.slug === "social") {
     const data = await getSocialBoardData(user, { individual: false });

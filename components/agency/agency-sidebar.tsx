@@ -20,6 +20,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { AgencyUserProfile } from "@/lib/agency/current-user";
+import { isSectorCollaborator } from "@/types/auth";
 import { GlobalSearch } from "@/components/layout/global-search";
 import { NotificationBell } from "@/components/layout/notification-bell";
 import type { SearchType } from "@/lib/agency/search-types";
@@ -149,11 +150,16 @@ export function AgencySidebar({ user, searchTypes }: AgencySidebarProps) {
 
   const canSee = visibleTo(user.permissions);
   const navItems = [
-    ...NAV_ITEMS.filter(canSee).flatMap((item) =>
-      item.href === "/demandas"
-        ? [item, ...panelNavForUser(user.userType)]
-        : [item]
-    ),
+    ...NAV_ITEMS.filter(canSee)
+      .filter(
+        (item) =>
+          item.href !== "/setores" || !isSectorCollaborator(user.userType)
+      )
+      .flatMap((item) =>
+        item.href === "/demandas"
+          ? [item, ...panelNavForUser(user.userType)]
+          : [item]
+      ),
   ];
   const footerItems = FOOTER_NAV.filter(canSee);
 

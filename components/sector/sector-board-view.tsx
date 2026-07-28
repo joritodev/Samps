@@ -9,7 +9,7 @@ import {
   ListOrdered,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { StatCard } from "@/components/shared/stat-card";
+import { MetricCard } from "@/components/shared/metric-card";
 import { DemandCard } from "@/components/shared/demand-card";
 import { BoardCalendar } from "@/components/board/board-calendar";
 import {
@@ -136,17 +136,17 @@ export function SectorBoardView({
       </header>
 
       {insightsOpen ? (
-        <div className="mt-3 grid shrink-0 gap-2 sm:grid-cols-2 lg:grid-cols-5">
-          <StatCard title="Prioritárias" value={kpis.priorityCount} accent="primary" />
-          <StatCard title="Disponíveis" value={kpis.available} accent="teal" />
-          <StatCard title="Em produção" value={kpis.inProduction} accent="muted" />
-          <StatCard title="Concluídas hoje" value={kpis.doneToday} accent="primary" />
-          <StatCard title="Atrasadas" value={kpis.overdue} accent="destructive" />
-          <StatCard title="Sem responsável" value={kpis.unassigned} accent="muted" />
-          <StatCard title="Em revisão" value={kpis.inReview} accent="teal" />
-          <StatCard title="Ajustes" value={kpis.adjustments} accent="destructive" />
-          <StatCard title="Concluídas na semana" value={kpis.doneWeek} />
-          <StatCard title="Concluídas no mês" value={kpis.doneMonth} />
+        <div className="mt-3 grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-5">
+          <MetricCard label="Prioritárias" value={kpis.priorityCount} tone="primary" />
+          <MetricCard label="Disponíveis" value={kpis.available} tone="teal" />
+          <MetricCard label="Em produção" value={kpis.inProduction} />
+          <MetricCard label="Concluídas hoje" value={kpis.doneToday} tone="primary" />
+          <MetricCard label="Atrasadas" value={kpis.overdue} tone="danger" />
+          <MetricCard label="Sem responsável" value={kpis.unassigned} />
+          <MetricCard label="Em revisão" value={kpis.inReview} tone="teal" />
+          <MetricCard label="Ajustes" value={kpis.adjustments} tone="danger" />
+          <MetricCard label="Concluídas na semana" value={kpis.doneWeek} />
+          <MetricCard label="Concluídas no mês" value={kpis.doneMonth} />
         </div>
       ) : null}
 

@@ -103,11 +103,13 @@ export async function distributeDemandToSector(params: {
   const sector = await db.sector.findUnique({ where: { id: sectorId } });
   const slug = sector?.slug;
   const boardPath =
-    slug === "video"
-      ? "/setores/video"
-      : slug === "trafego"
-        ? "/setores/trafego"
-        : "/setores/design";
+    slug === "social" || slug === "social-media"
+      ? "/meu-painel/social"
+      : slug === "video"
+        ? "/meu-painel/video"
+        : slug === "trafego"
+          ? "/meu-painel/trafego"
+          : "/meu-painel/design";
 
   for (const u of sectorUsers) {
     await createNotification({

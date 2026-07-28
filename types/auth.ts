@@ -59,21 +59,35 @@ declare module "@auth/core/jwt" {
   }
 }
 
+export function getPersonalPanelPath(userType: UserType): string | null {
+  switch (userType) {
+    case "DESIGNER":
+      return "/meu-painel/design";
+    case "VIDEOMAKER":
+    case "VIDEO_EDITOR":
+      return "/meu-painel/video";
+    case "SOCIAL_MEDIA":
+      return "/meu-painel/social";
+    case "OTHER":
+      return "/meu-painel/trafego";
+    default:
+      return null;
+  }
+}
+
+/** Colaboradores operacionais de setor — não veem o quadro geral /setores. */
+export function isSectorCollaborator(userType: UserType): boolean {
+  return getPersonalPanelPath(userType) !== null;
+}
+
 export function getDashboardPath(userType: UserType): string {
+  const panel = getPersonalPanelPath(userType);
+  if (panel) return panel;
+
   switch (userType) {
     case "ADMIN":
     case "MANAGEMENT":
       return "/painel-gestao";
-    case "SOCIAL_MEDIA":
-      return "/meu-painel/social";
-    case "DESIGNER":
-      return "/setores/design";
-    // Vídeo e tráfego usam a lista de setores → quadro do próprio slug.
-    case "VIDEOMAKER":
-    case "VIDEO_EDITOR":
-      return "/setores/video";
-    case "OTHER":
-      return "/setores/trafego";
     case "EXTERNAL_CLIENT":
       return "/portal";
     default:
