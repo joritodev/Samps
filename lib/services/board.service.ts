@@ -451,5 +451,9 @@ export async function groupBoardDemandsByList(
     if (!listId || !grouped[listId]) continue;
     grouped[listId].push({ ...demand, listId });
   }
+
+  const { syncDemandDelays } = await import("@/lib/services/delay.service");
+  await syncDemandDelays(demands.map((d) => d.id));
+
   return { lists, grouped };
 }

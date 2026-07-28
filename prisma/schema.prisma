@@ -176,6 +176,12 @@ enum NotificationType {
   OTHER
 }
 
+enum DemandDelayResolution {
+  COMPLETED
+  DEADLINE_EXTENDED
+  CANCELLED
+}
+
 enum AuditAction {
   USER_CREATED
   USER_UPDATED
@@ -495,6 +501,7 @@ model Client {
   externalVisibility    ExternalVisibility[]
   board                 ClientBoard?
   portal                ClientPortal?
+  demandDelays          DemandDelay[]
 }
 
 model Contract {
@@ -631,6 +638,7 @@ model Demand {
   assignments     DemandAssignment[]
   workSessions    WorkSession[]
   priorityScores  PriorityScore[]
+  demandDelays    DemandDelay[]
 
   @@index([clientId])
   @@index([boardId])
@@ -641,6 +649,26 @@ model Demand {
   @@index([status])
   @@index([boardColumn])
   @@index([dueDate])
+}
+
+model DemandDelay {
+  id              String                 @id @default(cuid())
+  demandId        String
+  clientId        String
+  originalDueDate DateTime
+  detectedAt      DateTime               @default(now())
+  resolvedAt      DateTime?
+  resolution      DemandDelayResolution?
+  daysOverdue     Int                    @default(0)
+  createdAt       DateTime               @default(now())
+
+  demand Demand @relation(fields: [demandId], references: [id], onDelete: Cascade)
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([demandId])
+  @@index([clientId])
+  @@index([detectedAt])
+  @@index([resolvedAt])
 }
 
 model DemandAssignment {

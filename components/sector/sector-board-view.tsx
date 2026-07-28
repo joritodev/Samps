@@ -40,6 +40,7 @@ export function SectorBoardView({
   calendarDemands,
   currentUserId,
   canAssign,
+  canChangeDeadline = false,
   sectorUsers,
   shoots,
 }: {
@@ -63,6 +64,7 @@ export function SectorBoardView({
   calendarDemands: DemandItem[];
   currentUserId: string;
   canAssign: boolean;
+  canChangeDeadline?: boolean;
   sectorUsers: { id: string; name: string }[];
   shoots?: {
     id: string;
@@ -281,6 +283,7 @@ export function SectorBoardView({
                 scheduledExecutionAt: selected.scheduledExecutionAt,
                 demandDeadline: selected.demandDeadline,
                 dueDate: selected.dueDate,
+                publishDate: (selected as { publishDate?: Date | null }).publishDate,
                 client: selected.client,
                 assignee: selected.assignee
                   ? {
@@ -297,6 +300,7 @@ export function SectorBoardView({
         onOpenChange={(o) => !o && setSelected(null)}
         currentUserId={currentUserId}
         canAssign={canAssign}
+        canChangeDeadline={canChangeDeadline}
         sectorUsers={sectorUsers}
       />
     </div>

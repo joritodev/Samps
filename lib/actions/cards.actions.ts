@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAuth } from "@/lib/permissions/check";
+import { hasPermission } from "@/lib/permissions/resolve";
 import { revalidateOperationalViews } from "@/lib/revalidate-operational";
 import {
   addCardComment,
@@ -14,10 +15,31 @@ import {
 } from "@/lib/services/cards.service";
 
 export async function getCardDetailAction(cardId: string) {
-  await requireAuth();
+  const user = await requireAuth();
   const card = await getCardById(cardId);
   if (!card) return { error: "Cartão não encontrado" as const };
-  return { card };
+
+  const { listDemandDelaysForDemand } = await import(
+    "@/lib/services/delay.service"
+  );
+  const delays = await listDemandDelaysForDemand(cardId);
+  const canChangeDeadline = hasPermission(
+    user.permissions,
+    "demands.change_deadline"
+  );
+
+  return {
+    card,
+    canChangeDeadline,
+    delays: delays.map((d) => ({
+      id: d.id,
+      originalDueDate: d.originalDueDate.toISOString(),
+      detectedAt: d.detectedAt.toISOString(),
+      resolvedAt: d.resolvedAt?.toISOString() ?? null,
+      resolution: d.resolution,
+      daysOverdue: d.daysOverdue,
+    })),
+  };
 }
 
 export async function demandBriefingAction(

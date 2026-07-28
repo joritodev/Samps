@@ -69,6 +69,10 @@ export default async function SectorBoardPage({
   const canAssign =
     hasPermission(user.permissions, "demands.assign") ||
     data.sector.leaderId === user.id;
+  const canChangeDeadline = hasPermission(
+    user.permissions,
+    "demands.change_deadline"
+  );
   const copy = TITLES[slug];
 
   return (
@@ -83,6 +87,7 @@ export default async function SectorBoardPage({
         calendarDemands={data.calendarDemands as never}
         currentUserId={user.id}
         canAssign={canAssign}
+        canChangeDeadline={canChangeDeadline}
         sectorUsers={sectorUsers}
       />
     </div>

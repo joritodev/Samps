@@ -26,6 +26,12 @@ import {
 import { requestAdjustmentAction } from "@/lib/actions/adjustment.actions";
 import { registerPublicationAction } from "@/lib/actions/cards.actions";
 import { aprovarDemanda, solicitarAjuste } from "@/app/actions/review";
+import { listDemandDelaysAction } from "@/lib/actions/deadline.actions";
+import { DeadlineChangeForm } from "@/components/shared/deadline-change-form";
+import {
+  DemandDelayHistory,
+  type DemandDelayRow,
+} from "@/components/shared/demand-delay-history";
 import { PAUSE_REASONS } from "@/lib/constants/work-session";
 import { toast } from "sonner";
 
@@ -40,6 +46,7 @@ export type SectorCardDetail = {
   scheduledExecutionAt?: Date | null;
   demandDeadline?: Date | null;
   dueDate?: Date | null;
+  publishDate?: Date | null;
   client?: { name: string };
   assignee?: { id: string; name: string } | null;
   assignments?: {
@@ -60,6 +67,7 @@ export function SectorCardSheet({
   onOpenChange,
   currentUserId,
   canAssign,
+  canChangeDeadline = false,
   sectorUsers,
 }: {
   card: SectorCardDetail | null;
@@ -67,6 +75,7 @@ export function SectorCardSheet({
   onOpenChange: (open: boolean) => void;
   currentUserId: string;
   canAssign: boolean;
+  canChangeDeadline?: boolean;
   sectorUsers: { id: string; name: string }[];
 }) {
   const [pending, startTransition] = useTransition();
@@ -76,6 +85,7 @@ export function SectorCardSheet({
   const [pauseReason, setPauseReason] = useState<string>(PAUSE_REASONS[0]);
   const [pauseDesc, setPauseDesc] = useState("");
   const [assignTo, setAssignTo] = useState("");
+  const [delays, setDelays] = useState<DemandDelayRow[]>([]);
 
   useEffect(() => {
     if (card && open) {
@@ -88,6 +98,7 @@ export function SectorCardSheet({
       );
       setAssignTo(sectorUsers[0]?.id ?? "");
       setPauseDesc("");
+      listDemandDelaysAction(card.id).then(setDelays).catch(() => setDelays([]));
     }
   }, [card, open, sectorUsers]);
 
@@ -426,6 +437,22 @@ export function SectorCardSheet({
                 </Button>
               </div>
             )}
+
+          <div className="space-y-3 border-t pt-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Histórico de atrasos
+            </p>
+            <DemandDelayHistory delays={delays} />
+            {canChangeDeadline && card && (
+              <DeadlineChangeForm
+                demandId={card.id}
+                clientId={card.clientId}
+                dueDate={card.dueDate}
+                demandDeadline={card.demandDeadline}
+                publishDate={card.publishDate}
+              />
+            )}
+          </div>
         </div>
       </SheetContent>
     </Sheet>
