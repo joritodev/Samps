@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { logAudit } from "@/lib/services/audit.service";
 import { createNotification } from "@/lib/services/notifications.service";
 import { recalculateSectorPriorities } from "@/lib/services/priority.service";
+import { getPanelPathForSectorSlug } from "@/types/auth";
 
 const FORMAT_TO_SECTOR_SLUG: Record<string, string> = {
   estático: "design",
@@ -101,15 +102,9 @@ export async function distributeDemandToSector(params: {
   });
 
   const sector = await db.sector.findUnique({ where: { id: sectorId } });
-  const slug = sector?.slug;
-  const boardPath =
-    slug === "social" || slug === "social-media"
-      ? "/meu-painel/social"
-      : slug === "video"
-        ? "/meu-painel/video"
-        : slug === "trafego"
-          ? "/meu-painel/trafego"
-          : "/meu-painel/design";
+  const boardPath = sector?.slug
+    ? getPanelPathForSectorSlug(sector.slug)
+    : "/meu-painel/design";
 
   for (const u of sectorUsers) {
     await createNotification({

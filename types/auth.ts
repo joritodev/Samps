@@ -95,4 +95,11 @@ export function getDashboardPath(userType: UserType): string {
   }
 }
 
+export function getPanelPathForSectorSlug(slug: string): string {
+  if (slug === "social" || slug === "social-media") return "/meu-painel/social";
+  if (slug === "video") return "/meu-painel/video";
+  if (slug === "trafego") return "/meu-painel/trafego";
+  return "/meu-painel/design";
+}
+
 export type AuthRedirectTarget = ReturnType<typeof getDashboardPath>;

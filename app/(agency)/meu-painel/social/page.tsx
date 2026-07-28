@@ -1,9 +1,11 @@
 import { requireAuth } from "@/lib/permissions/check";
+import { requirePanelUserType } from "@/lib/agency/panel-access";
 import { getSocialBoardData } from "@/lib/services/social-board.service";
 import { SectorBoardView } from "@/components/sector/sector-board-view";
 
 export default async function SocialPanelPage() {
   const user = await requireAuth();
+  requirePanelUserType("social", user.userType);
   const data = await getSocialBoardData(user, { individual: true });
 
   return (
