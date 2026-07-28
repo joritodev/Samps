@@ -223,7 +223,7 @@ export function BoardView({
             onCardSelect={openCard}
           />
         ) : (
-          <div className="h-full min-h-0 overflow-hidden bg-[#F8F9FA] p-4">
+          <div className="h-full min-h-0 overflow-hidden bg-background p-4">
             <BoardCalendar
               demands={calendarDemands}
               onSelect={openCard}

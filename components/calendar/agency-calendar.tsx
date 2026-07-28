@@ -78,23 +78,23 @@ const CATEGORY_OPTIONS: {
   {
     id: "content",
     label: "Conteúdo / Design",
-    chip: "bg-emerald-50 text-emerald-800 border-emerald-100",
-    panel: "bg-emerald-50/80 border-emerald-100",
+    chip: "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-400/30 dark:bg-emerald-400/10 dark:text-emerald-200",
+    panel: "border-emerald-100 bg-emerald-50/80 dark:border-emerald-400/30 dark:bg-emerald-400/10",
     dot: "bg-emerald-400",
   },
   {
     id: "video",
     label: "Vídeo / Reel",
-    chip: "bg-amber-50 text-amber-900 border-amber-100",
-    panel: "bg-amber-50/80 border-amber-100",
+    chip: "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-200",
+    panel: "border-amber-100 bg-amber-50/80 dark:border-amber-400/30 dark:bg-amber-400/10",
     dot: "bg-amber-400",
   },
   {
     id: "other",
     label: "Projetos e outros",
-    chip: "bg-slate-100 text-slate-700 border-slate-200",
-    panel: "bg-slate-100/80 border-slate-200",
-    dot: "bg-slate-400",
+    chip: "border-border bg-muted text-foreground",
+    panel: "border-border bg-muted/80",
+    dot: "bg-muted-foreground",
   },
 ];
 

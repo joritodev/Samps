@@ -104,7 +104,7 @@ export function DemandCard({
           {demand.assignee && <span>{demand.assignee.name}</span>}
         </div>
         {demand.timerPreview && (
-          <div className="rounded-md bg-amber-50 px-2 py-1 text-[11px] text-amber-900">
+          <div className="rounded-md border border-amber-500/25 bg-amber-500/10 px-2 py-1 text-[11px] text-amber-900 dark:border-amber-400/25 dark:bg-amber-400/10 dark:text-amber-200">
             <p>Executor: {demand.timerPreview.executor.name}</p>
             <p>
               {demand.timerPreview.status === "PAUSED" ? "Pausada" : "Em execução"} há:{" "}

@@ -137,7 +137,7 @@ export function BoardSettingsForm({
                 <Switch defaultChecked={l.active} disabled />
               </div>
             ))}
-            <p className="text-xs text-slate-500">Ativação/desativação via wizard na próxima versão.</p>
+            <p className="text-xs text-muted-foreground">Ativação/desativação via wizard na próxima versão.</p>
           </CardContent>
         </Card>
       </TabsContent>
@@ -152,11 +152,11 @@ export function BoardSettingsForm({
               externalUsers.map((u) => (
                 <div key={u.id} className="flex justify-between text-sm border rounded-lg px-3 py-2">
                   <span>{u.name}</span>
-                  <span className="text-slate-500">{u.email}</span>
+                  <span className="text-muted-foreground">{u.email}</span>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-slate-500">Nenhum usuário externo vinculado.</p>
+              <p className="text-sm text-muted-foreground">Nenhum usuário externo vinculado.</p>
             )}
           </CardContent>
         </Card>

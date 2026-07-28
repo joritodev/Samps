@@ -46,7 +46,7 @@ export default async function UsuariosPage() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-slate-500 py-8">
+                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                   Nenhum usuário encontrado ou sem permissão.
                 </TableCell>
               </TableRow>

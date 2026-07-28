@@ -82,7 +82,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
           </Button>
         </form>
         <div className="mt-4 text-center">
-          <Link href="/login" className="text-sm text-slate-500 hover:text-slate-900">
+          <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground">
             Voltar ao login
           </Link>
         </div>
