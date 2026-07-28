@@ -1,5 +1,6 @@
 import type {
   BoardListType,
+  ClientStatus,
   DemandType,
   PortalStatus,
 } from "@prisma/client";
@@ -24,6 +25,7 @@ export interface BoardWizardInput {
     brandColor?: string;
     startedAt?: Date;
     internalNotes?: string;
+    status?: ClientStatus;
   };
   team: {
     socialMediaId: string;

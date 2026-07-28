@@ -25,7 +25,25 @@ export default async function CriarQuadroPage({
     searchParams.clientId
       ? db.client.findUnique({
           where: { id: searchParams.clientId },
-          select: { id: true, name: true, board: { select: { id: true } } },
+          select: {
+            id: true,
+            name: true,
+            legalName: true,
+            tradeName: true,
+            segment: true,
+            email: true,
+            phone: true,
+            logoUrl: true,
+            brandColor: true,
+            status: true,
+            startedAt: true,
+            internalNotes: true,
+            socialMediaId: true,
+            secondarySocialMediaId: true,
+            primaryResponsibleId: true,
+            accountLeaderId: true,
+            board: { select: { id: true } },
+          },
         })
       : Promise.resolve(null),
   ]);
@@ -44,6 +62,27 @@ export default async function CriarQuadroPage({
       </div>
     );
   }
+
+  const initialClient = existingClient
+    ? {
+        id: existingClient.id,
+        name: existingClient.name,
+        legalName: existingClient.legalName,
+        tradeName: existingClient.tradeName,
+        segment: existingClient.segment,
+        email: existingClient.email,
+        phone: existingClient.phone,
+        logoUrl: existingClient.logoUrl,
+        brandColor: existingClient.brandColor,
+        status: existingClient.status,
+        startedAt: existingClient.startedAt,
+        internalNotes: existingClient.internalNotes,
+        socialMediaId: existingClient.socialMediaId,
+        secondarySocialMediaId: existingClient.secondarySocialMediaId,
+        primaryResponsibleId: existingClient.primaryResponsibleId,
+        accountLeaderId: existingClient.accountLeaderId,
+      }
+    : undefined;
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">
@@ -67,12 +106,12 @@ export default async function CriarQuadroPage({
       </header>
 
       <div className="p-6">
-        <Suspense fallback={<p className="text-sm text-muted-foreground">Carregando…</p>}>
-          <BoardWizard
-            users={users}
-            existingClientId={existingClient?.id}
-            existingClientName={existingClient?.name}
-          />
+        <Suspense
+          fallback={
+            <p className="text-sm text-muted-foreground">Carregando…</p>
+          }
+        >
+          <BoardWizard users={users} initialClient={initialClient} />
         </Suspense>
       </div>
     </div>
