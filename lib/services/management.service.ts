@@ -2,6 +2,11 @@ import { DemandStatus } from "@prisma/client";
 import { db } from "@/lib/db";
 import type { SessionUser } from "@/types/auth";
 import { buildContextWhere } from "@/lib/services/demands.service";
+import {
+  countDelaysInMonth,
+  listRecentDelays,
+  syncDemandDelays,
+} from "@/lib/services/delay.service";
 
 export async function getManagementOverview(user: SessionUser) {
   const where = buildContextWhere(user, "management");
@@ -115,6 +120,13 @@ export async function getManagementOverview(user: SessionUser) {
     take: 8,
   });
 
+  await syncDemandDelays();
+
+  const [delaysThisMonth, recentDelays] = await Promise.all([
+    countDelaysInMonth(today),
+    listRecentDelays(8),
+  ]);
+
   return {
     kpis: {
       open,
@@ -130,8 +142,10 @@ export async function getManagementOverview(user: SessionUser) {
       activeTimers,
       shootsMonth,
       awaitingPublication,
+      delaysThisMonth,
     },
     sectorStats,
     priorityDemands,
+    recentDelays,
   };
 }

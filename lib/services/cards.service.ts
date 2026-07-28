@@ -7,6 +7,7 @@ import {
   resolveSectorIdForDemand,
 } from "@/lib/services/distribution.service";
 import { completeWorkSession } from "@/lib/services/work-session.service";
+import { resolveDelayOnTerminalStatus } from "@/lib/services/deadline.service";
 import type { SessionUser } from "@/types/auth";
 
 const BRIEFING_REQUIRED = ["title", "description", "format"] as const;
@@ -236,6 +237,8 @@ export async function registerPublicationAndComplete(
       link: `/clientes/${demand?.clientId}/quadro`,
     });
   }
+
+  await resolveDelayOnTerminalStatus(cardId, "PUBLISHED");
 
   return updated;
 }

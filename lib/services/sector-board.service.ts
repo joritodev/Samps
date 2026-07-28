@@ -6,6 +6,7 @@ import {
 import { db } from "@/lib/db";
 import { getTop5ForSector } from "@/lib/services/priority.service";
 import { formatElapsed } from "@/lib/services/work-session.service";
+import { syncDemandDelays } from "@/lib/services/delay.service";
 
 export type SectorSlug = "design" | "video" | "trafego";
 
@@ -202,6 +203,8 @@ export async function getSectorBoardData(
     include: demandInclude,
     orderBy: [{ priority: { weight: "desc" } }, { dueDate: "asc" }],
   });
+
+  await syncDemandDelays(demands.map((d) => d.id));
 
   const enriched = demands.map(withTimerPreview);
 

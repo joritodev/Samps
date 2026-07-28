@@ -1024,6 +1024,9 @@ async function main() {
     ],
   });
 
+  const { syncDemandDelays } = await import("../lib/services/delay.service");
+  await syncDemandDelays();
+
   console.log("\nSeed concluído.");
   console.log(`  Permissões: ${PERMISSION_CODES.length}`);
   console.log(`  Funções: ${ROLE_DEFINITIONS.length}`);

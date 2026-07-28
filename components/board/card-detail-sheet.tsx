@@ -24,6 +24,11 @@ import {
   addCommentAction,
 } from "@/lib/actions/cards.actions";
 import { requestAdjustmentAction } from "@/lib/actions/adjustment.actions";
+import { DeadlineChangeForm } from "@/components/shared/deadline-change-form";
+import {
+  DemandDelayHistory,
+  type DemandDelayRow,
+} from "@/components/shared/demand-delay-history";
 import { toast } from "sonner";
 
 type CardDetail = {
@@ -67,11 +72,15 @@ export function CardDetailSheet({
   card,
   open,
   onOpenChange,
+  canChangeDeadline = false,
+  delays = [],
 }: {
   clientId: string;
   card: CardDetail | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  canChangeDeadline?: boolean;
+  delays?: DemandDelayRow[];
 }) {
   const [pending, startTransition] = useTransition();
   const [title, setTitle] = useState("");
@@ -119,6 +128,7 @@ export function CardDetailSheet({
               <TabsList className="flex flex-wrap h-auto gap-1">
                 <TabsTrigger value="identification">Identificação</TabsTrigger>
                 <TabsTrigger value="planning">Planejamento</TabsTrigger>
+                <TabsTrigger value="delays">Atrasos</TabsTrigger>
                 <TabsTrigger value="briefing">Briefing</TabsTrigger>
                 <TabsTrigger value="production">Produção</TabsTrigger>
                 <TabsTrigger value="publication">Publicação</TabsTrigger>
@@ -150,6 +160,22 @@ export function CardDetailSheet({
                 )}
                 {card.demandDeadline && (
                   <p className="text-sm">Prazo demanda: {format(new Date(card.demandDeadline), "dd/MM/yyyy", { locale: ptBR })}</p>
+                )}
+                {card.dueDate && (
+                  <p className="text-sm">Prazo interno: {format(new Date(card.dueDate), "dd/MM/yyyy", { locale: ptBR })}</p>
+                )}
+              </TabsContent>
+
+              <TabsContent value="delays" className="space-y-4">
+                <DemandDelayHistory delays={delays} />
+                {canChangeDeadline && card && (
+                  <DeadlineChangeForm
+                    demandId={card.id}
+                    clientId={clientId}
+                    dueDate={card.dueDate}
+                    demandDeadline={card.demandDeadline}
+                    publishDate={card.publishDate}
+                  />
                 )}
               </TabsContent>
 

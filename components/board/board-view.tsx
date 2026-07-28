@@ -10,6 +10,7 @@ import { BoardCalendar } from "@/components/board/board-calendar";
 import { CardDetailSheet } from "@/components/board/card-detail-sheet";
 import { Button } from "@/components/ui/button";
 import { getCardDetailAction } from "@/lib/actions/cards.actions";
+import type { DemandDelayRow } from "@/components/shared/demand-delay-history";
 import { toast } from "sonner";
 
 type List = { id: string; name: string; type: string };
@@ -161,6 +162,8 @@ export function BoardView({
   const [insightsOpen, setInsightsOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState<CardDetail | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [canChangeDeadline, setCanChangeDeadline] = useState(false);
+  const [cardDelays, setCardDelays] = useState<DemandDelayRow[]>([]);
   const [, startTransition] = useTransition();
 
   const columns = lists.map((l) => ({ id: l.id, title: l.name }));
@@ -176,6 +179,8 @@ export function BoardView({
       }
       if ("card" in result && result.card) {
         setSelectedCard(result.card as CardDetail);
+        setCanChangeDeadline(result.canChangeDeadline ?? false);
+        setCardDelays(result.delays ?? []);
       }
     });
   }
@@ -236,6 +241,8 @@ export function BoardView({
           setSheetOpen(o);
           if (!o) setSelectedCard(null);
         }}
+        canChangeDeadline={canChangeDeadline}
+        delays={cardDelays}
       />
     </div>
   );
