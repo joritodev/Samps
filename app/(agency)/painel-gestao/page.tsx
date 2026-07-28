@@ -140,7 +140,7 @@ export default async function PainelGestaoPage() {
       </div>
 
       <div className="mt-3 grid min-h-0 flex-1 gap-3 lg:grid-cols-12">
-        <div className="flex min-h-0 flex-col gap-3 lg:col-span-4">
+        <div className="flex min-h-0 flex-col gap-3 overflow-y-auto lg:col-span-4">
           <Card className="shrink-0 shadow-none">
             <CardHeader className="space-y-0 px-4 py-3">
               <CardTitle className="text-sm font-semibold">Carga por setor</CardTitle>
@@ -175,11 +175,11 @@ export default async function PainelGestaoPage() {
             </CardContent>
           </Card>
 
-          <Card className="min-h-0 flex-1 shadow-none">
-            <CardHeader className="shrink-0 space-y-0 px-4 py-3">
+          <Card className="shrink-0 shadow-none">
+            <CardHeader className="space-y-0 px-4 py-3">
               <CardTitle className="text-sm font-semibold">Alertas</CardTitle>
             </CardHeader>
-            <CardContent className="min-h-0 space-y-1.5 overflow-y-auto px-4 pb-4 pt-0">
+            <CardContent className="space-y-1.5 px-4 pb-4 pt-0">
               {alerts.length ? (
                 alerts.map((alert) => (
                   <div
@@ -198,13 +198,13 @@ export default async function PainelGestaoPage() {
             </CardContent>
           </Card>
 
-          <Card className="min-h-0 flex-1 shadow-none">
-            <CardHeader className="shrink-0 space-y-0 px-4 py-3">
+          <Card className="shrink-0 shadow-none">
+            <CardHeader className="space-y-0 px-4 py-3">
               <CardTitle className="text-sm font-semibold">
                 Últimos atrasos
               </CardTitle>
             </CardHeader>
-            <CardContent className="min-h-0 space-y-2 overflow-y-auto px-4 pb-4 pt-0">
+            <CardContent className="space-y-2 px-4 pb-4 pt-0">
               {recentDelays.length ? (
                 recentDelays.map((d) => {
                   const href = d.demand.clientId
