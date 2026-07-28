@@ -2,7 +2,7 @@
 
 import { DistributionMethod } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import { requirePermission } from "@/lib/permissions/check";
+import { requireAuth, requirePermission } from "@/lib/permissions/check";
 import {
   setCatalogActive,
   updateAgencySettings,
@@ -35,6 +35,52 @@ export async function updateCompanySettingsAction(input: {
   } catch (e) {
     return {
       error: e instanceof Error ? e.message : "Erro ao salvar",
+    };
+  }
+}
+
+export async function updatePortalSettingsAction(input: {
+  portalName: string;
+  portalLogoUrl?: string;
+  portalColor: string;
+}) {
+  const user = await requirePermission("settings.access");
+  if (!input.portalName.trim()) {
+    return { error: "Nome do portal é obrigatório" as const };
+  }
+  try {
+    await updateAgencySettings(user.id, {
+      portalName: input.portalName,
+      portalLogoUrl: input.portalLogoUrl,
+      portalColor: input.portalColor,
+    });
+    revalidateSettings("/configuracoes/portal", "/configuracoes");
+    return { success: true as const };
+  } catch (e) {
+    return {
+      error: e instanceof Error ? e.message : "Erro ao salvar portal",
+    };
+  }
+}
+
+export async function updateNotificationPrefsAction(input: {
+  DEADLINE: boolean;
+  ASSIGNMENT: boolean;
+  ADJUSTMENT: boolean;
+  PUBLICATION: boolean;
+  OTHER: boolean;
+}) {
+  const user = await requireAuth();
+  try {
+    const { updateNotificationPrefs } = await import(
+      "@/lib/services/notifications.service"
+    );
+    await updateNotificationPrefs(user.id, input);
+    revalidateSettings("/configuracoes/notificacoes");
+    return { success: true as const };
+  } catch (e) {
+    return {
+      error: e instanceof Error ? e.message : "Erro ao salvar preferências",
     };
   }
 }

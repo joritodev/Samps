@@ -274,6 +274,7 @@ model User {
   mustResetPassword  Boolean    @default(true)
   termsAcceptedAt    DateTime?
   internalNotes      String?
+  notificationPrefs  Json?
   joinedAt           DateTime?
   lastLoginAt        DateTime?
   createdAt          DateTime   @default(now())

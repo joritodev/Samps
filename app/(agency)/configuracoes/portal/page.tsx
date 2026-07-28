@@ -1,7 +1,18 @@
-import { SettingsSectionStub } from "@/components/agency/settings-section-stub";
+import { PortalSettings } from "@/components/agency/portal-settings";
 import { requireSettingsSection } from "@/lib/agency/require-settings-section";
+import { getAgencySettings } from "@/lib/services/settings.service";
 
 export default async function PortalSettingsPage() {
   await requireSettingsSection("/configuracoes/portal");
-  return <SettingsSectionStub title="Portal do cliente" />;
+  const settings = await getAgencySettings();
+
+  return (
+    <PortalSettings
+      initial={{
+        portalName: settings.portalName,
+        portalLogoUrl: settings.portalLogoUrl,
+        portalColor: settings.portalColor,
+      }}
+    />
+  );
 }

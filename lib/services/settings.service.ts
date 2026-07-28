@@ -17,28 +17,46 @@ export async function getAgencySettings() {
 export async function updateAgencySettings(
   userId: string,
   data: {
-    name: string;
+    name?: string;
     logoUrl?: string | null;
-    timezone: string;
-    language: string;
-    dateFormat: string;
-    workStartTime: string;
-    workEndTime: string;
-    workDays: string;
+    timezone?: string;
+    language?: string;
+    dateFormat?: string;
+    workStartTime?: string;
+    workEndTime?: string;
+    workDays?: string;
+    portalName?: string;
+    portalLogoUrl?: string | null;
+    portalColor?: string;
   }
 ) {
   const previous = await getAgencySettings();
   const updated = await db.agencySettings.update({
     where: { id: "default" },
     data: {
-      name: data.name.trim(),
-      logoUrl: data.logoUrl?.trim() || null,
-      timezone: data.timezone,
-      language: data.language,
-      dateFormat: data.dateFormat,
-      workStartTime: data.workStartTime,
-      workEndTime: data.workEndTime,
-      workDays: data.workDays,
+      ...(data.name !== undefined ? { name: data.name.trim() } : {}),
+      ...(data.logoUrl !== undefined
+        ? { logoUrl: data.logoUrl?.trim() || null }
+        : {}),
+      ...(data.timezone !== undefined ? { timezone: data.timezone } : {}),
+      ...(data.language !== undefined ? { language: data.language } : {}),
+      ...(data.dateFormat !== undefined ? { dateFormat: data.dateFormat } : {}),
+      ...(data.workStartTime !== undefined
+        ? { workStartTime: data.workStartTime }
+        : {}),
+      ...(data.workEndTime !== undefined
+        ? { workEndTime: data.workEndTime }
+        : {}),
+      ...(data.workDays !== undefined ? { workDays: data.workDays } : {}),
+      ...(data.portalName !== undefined
+        ? { portalName: data.portalName.trim() }
+        : {}),
+      ...(data.portalLogoUrl !== undefined
+        ? { portalLogoUrl: data.portalLogoUrl?.trim() || null }
+        : {}),
+      ...(data.portalColor !== undefined
+        ? { portalColor: data.portalColor }
+        : {}),
     },
   });
   await logAudit({
@@ -48,7 +66,7 @@ export async function updateAgencySettings(
     entityId: "default",
     previousValue: previous as unknown as Prisma.InputJsonValue,
     newValue: updated as unknown as Prisma.InputJsonValue,
-    origin: "configuracoes/empresa",
+    origin: "configuracoes",
   });
   return updated;
 }
@@ -273,4 +291,15 @@ export async function setCatalogActive(
     origin: "configuracoes",
   });
   return row;
+}
+
+export async function listActiveContracts() {
+  return db.contract.findMany({
+    where: { status: "ACTIVE" },
+    include: {
+      client: { select: { id: true, name: true, status: true } },
+      services: { select: { id: true, name: true, quantity: true } },
+    },
+    orderBy: { startDate: "desc" },
+  });
 }
