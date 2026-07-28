@@ -364,9 +364,9 @@ export function TeamView({
                             className={cn(
                               "font-normal",
                               invite.state === "valid" &&
-                                "border-sky-200 bg-sky-50 text-sky-700",
+                                "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-400/30 dark:bg-sky-400/10 dark:text-sky-200",
                               invite.state === "expired" &&
-                                "border-amber-200 bg-amber-50 text-amber-800",
+                                "border-amber-500/25 bg-amber-500/10 text-amber-800 dark:border-amber-400/25 dark:bg-amber-400/10 dark:text-amber-200",
                               invite.state === "revoked" &&
                                 "border-border bg-muted text-muted-foreground"
                             )}

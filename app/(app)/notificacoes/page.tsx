@@ -20,8 +20,8 @@ export default async function NotificacoesPage() {
               <CardContent className="flex items-start justify-between gap-4 py-4">
                 <div>
                   <p className="font-medium text-sm">{notification.title}</p>
-                  <p className="text-sm text-slate-500 mt-1">{notification.message}</p>
-                  <p className="text-xs text-slate-400 mt-2">
+                  <p className="text-sm text-muted-foreground mt-1">{notification.message}</p>
+                  <p className="text-xs text-muted-foreground/80 mt-2">
                     {format(new Date(notification.createdAt), "dd/MM/yyyy HH:mm", {
                       locale: ptBR,
                     })}
@@ -33,7 +33,7 @@ export default async function NotificacoesPage() {
           ))
         ) : (
           <Card className="rounded-xl shadow-sm">
-            <CardContent className="py-12 text-center text-sm text-slate-500">
+            <CardContent className="py-12 text-center text-sm text-muted-foreground">
               Nenhuma notificação.
             </CardContent>
           </Card>

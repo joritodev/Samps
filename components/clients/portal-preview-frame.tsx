@@ -29,7 +29,7 @@ export function PortalPreviewFrame({ clientId }: { clientId: string }) {
 
   if (!ready) {
     return (
-      <div className="flex items-center gap-2 text-sm text-slate-500 py-8">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground py-8">
         <Loader2 className="h-4 w-4 animate-spin" />
         Preparando prévia...
       </div>

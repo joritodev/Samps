@@ -333,8 +333,8 @@ export function SectorCardSheet({
           )}
 
           {isSocialReview && (
-            <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50/80 p-3">
-              <p className="text-xs font-medium text-amber-900">
+            <div className="space-y-3 rounded-lg border border-amber-500/25 bg-amber-500/10 p-3 dark:border-amber-400/25 dark:bg-amber-400/10">
+              <p className="text-xs font-medium text-amber-900 dark:text-amber-200">
                 Aguardando revisão da Social
               </p>
               {card.materialUrl && (
@@ -409,7 +409,7 @@ export function SectorCardSheet({
             !isAwaitingPublication &&
             (card.status === "IN_REVIEW" ||
               assignment?.status === "IN_REVIEW") && (
-              <div className="space-y-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
+              <div className="space-y-2 rounded-lg border border-amber-500/25 bg-amber-500/10 p-3 dark:border-amber-400/25 dark:bg-amber-400/10">
                 <Label>Solicitar ajuste</Label>
                 <Textarea
                   value={pauseDesc}

@@ -71,7 +71,7 @@ function Metric({
 export default async function PainelGestaoPage() {
   const user = await requireAuth();
   const overview = await getManagementOverview(user);
-  const { kpis, sectorStats, priorityDemands, recentDelays } = overview;
+  const { kpis, sectorStats, priorityDemands } = overview;
 
   const maxOpen = Math.max(...sectorStats.map((s) => s.openCount), 1);
 
@@ -193,45 +193,6 @@ export default async function PainelGestaoPage() {
               ) : (
                 <p className="text-sm text-muted-foreground">
                   Nenhum alerta no momento.
-                </p>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="min-h-0 flex-1 shadow-none">
-            <CardHeader className="shrink-0 space-y-0 px-4 py-3">
-              <CardTitle className="text-sm font-semibold">
-                Últimos atrasos
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="min-h-0 space-y-2 overflow-y-auto px-4 pb-4 pt-0">
-              {recentDelays.length ? (
-                recentDelays.map((d) => {
-                  const href = d.demand.clientId
-                    ? `/clientes/${d.demand.clientId}/quadro`
-                    : d.demand.sector?.slug
-                      ? `/setores/${d.demand.sector.slug === "social-media" ? "social" : d.demand.sector.slug}`
-                      : "#";
-                  return (
-                    <Link
-                      key={d.id}
-                      href={href}
-                      className="block rounded-md border border-border px-2.5 py-2 text-xs hover:bg-muted/50"
-                    >
-                      <p className="font-medium text-foreground line-clamp-1">
-                        {d.demand.title}
-                      </p>
-                      <p className="text-muted-foreground">
-                        {d.demand.client.name} · {d.daysOverdue} dia
-                        {d.daysOverdue === 1 ? "" : "s"}
-                        {d.resolvedAt ? " · resolvido" : " · aberto"}
-                      </p>
-                    </Link>
-                  );
-                })
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Nenhum atraso registrado.
                 </p>
               )}
             </CardContent>

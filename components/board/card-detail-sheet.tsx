@@ -244,7 +244,7 @@ export function CardDetailSheet({
                   </Button>
                 )}
                 {locked && (
-                  <p className="text-xs text-amber-600">Briefing bloqueado em {format(new Date(card.briefingLockedAt!), "dd/MM/yyyy HH:mm", { locale: ptBR })}</p>
+                  <p className="text-xs text-amber-700 dark:text-amber-300">Briefing bloqueado em {format(new Date(card.briefingLockedAt!), "dd/MM/yyyy HH:mm", { locale: ptBR })}</p>
                 )}
               </TabsContent>
 
@@ -267,7 +267,7 @@ export function CardDetailSheet({
                   Concluir produção e enviar para revisão
                 </Button>
                 {(card.status === "IN_REVIEW" || card.status === "ADJUSTMENTS") && (
-                  <div className="space-y-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
+                  <div className="space-y-2 rounded-lg border border-amber-500/25 bg-amber-500/10 p-3 dark:border-amber-400/25 dark:bg-amber-400/10">
                     <Label>Solicitar ajuste</Label>
                     <Textarea
                       value={comment}
@@ -323,7 +323,7 @@ export function CardDetailSheet({
               <TabsContent value="communication" className="space-y-3">
                 <div className="space-y-2 max-h-48 overflow-y-auto">
                   {(card.comments ?? []).map((c) => (
-                    <div key={c.id} className="rounded-lg bg-slate-50 p-2 text-sm">
+                    <div key={c.id} className="rounded-lg bg-muted p-2 text-sm">
                       <p className="font-medium text-xs">{c.user.name}</p>
                       <p>{c.text}</p>
                     </div>
@@ -359,7 +359,7 @@ export function CardDetailSheet({
                     }}
                   />
                 </div>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-muted-foreground">
                   Campos visíveis configuráveis na aba de configurações do portal.
                 </p>
               </TabsContent>
