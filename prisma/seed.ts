@@ -1,4 +1,6 @@
 import {
+  AssignmentMethod,
+  AssignmentStatus,
   BoardListType,
   ClientStatus,
   ContractStatus,
@@ -885,6 +887,62 @@ async function main() {
             : undefined,
         createdAt,
         updatedAt: updatedAt ?? createdAt,
+      },
+    });
+  }
+
+  console.log("Criando atribuições de setor…");
+
+  const sectorDemands = await prisma.demand.findMany({
+    where: { sectorId: { not: null } },
+    select: {
+      id: true,
+      sectorId: true,
+      status: true,
+      assigneeId: true,
+    },
+  });
+
+  for (const d of sectorDemands) {
+    if (!d.sectorId) continue;
+
+    let assignmentStatus: AssignmentStatus | null = null;
+
+    switch (d.status) {
+      case DemandStatus.DEMANDED:
+      case DemandStatus.AVAILABLE:
+        assignmentStatus = AssignmentStatus.AVAILABLE;
+        break;
+      case DemandStatus.IN_PRODUCTION:
+        assignmentStatus = d.assigneeId
+          ? AssignmentStatus.IN_PROGRESS
+          : AssignmentStatus.AVAILABLE;
+        break;
+      case DemandStatus.IN_REVIEW:
+      case DemandStatus.APPROVED:
+        assignmentStatus = AssignmentStatus.IN_REVIEW;
+        break;
+      case DemandStatus.ADJUSTMENTS:
+        assignmentStatus = AssignmentStatus.ADJUSTMENT;
+        break;
+      case DemandStatus.DONE:
+      case DemandStatus.PUBLISHED:
+      case DemandStatus.SCHEDULED:
+        assignmentStatus = AssignmentStatus.DONE;
+        break;
+      default:
+        break;
+    }
+
+    if (!assignmentStatus) continue;
+
+    await prisma.demandAssignment.create({
+      data: {
+        demandId: d.id,
+        sectorId: d.sectorId,
+        executorId: d.assigneeId,
+        status: assignmentStatus,
+        method: d.assigneeId ? AssignmentMethod.MANAGEMENT : AssignmentMethod.MANAGEMENT,
       },
     });
   }

@@ -9,6 +9,7 @@ import { db } from "@/lib/db";
 import { logAudit } from "@/lib/services/audit.service";
 import { createNotification } from "@/lib/services/notifications.service";
 import { recalculateSectorPriorities } from "@/lib/services/priority.service";
+import { getPanelPathForSectorSlug } from "@/types/auth";
 import type { SessionUser } from "@/types/auth";
 
 export async function getActiveAssignment(demandId: string) {
@@ -154,17 +155,19 @@ export async function assignDemand(
     newValue: { executorId, method },
   });
 
+  const sector = demand.sectorId
+    ? await db.sector.findUnique({ where: { id: demand.sectorId } })
+    : null;
+  const link = sector?.slug
+    ? getPanelPathForSectorSlug(sector.slug)
+    : "/demandas";
+
   await createNotification({
     userId: executorId,
     type: NotificationType.DEMAND_ASSIGNED,
     title: "Demanda atribuída a você",
     message: demand.title,
-    link: demand.sectorId
-      ? (await db.sector.findUnique({ where: { id: demand.sectorId } }))?.slug ===
-        "video"
-        ? "/meu-painel/video"
-        : "/meu-painel/design"
-      : "/painel-gestao",
+    link,
   });
 
   await recalculateSectorPriorities(demand.sectorId);

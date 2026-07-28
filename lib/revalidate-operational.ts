@@ -10,6 +10,7 @@ export function revalidateOperationalViews(clientId?: string) {
   revalidatePath("/setores/social");
   revalidatePath("/meu-painel/design");
   revalidatePath("/meu-painel/video");
+  revalidatePath("/meu-painel/trafego");
   revalidatePath("/meu-painel/social");
   revalidatePath("/painel-gestao");
   revalidatePath("/demandas");
