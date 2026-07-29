@@ -2,6 +2,7 @@ import { ClientStatus, DemandStatus } from "@prisma/client";
 import { db } from "@/lib/db";
 import { ClientsView } from "@/components/agency/clients-view";
 import { clientScopeFilter, requireAuth } from "@/lib/permissions/check";
+import { listContentTypes } from "@/lib/services/settings.service";
 import type { ClientListItem } from "@/types/clients-ui";
 
 const CLOSED: DemandStatus[] = [
@@ -16,6 +17,11 @@ export default async function ClientesPage() {
   const scope = clientScopeFilter(user);
 
   let clients: ClientListItem[] = [];
+  const contentTypes = (await listContentTypes(false)).map((t) => ({
+    id: t.id,
+    name: t.name,
+    slug: t.slug,
+  }));
 
   try {
     const rows = await db.client.findMany({
@@ -59,6 +65,7 @@ export default async function ClientesPage() {
     <ClientsView
       clients={clients}
       canCreate={user.permissions.includes("clients.create")}
+      contentTypes={contentTypes}
     />
   );
 }

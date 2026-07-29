@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import {
   ArrowUpRight,
@@ -9,6 +10,14 @@ import {
   ListTodo,
   LayoutDashboard,
 } from "lucide-react";
+import { toast } from "sonner";
+import { syncClientContractServices } from "@/app/actions/clients";
+import {
+  buildScopeRows,
+  ContractScopeFields,
+  scopeRowsToPayload,
+  type ScopeFieldRow,
+} from "@/components/agency/contract-scope-fields";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +28,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  periodicitySuffix,
+  type ContentTypeOption,
+} from "@/lib/agency/contract-services";
 import { demandStatusLabel } from "@/lib/agency/labels";
 import { cn } from "@/lib/utils";
 import type { ClientDetail } from "@/types/clients-ui";
@@ -28,12 +41,16 @@ const tabTriggerClass =
 
 export function ClientDetailView({
   client,
+  contentTypes,
   canViewAsClient,
   canCreateBoard,
+  canEditContract,
 }: {
   client: ClientDetail;
+  contentTypes: ContentTypeOption[];
   canViewAsClient: boolean;
   canCreateBoard: boolean;
+  canEditContract: boolean;
 }) {
   const initials = client.name
     .split(" ")
@@ -41,6 +58,37 @@ export function ClientDetailView({
     .map((w) => w[0])
     .join("")
     .toUpperCase();
+
+  const [editing, setEditing] = useState(false);
+  const [scopeRows, setScopeRows] = useState<ScopeFieldRow[]>(() =>
+    buildScopeRows(contentTypes, client.contractServices)
+  );
+  const [pending, startTransition] = useTransition();
+
+  function startEdit() {
+    setScopeRows(buildScopeRows(contentTypes, client.contractServices));
+    setEditing(true);
+  }
+
+  function saveScope() {
+    const services = scopeRowsToPayload(scopeRows);
+    if (services.some((s) => Number.isNaN(s.quantity) || s.quantity < 0)) {
+      toast.error("Quantidade inválida");
+      return;
+    }
+    startTransition(async () => {
+      const result = await syncClientContractServices(client.id, {
+        planName: client.planName ?? undefined,
+        services,
+      });
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success("Escopo do contrato atualizado");
+      setEditing(false);
+    });
+  }
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">
@@ -244,22 +292,57 @@ export function ClientDetailView({
 
           <TabsContent value="contract" className="mt-0">
             <Card>
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-muted-foreground" />
-                  <CardTitle className="text-base">Contrato / Regras</CardTitle>
+              <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-base">Contrato / Regras</CardTitle>
+                  </div>
+                  <CardDescription className="mt-1.5">
+                    {client.planName
+                      ? `Plano ${client.planName}`
+                      : "Escopo acordado para a operação desta conta"}
+                  </CardDescription>
                 </div>
-                <CardDescription>
-                  {client.planName
-                    ? `Plano ${client.planName}`
-                    : "Escopo acordado para a operação desta conta"}
-                </CardDescription>
+                {canEditContract && !editing ? (
+                  <Button variant="outline" size="sm" onClick={startEdit}>
+                    Editar escopo
+                  </Button>
+                ) : null}
               </CardHeader>
               <CardContent>
-                {client.contractServices.length === 0 ? (
-                  <p className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
-                    Nenhum item de contrato cadastrado ainda.
-                  </p>
+                {editing ? (
+                  <div className="space-y-4">
+                    <ContractScopeFields
+                      contentTypes={contentTypes}
+                      rows={scopeRows}
+                      onChange={setScopeRows}
+                      showNotes={false}
+                    />
+                    <div className="flex flex-wrap gap-2">
+                      <Button disabled={pending} onClick={saveScope}>
+                        {pending ? "Salvando..." : "Salvar escopo"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        disabled={pending}
+                        onClick={() => setEditing(false)}
+                      >
+                        Cancelar
+                      </Button>
+                    </div>
+                  </div>
+                ) : client.contractServices.length === 0 ? (
+                  <div className="space-y-3">
+                    <p className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
+                      Nenhum item de contrato cadastrado ainda.
+                    </p>
+                    {canEditContract ? (
+                      <Button variant="outline" size="sm" onClick={startEdit}>
+                        Cadastrar escopo
+                      </Button>
+                    ) : null}
+                  </div>
                 ) : (
                   <ul className="divide-y divide-border rounded-xl border border-border bg-muted/80">
                     {client.contractServices.map((service) => (
@@ -272,7 +355,7 @@ export function ClientDetailView({
                         </span>
                         <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
                           {service.quantity ?? "—"}
-                          {service.periodicity === "monthly" ? " / mês" : ""}
+                          {periodicitySuffix(service.periodicity)}
                         </span>
                       </li>
                     ))}

@@ -1,0 +1,167 @@
+Quero que você verifique se tudo que foi pedido aqui já foi implementado ou está incompleto, quero que liste tudo que já foi feito, o que está parcialmente feito e o que falta ser feito.
+
+# Consolidação Completa dos Requisitos do Sistema de Gestão
+
+## PROMPT 1: Fundação do Sistema, Login, Perfis e Configurações Gerais
+
+Este módulo estabelece a base estrutural, a arquitetura de segurança e a organização inicial da plataforma.
+
+### Autenticação, Perfis e Redirecionamento
+
+* A página de login deve possuir campos de e-mail e senha, botão "Entrar", opção de recuperação de senha e validação de conta ativa.
+
+* O acesso ao sistema é feito exclusivamente por convites da gestão ou administração, sem permitir cadastro público livre.
+
+* O primeiro acesso exige a confirmação de dados básicos, criação de nova senha e aceite de termos internos.
+
+* Os tipos de usuários iniciais incluem: Administrador geral, Gestão, Social media, Designer, Videomaker, Editor de vídeo, Outros colaboradores e Cliente externo.
+
+* Após o login, o sistema deve identificar a função do usuário e redirecioná-lo automaticamente para o seu painel correspondente (ex: um designer é levado para "Meu Painel — Design").
+
+### Sistema de Permissões Configurável
+
+* As permissões devem ser configuráveis de forma granular e não devem ser engessadas apenas pelo nome do cargo do usuário.
+
+* A gestão deve poder criar funções, nomeá-las e definir permissões específicas (ex: "Alterar prazo", "Alterar prioridade", "Visualizar cronômetros").
+
+* Usuários externos (clientes) só podem acessar os dados da sua própria empresa.
+
+* Usuários internos, como as Social Medias, só devem visualizar os clientes que lhes foram previamente atribuídos.
+
+### Navegação e Painéis Iniciais
+
+* O menu lateral interno deve exibir itens de forma dinâmica, ocultando ou mostrando opções com base nas permissões de cada usuário.
+
+* O portal do cliente deve possuir um menu externo totalmente separado, ocultando a operação interna da agência.
+
+* O Painel da Gestão deve exibir indicadores consolidados, como demandas em aberto, atrasadas, em produção e sem responsável.
+
+* O sistema deve possuir páginas estruturadas em formato de lista e calendário para gerenciar Projetos, Captações e Clientes.
+
+### Segurança, Auditoria e Sincronização
+
+* Toda ação importante deve gerar um histórico inviolável, registrando o usuário, a ação, data, hora, valor anterior e o novo valor.
+
+* A arquitetura de dados deve seguir o princípio de "Um Registro", onde a mesma demanda aparece em vários painéis sem criar dados duplicados.
+
+* A segurança de dados deve utilizar Row Level Security (RLS) no backend e banco de dados, impedindo acessos indevidos mesmo fora do frontend.
+
+* O sistema deve possuir uma pesquisa global com filtros persistentes para clientes, demandas, projetos, usuários e arquivos.
+
+* Não devem ser implementados nesta fase: cronômetros completos, matriz automática de prazos, regras de pausas, aprovação externa e integrações reais.
+
+---
+
+## PROMPT 2: Criação e Configuração do Quadro Interno do Cliente
+
+Este módulo define a criação dos quadros operacionais e a separação estrita e segura entre a visão interna da agência e a visão externa do cliente.
+
+### Assistente de Criação Dupla
+
+* A gestão deve possuir um botão destacado "Criar quadro de cliente" que abre um assistente de configuração em seis etapas.
+
+* A conclusão do assistente deve criar simultaneamente o Quadro Interno (para uso da agência) e o Portal Externo (para visualização do cliente).
+
+* A criação deve ser uma operação transacional obrigatória, evitando que o sistema crie apenas um dos ambientes caso ocorra um erro.
+
+* O portal externo deve ser criado inicialmente em status de "Rascunho", aguardando a configuração e o convite aos usuários externos.
+
+### Separação de Dados e Visibilidade
+
+* O Quadro Interno exibe o histórico operacional completo, prazos internos, cronômetros, comentários da equipe e prioridades.
+
+* O Portal Externo exibe exclusivamente informações autorizadas, como publicações previstas, calendário externo e materiais entregues.
+
+* Comentários internos, produtividade da equipe e atrasos individuais nunca devem aparecer no portal externo.
+
+* O padrão de visibilidade de todo cartão é oculto (interno), exigindo liberação manual e seleção de campos para que o cliente possa visualizar.
+
+* A gestão deve possuir um recurso chamado "Visualizar como cliente" para simular o portal externo e validar as informações antes de liberá-las.
+
+### Competências e Automação de Cartões
+
+* O quadro operacional do cliente deve ser organizado por competências mensais (ex: Julho de 2026, Agosto de 2026).
+
+* Ao iniciar um novo mês, o sistema deve gerar automaticamente os cartões obrigatórios com base no contrato cadastrado (ex: 8 estáticos, 4 carrosséis).
+
+* Os cartões contratuais automáticos devem iniciar com o status "Pendente de planejamento".
+
+### Fluxo do Briefing e Conclusão
+
+* O quadro deve conter as listas padrão: Feeds obrigatórios, Stories obrigatórios, Demandas e acompanhamentos, Demandas extras, Captações, Projetos e Links úteis.
+
+* A ação final da etapa da social media deve ser "Concluir briefing e demandar", que valida os campos obrigatórios e envia a demanda ao setor responsável.
+
+* Após o envio da demanda, a descrição original do briefing deve ficar bloqueada para impedir alterações silenciosas.
+
+* A data de postagem ou entrega deve ficar protegida após a demanda, podendo ser alterada apenas pela gestão mediante registro de justificativa.
+
+* A conclusão definitiva de um cartão (ex: Feeds) exige obrigatoriamente a inserção do link do material finalizado ou o link da publicação.
+
+* Não devem ser implementados nesta fase: portal externo completo com aprovação do cliente, chat, solicitação de ajustes pelo portal e relatórios avançados de saúde da conta.
+
+---
+
+## PROMPT 3: Quadros dos Setores, Painéis Individuais e Fluxo Operacional
+
+Este módulo detalha a execução diária do trabalho, a distribuição das tarefas para a equipe criativa e o acompanhamento de produtividade e tempo.
+
+### Princípio de Visualização e Quadros
+
+* Uma demanda deve ser criada apenas uma vez e exibida em várias visualizações (painel do cliente, setor, indivíduo) sem criar cópias independentes.
+
+* O sistema deve possuir Quadros Gerais dedicados para os setores de Social Media, Design, Vídeo e Tráfego Pago.
+
+* O sistema deve possuir Painéis Individuais para que cada colaborador visualize exclusivamente as demandas atribuídas a ele.
+
+* Todos os quadros operacionais devem possuir opções para alternar entre as visualizações de Quadro Kanban, Calendário e Lista.
+
+* Os cartões devem exibir uma prévia externa resumida (contendo título, prazos, executor e cronômetro), mostrando os dados completos apenas quando abertos.
+
+### Gestão de Prioridades (Top 5)
+
+* Todos os quadros gerais e painéis individuais devem possuir uma lista automática chamada "Demandas prioritárias" (Top 5).
+
+* Esta lista deve exibir as 5 demandas mais urgentes no momento, calculadas com base no grau de prioridade, prazos, atrasos e status.
+
+* O cálculo do Top 5 deve ser refeito automaticamente a cada nova alteração de demanda, ajuste de prazo ou mudança de status.
+
+### Execução e Cronômetros
+
+* O sistema deve suportar métodos de distribuição configuráveis por autoatribuição ("Assumir demanda"), distribuição pelo líder ou atribuição direta pela gestão.
+
+* A ação de "Assumir demanda" define o executor da tarefa, mas não inicia o tempo de trabalho automaticamente.
+
+* A ação de "Iniciar atividade" dispara o cronômetro, e o tempo atual em execução passa a ser visível imediatamente em todos os painéis autorizados.
+
+* Por padrão, cada usuário só pode manter uma única atividade com cronômetro ativo por vez.
+
+* O sistema deve permitir pausar uma atividade, exigindo obrigatoriamente que o colaborador selecione um motivo (ex: reunião, aguardando material).
+
+* Para concluir uma produção nas áreas de design ou vídeo, é obrigatório encerrar o cronômetro e anexar o link do material entregue.
+
+* Solicitações de ajuste devem reabrir a etapa do executor e gerar uma nova sessão de tempo, separada do tempo de produção inicial.
+
+### Captações, Projetos e Atrasos
+
+* Captações criadas diretamente no quadro do cliente devem ser enviadas automaticamente ao quadro geral de vídeo e ao calendário.
+
+* Projetos que possuam etapas atribuídas a um setor específico devem aparecer no quadro operacional desse setor, mantendo o vínculo com o projeto original.
+
+* O colaborador tem a opção de definir uma "Data programada de execução", mas o sistema deve emitir um alerta se essa data ultrapassar o prazo interno estipulado.
+
+* Os atrasos devem ser registrados de forma permanente (gravando o prazo original, data real e impacto), e não devem desaparecer após a conclusão da atividade.
+
+### Indicadores e Ações da Gestão
+
+* O painel da gestão deve possuir ferramentas para monitorar gargalos, atividades paradas, cronômetros acima do tempo esperado e produtividade da equipe.
+
+* A gestão possui permissão para alterar setores responsáveis, trocar executores, modificar prioridades e corrigir registros de tempo informando uma justificativa formal.
+
+* O sistema deve gerar indicadores diários, semanais e mensais (ex: demandas concluídas, tempo médio) para todos os setores e usuários.
+
+* Os quadros devem possuir uma lista ou filtro de atividades "Concluídas hoje", atuando como uma visualização daquele dia sem mover o cartão definitivamente.
+
+* O sistema deve gerar notificações diretas para prazos próximos, demandas atrasadas, ajustes solicitados e produções concluídas.
+
+* Não devem ser implementados nesta fase: algoritmo final e definitivo de prioridade, metas finais de tempo de execução, integrações reais com Google Drive ou Instagram e distribuição automatizada por Inteligência Artificial.
