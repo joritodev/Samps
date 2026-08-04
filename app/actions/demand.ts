@@ -2,6 +2,7 @@
 
 import { AuditAction, DemandStatus } from "@prisma/client";
 import { db } from "@/lib/db";
+import { BRIEFING_DEMAND_STATUSES } from "@/lib/agency/labels";
 import { requirePermission } from "@/lib/permissions/check";
 import { revalidateOperationalViews } from "@/lib/revalidate-operational";
 import { logAudit } from "@/lib/services/audit.service";
@@ -50,6 +51,13 @@ export async function concluirBriefing(
 
     if (previous.briefingLockedAt) {
       return { error: "Briefing já bloqueado." };
+    }
+
+    if (!BRIEFING_DEMAND_STATUSES.includes(previous.status)) {
+      return {
+        error:
+          "Só é possível demandar cartões em planejamento. Status atual não permite esta ação.",
+      };
     }
 
     await db.demand.update({

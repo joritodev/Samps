@@ -1,8 +1,8 @@
-import type {
+import {
   DemandStatus,
-  ProjectStatus,
-  ShootStatus,
-  UserType,
+  type ProjectStatus,
+  type ShootStatus,
+  type UserType,
 } from "@prisma/client";
 
 export const PROJECT_STATUS_LABEL: Record<ProjectStatus, string> = {
@@ -55,3 +55,39 @@ export const DEMAND_STATUS_LABEL: Record<DemandStatus, string> = {
 export function demandStatusLabel(status: string) {
   return DEMAND_STATUS_LABEL[status as DemandStatus] ?? status;
 }
+
+/** Status em que o briefing ainda pode ser concluído e demandado. */
+export const BRIEFING_DEMAND_STATUSES: DemandStatus[] = [
+  DemandStatus.PENDING_PLANNING,
+  DemandStatus.PLANNING,
+  DemandStatus.OPEN,
+  DemandStatus.BACKLOG,
+];
+
+export function canDemandBriefing(
+  status: string,
+  briefingLockedAt?: Date | string | null
+) {
+  if (briefingLockedAt) return false;
+  return BRIEFING_DEMAND_STATUSES.includes(status as DemandStatus);
+}
+
+export function canCompleteProduction(status: string) {
+  return (
+    status === DemandStatus.IN_PRODUCTION ||
+    status === DemandStatus.ADJUSTMENTS
+  );
+}
+
+export function canRequestAdjustment(status: string) {
+  return status === DemandStatus.IN_REVIEW;
+}
+
+export function canRegisterPublication(status: string) {
+  return (
+    status === DemandStatus.APPROVED ||
+    status === DemandStatus.SCHEDULED ||
+    status === DemandStatus.IN_REVIEW
+  );
+}
+

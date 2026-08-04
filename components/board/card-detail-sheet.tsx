@@ -30,6 +30,13 @@ import {
   type DemandDelayRow,
 } from "@/components/shared/demand-delay-history";
 import { toast } from "sonner";
+import {
+  canCompleteProduction,
+  canDemandBriefing,
+  canRegisterPublication,
+  canRequestAdjustment,
+  demandStatusLabel,
+} from "@/lib/agency/labels";
 
 type CardDetail = {
   id: string;
@@ -95,6 +102,12 @@ export function CardDetailSheet({
   }
 
   const locked = !!card?.briefingLockedAt;
+  const canBriefing = card
+    ? canDemandBriefing(card.status, card.briefingLockedAt)
+    : false;
+  const canProduce = card ? canCompleteProduction(card.status) : false;
+  const canAdjust = card ? canRequestAdjustment(card.status) : false;
+  const canPublish = card ? canRegisterPublication(card.status) : false;
   const fmt = (card?.format ?? "").toLowerCase();
 
   useEffect(() => {
@@ -118,7 +131,7 @@ export function CardDetailSheet({
             <SheetHeader>
               <SheetTitle className="text-left pr-8">{card.title}</SheetTitle>
               <div className="flex flex-wrap gap-1">
-                <Badge variant="outline">{card.status}</Badge>
+                <Badge variant="outline">{demandStatusLabel(card.status)}</Badge>
                 {card.cardCode && <Badge variant="secondary">{card.cardCode}</Badge>}
                 {card.isContractual && <Badge variant="secondary">Contratual</Badge>}
               </div>
@@ -149,7 +162,7 @@ export function CardDetailSheet({
               <TabsContent value="planning" className="space-y-3">
                 <div className="space-y-1">
                   <Label>Objetivo</Label>
-                  <Input defaultValue={card.objective ?? ""} disabled={locked} />
+                  <Input defaultValue={card.objective ?? ""} disabled={!canBriefing} />
                 </div>
                 <div className="space-y-1">
                   <Label>Formato</Label>
@@ -182,14 +195,14 @@ export function CardDetailSheet({
               <TabsContent value="briefing" className="space-y-3">
                 <div className="space-y-1">
                   <Label>Título</Label>
-                  <Input value={title} onChange={(e) => setTitle(e.target.value)} disabled={locked} />
+                  <Input value={title} onChange={(e) => setTitle(e.target.value)} disabled={!canBriefing} />
                 </div>
                 <div className="space-y-1">
                   <Label>Descrição *</Label>
                   <Textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    disabled={locked}
+                    disabled={!canBriefing}
                     rows={5}
                     placeholder="Descreva o briefing antes de demandar"
                   />
@@ -197,22 +210,22 @@ export function CardDetailSheet({
                 {fmt.includes("carrossel") && (
                   <div className="space-y-1">
                     <Label>Slides</Label>
-                    <Input type="number" defaultValue={card.slidesCount ?? ""} disabled={locked} />
+                    <Input type="number" defaultValue={card.slidesCount ?? ""} disabled={!canBriefing} />
                   </div>
                 )}
                 {fmt.includes("stor") && (
                   <div className="space-y-1">
                     <Label>Telas</Label>
-                    <Input type="number" defaultValue={card.screensCount ?? ""} disabled={locked} />
+                    <Input type="number" defaultValue={card.screensCount ?? ""} disabled={!canBriefing} />
                   </div>
                 )}
                 {(fmt.includes("reel") || fmt.includes("video")) && (
                   <div className="space-y-1">
                     <Label>Duração (seg)</Label>
-                    <Input type="number" defaultValue={card.durationSeconds ?? ""} disabled={locked} />
+                    <Input type="number" defaultValue={card.durationSeconds ?? ""} disabled={!canBriefing} />
                   </div>
                 )}
-                {!locked && (
+                {canBriefing && (
                   <Button
                     disabled={pending}
                     onClick={() =>
@@ -243,30 +256,44 @@ export function CardDetailSheet({
                     Concluir briefing e demandar
                   </Button>
                 )}
-                {locked && (
-                  <p className="text-xs text-amber-700 dark:text-amber-300">Briefing bloqueado em {format(new Date(card.briefingLockedAt!), "dd/MM/yyyy HH:mm", { locale: ptBR })}</p>
+                {!canBriefing && (
+                  <p className="text-xs text-muted-foreground">
+                    {locked && card.briefingLockedAt
+                      ? `Briefing bloqueado em ${format(new Date(card.briefingLockedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`
+                      : `Esta demanda já está em “${demandStatusLabel(card.status)}”. O briefing só pode ser demandado enquanto estiver em planejamento.`}
+                  </p>
                 )}
               </TabsContent>
 
               <TabsContent value="production" className="space-y-3">
                 <p className="text-sm">Executor: {card.assignee?.name ?? "Não atribuído"}</p>
-                <div className="space-y-1">
-                  <Label>Link do material</Label>
-                  <Input value={materialUrl} onChange={(e) => setMaterialUrl(e.target.value)} />
-                </div>
-                <Button
-                  variant="outline"
-                  disabled={pending}
-                  onClick={() =>
-                    startTransition(async () => {
-                      const r = await completeProductionAction(card.id, clientId, materialUrl);
-                      if (r.success) toast.success("Enviado para revisão");
-                    })
-                  }
-                >
-                  Concluir produção e enviar para revisão
-                </Button>
-                {(card.status === "IN_REVIEW" || card.status === "ADJUSTMENTS") && (
+                {canProduce ? (
+                  <>
+                    <div className="space-y-1">
+                      <Label>Link do material</Label>
+                      <Input value={materialUrl} onChange={(e) => setMaterialUrl(e.target.value)} />
+                    </div>
+                    <Button
+                      variant="outline"
+                      disabled={pending || !materialUrl.trim()}
+                      onClick={() =>
+                        startTransition(async () => {
+                          const r = await completeProductionAction(card.id, clientId, materialUrl);
+                          if (r.success) toast.success("Enviado para revisão");
+                        })
+                      }
+                    >
+                      Concluir produção e enviar para revisão
+                    </Button>
+                  </>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    {card.materialUrl
+                      ? `Material: ${card.materialUrl}`
+                      : `Produção disponível quando o status for “Em produção” ou “Em ajuste”. Agora: ${demandStatusLabel(card.status)}.`}
+                  </p>
+                )}
+                {canAdjust && (
                   <div className="space-y-2 rounded-lg border border-amber-500/25 bg-amber-500/10 p-3 dark:border-amber-400/25 dark:bg-amber-400/10">
                     <Label>Solicitar ajuste</Label>
                     <Textarea
@@ -301,23 +328,33 @@ export function CardDetailSheet({
               </TabsContent>
 
               <TabsContent value="publication" className="space-y-3">
-                <div className="space-y-1">
-                  <Label>Link de publicação</Label>
-                  <Input value={publishedUrl} onChange={(e) => setPublishedUrl(e.target.value)} />
-                </div>
-                <Button
-                  disabled={pending}
-                  onClick={() =>
-                    startTransition(async () => {
-                      const r = await registerPublicationAction(card.id, clientId, {
-                        publishedUrl,
-                      });
-                      if (r.success) toast.success("Publicação registrada");
-                    })
-                  }
-                >
-                  Registrar publicação e concluir
-                </Button>
+                {canPublish ? (
+                  <>
+                    <div className="space-y-1">
+                      <Label>Link de publicação</Label>
+                      <Input value={publishedUrl} onChange={(e) => setPublishedUrl(e.target.value)} />
+                    </div>
+                    <Button
+                      disabled={pending || !publishedUrl.trim()}
+                      onClick={() =>
+                        startTransition(async () => {
+                          const r = await registerPublicationAction(card.id, clientId, {
+                            publishedUrl,
+                          });
+                          if (r.success) toast.success("Publicação registrada");
+                        })
+                      }
+                    >
+                      Registrar publicação e concluir
+                    </Button>
+                  </>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    {card.publishedUrl
+                      ? `Publicado: ${card.publishedUrl}`
+                      : `Publicação disponível após aprovação/revisão. Status atual: ${demandStatusLabel(card.status)}.`}
+                  </p>
+                )}
               </TabsContent>
 
               <TabsContent value="communication" className="space-y-3">
