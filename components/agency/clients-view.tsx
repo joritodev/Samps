@@ -32,8 +32,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Textarea } from "@/components/ui/textarea";
+import {
+  buildScopeRows,
+  ContractScopeFields,
+  scopeRowsToPayload,
+  type ScopeFieldRow,
+} from "@/components/agency/contract-scope-fields";
 import { cn } from "@/lib/utils";
+import type { ContentTypeOption } from "@/lib/agency/contract-services";
 import type { ClientListItem } from "@/types/clients-ui";
 
 function ClientAvatar({
@@ -71,15 +77,20 @@ function ClientAvatar({
 function NewClientSheet({
   open,
   onOpenChange,
+  contentTypes,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  contentTypes: ContentTypeOption[];
 }) {
   const [name, setName] = useState("");
   const [status, setStatus] = useState<"active" | "paused">("active");
   const [segment, setSegment] = useState("");
   const [planName, setPlanName] = useState("");
-  const [scope, setScope] = useState("");
+  const [notes, setNotes] = useState("");
+  const [scopeRows, setScopeRows] = useState<ScopeFieldRow[]>(() =>
+    buildScopeRows(contentTypes)
+  );
   const [pending, startTransition] = useTransition();
 
   function reset() {
@@ -87,12 +98,19 @@ function NewClientSheet({
     setStatus("active");
     setSegment("");
     setPlanName("");
-    setScope("");
+    setNotes("");
+    setScopeRows(buildScopeRows(contentTypes));
   }
 
   function handleSubmit() {
     if (!name.trim()) {
       toast.error("O nome do cliente é obrigatório");
+      return;
+    }
+
+    const services = scopeRowsToPayload(scopeRows);
+    if (services.some((s) => Number.isNaN(s.quantity) || s.quantity < 0)) {
+      toast.error("Quantidade inválida");
       return;
     }
 
@@ -102,7 +120,8 @@ function NewClientSheet({
         active: status === "active",
         segment,
         planName,
-        contractNotes: scope,
+        contractNotes: notes,
+        services,
       });
 
       if (result.error) {
@@ -124,7 +143,7 @@ function NewClientSheet({
         if (!next) reset();
       }}
     >
-      <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-md">
+      <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-lg">
         <SheetHeader className="space-y-1 border-b border-border px-6 py-5 text-left">
           <SheetTitle>Novo Cliente</SheetTitle>
           <SheetDescription>
@@ -179,20 +198,13 @@ function NewClientSheet({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="client-scope">Escopo do contrato</Label>
-            <Textarea
-              id="client-scope"
-              placeholder="Ex: 8 feeds, 12 stories, 2 reels / mês…"
-              value={scope}
-              onChange={(e) => setScope(e.target.value)}
-              className="min-h-[120px] resize-none"
-            />
-            <p className="text-xs text-muted-foreground">
-              Os itens quantificados do contrato são cadastrados na tela do
-              cliente.
-            </p>
-          </div>
+          <ContractScopeFields
+            contentTypes={contentTypes}
+            rows={scopeRows}
+            onChange={setScopeRows}
+            notes={notes}
+            onNotesChange={setNotes}
+          />
         </div>
 
         <SheetFooter className="border-t border-border bg-muted/80 px-6 py-4 sm:flex-col sm:space-x-0">
@@ -213,9 +225,11 @@ function NewClientSheet({
 export function ClientsView({
   clients,
   canCreate,
+  contentTypes,
 }: {
   clients: ClientListItem[];
   canCreate: boolean;
+  contentTypes: ContentTypeOption[];
 }) {
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -355,7 +369,11 @@ export function ClientsView({
         )}
       </div>
 
-      <NewClientSheet open={sheetOpen} onOpenChange={setSheetOpen} />
+      <NewClientSheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        contentTypes={contentTypes}
+      />
     </div>
   );
 }

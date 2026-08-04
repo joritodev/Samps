@@ -19,6 +19,7 @@ export type ClientContractService = {
   name: string;
   quantity: number | null;
   periodicity: string;
+  contentTypeId: string | null;
 };
 
 export type ClientDetail = {
