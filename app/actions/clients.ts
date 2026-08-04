@@ -12,7 +12,10 @@ import {
   normalizeScopeLines,
   type ContractScopeLine,
 } from "@/lib/agency/contract-services";
-import { requirePermission } from "@/lib/permissions/check";
+import {
+  requireClientAccess,
+  requirePermission,
+} from "@/lib/permissions/check";
 import { logAudit } from "@/lib/services/audit.service";
 
 type ScopeInput = {
@@ -131,6 +134,7 @@ export async function syncClientContractServices(
   }
 ) {
   const actor = await requirePermission("clients.edit");
+  await requireClientAccess(clientId);
 
   if (input.services.some((s) => Number(s.quantity) < 0)) {
     return { error: "Quantidade não pode ser negativa" };
@@ -179,65 +183,71 @@ export async function syncClientContractServices(
         include: { services: true },
       });
     } else {
-      await db.contract.update({
-        where: { id: contract.id },
-        data: {
-          ...(planName !== undefined
-            ? { planName: planName || contract.planName }
-            : {}),
-          ...(input.contractNotes !== undefined
-            ? { notes: contractNotes || null }
-            : {}),
-        },
-      });
+      const contractId = contract.id;
+      const existingPlanName = contract.planName;
+      const existingServices = contract.services;
 
-      const keepIds = new Set(lines.map((l) => l.contentTypeId));
-      const byContentType = new Map(
-        contract.services
-          .filter((s) => s.contentTypeId)
-          .map((s) => [s.contentTypeId!, s])
-      );
+      await db.$transaction(async (tx) => {
+        await tx.contract.update({
+          where: { id: contractId },
+          data: {
+            ...(planName !== undefined
+              ? { planName: planName || existingPlanName }
+              : {}),
+            ...(input.contractNotes !== undefined
+              ? { notes: contractNotes || null }
+              : {}),
+          },
+        });
 
-      for (const existing of contract.services) {
-        if (
-          existing.contentTypeId &&
-          !keepIds.has(existing.contentTypeId) &&
-          existing.isActive
-        ) {
-          await db.contractService.update({
-            where: { id: existing.id },
-            data: { isActive: false },
-          });
-        }
-      }
-
-      for (const line of lines) {
-        const payload = serviceCreates.find(
-          (s) => s.contentTypeId === line.contentTypeId
+        const keepIds = new Set(lines.map((l) => l.contentTypeId));
+        const byContentType = new Map(
+          existingServices
+            .filter((s) => s.contentTypeId)
+            .map((s) => [s.contentTypeId!, s])
         );
-        if (!payload) continue;
 
-        const existing = byContentType.get(line.contentTypeId);
-        if (existing) {
-          await db.contractService.update({
-            where: { id: existing.id },
-            data: {
-              name: payload.name,
-              quantity: payload.quantity,
-              periodicity: payload.periodicity,
-              demandType: payload.demandType,
-              isActive: true,
-            },
-          });
-        } else {
-          await db.contractService.create({
-            data: {
-              contractId: contract.id,
-              ...payload,
-            },
-          });
+        for (const existing of existingServices) {
+          if (
+            existing.contentTypeId &&
+            !keepIds.has(existing.contentTypeId) &&
+            existing.isActive
+          ) {
+            await tx.contractService.update({
+              where: { id: existing.id },
+              data: { isActive: false },
+            });
+          }
         }
-      }
+
+        for (const line of lines) {
+          const payload = serviceCreates.find(
+            (s) => s.contentTypeId === line.contentTypeId
+          );
+          if (!payload) continue;
+
+          const existing = byContentType.get(line.contentTypeId);
+          if (existing) {
+            await tx.contractService.update({
+              where: { id: existing.id },
+              data: {
+                name: payload.name,
+                quantity: payload.quantity,
+                periodicity: payload.periodicity,
+                demandType: payload.demandType,
+                isActive: true,
+              },
+            });
+          } else {
+            await tx.contractService.create({
+              data: {
+                contractId,
+                ...payload,
+              },
+            });
+          }
+        }
+      });
     }
 
     await logAudit({
