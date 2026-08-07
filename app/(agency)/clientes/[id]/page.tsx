@@ -65,6 +65,16 @@ export default async function ClienteDetailPage({
         active: row.status === ClientStatus.ACTIVE,
         segment: row.segment,
         planName: contract?.planName ?? null,
+        birthDate: row.birthDate?.toISOString() ?? null,
+        addressZip: row.addressZip,
+        addressStreet: row.addressStreet,
+        addressNumber: row.addressNumber,
+        addressComplement: row.addressComplement,
+        addressDistrict: row.addressDistrict,
+        addressCity: row.addressCity,
+        addressState: row.addressState,
+        contractDocUrl: row.contractDocUrl,
+        studyDocUrl: row.studyDocUrl,
         contractServices:
           contract?.services.map((s) => ({
             id: s.id,

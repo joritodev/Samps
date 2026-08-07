@@ -11,7 +11,10 @@ import {
   LayoutDashboard,
 } from "lucide-react";
 import { toast } from "sonner";
-import { syncClientContractServices } from "@/app/actions/clients";
+import {
+  syncClientContractServices,
+  updateClientProfile,
+} from "@/app/actions/clients";
 import {
   buildScopeRows,
   ContractScopeFields,
@@ -27,7 +30,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  formatAddress,
+  formatBirthDate,
+} from "@/lib/agency/client-fields";
 import {
   periodicitySuffix,
   type ContentTypeOption,
@@ -35,6 +44,13 @@ import {
 import { demandStatusLabel } from "@/lib/agency/labels";
 import { cn } from "@/lib/utils";
 import type { ClientDetail } from "@/types/clients-ui";
+
+function toDateInputValue(value?: string | null) {
+  if (!value) return "";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toISOString().slice(0, 10);
+}
 
 const tabTriggerClass =
   "rounded-none border-b-2 border-transparent bg-transparent px-4 py-2.5 text-muted-foreground shadow-none data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none";
@@ -60,14 +76,49 @@ export function ClientDetailView({
     .toUpperCase();
 
   const [editing, setEditing] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
   const [scopeRows, setScopeRows] = useState<ScopeFieldRow[]>(() =>
     buildScopeRows(contentTypes, client.contractServices)
   );
   const [pending, startTransition] = useTransition();
+  const [profilePending, startProfileTransition] = useTransition();
+  const [birthDate, setBirthDate] = useState(toDateInputValue(client.birthDate));
+  const [addressZip, setAddressZip] = useState(client.addressZip ?? "");
+  const [addressStreet, setAddressStreet] = useState(client.addressStreet ?? "");
+  const [addressNumber, setAddressNumber] = useState(client.addressNumber ?? "");
+  const [addressComplement, setAddressComplement] = useState(
+    client.addressComplement ?? ""
+  );
+  const [addressDistrict, setAddressDistrict] = useState(
+    client.addressDistrict ?? ""
+  );
+  const [addressCity, setAddressCity] = useState(client.addressCity ?? "");
+  const [addressState, setAddressState] = useState(client.addressState ?? "");
+  const [contractDocUrl, setContractDocUrl] = useState(
+    client.contractDocUrl ?? ""
+  );
+  const [studyDocUrl, setStudyDocUrl] = useState(client.studyDocUrl ?? "");
+
+  const addressLabel = formatAddress(client) || "Não informado";
+  const birthLabel = formatBirthDate(client.birthDate) || "Não informado";
 
   function startEdit() {
     setScopeRows(buildScopeRows(contentTypes, client.contractServices));
     setEditing(true);
+  }
+
+  function startProfileEdit() {
+    setBirthDate(toDateInputValue(client.birthDate));
+    setAddressZip(client.addressZip ?? "");
+    setAddressStreet(client.addressStreet ?? "");
+    setAddressNumber(client.addressNumber ?? "");
+    setAddressComplement(client.addressComplement ?? "");
+    setAddressDistrict(client.addressDistrict ?? "");
+    setAddressCity(client.addressCity ?? "");
+    setAddressState(client.addressState ?? "");
+    setContractDocUrl(client.contractDocUrl ?? "");
+    setStudyDocUrl(client.studyDocUrl ?? "");
+    setEditingProfile(true);
   }
 
   function saveScope() {
@@ -87,6 +138,29 @@ export function ClientDetailView({
       }
       toast.success("Escopo do contrato atualizado");
       setEditing(false);
+    });
+  }
+
+  function saveProfile() {
+    startProfileTransition(async () => {
+      const result = await updateClientProfile(client.id, {
+        birthDate,
+        addressZip,
+        addressStreet,
+        addressNumber,
+        addressComplement,
+        addressDistrict,
+        addressCity,
+        addressState,
+        contractDocUrl,
+        studyDocUrl,
+      });
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success("Dados cadastrais atualizados");
+      setEditingProfile(false);
     });
   }
 
@@ -216,6 +290,184 @@ export function ClientDetailView({
                 </CardContent>
               </Card>
             </div>
+
+            <Card>
+              <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
+                <div>
+                  <CardTitle className="text-base">Dados cadastrais</CardTitle>
+                  <CardDescription>
+                    Endereço, aniversário e documentos do Drive
+                  </CardDescription>
+                </div>
+                {canEditContract && !editingProfile ? (
+                  <Button type="button" variant="outline" size="sm" onClick={startProfileEdit}>
+                    Editar
+                  </Button>
+                ) : null}
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {editingProfile ? (
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="profile-birth">Aniversário</Label>
+                      <Input
+                        id="profile-birth"
+                        type="date"
+                        value={birthDate}
+                        onChange={(e) => setBirthDate(e.target.value)}
+                      />
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="profile-zip">CEP</Label>
+                        <Input
+                          id="profile-zip"
+                          value={addressZip}
+                          onChange={(e) => setAddressZip(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="profile-state">UF</Label>
+                        <Input
+                          id="profile-state"
+                          maxLength={2}
+                          value={addressState}
+                          onChange={(e) => setAddressState(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="profile-street">Rua</Label>
+                      <Input
+                        id="profile-street"
+                        value={addressStreet}
+                        onChange={(e) => setAddressStreet(e.target.value)}
+                      />
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="profile-number">Número</Label>
+                        <Input
+                          id="profile-number"
+                          value={addressNumber}
+                          onChange={(e) => setAddressNumber(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="profile-complement">Complemento</Label>
+                        <Input
+                          id="profile-complement"
+                          value={addressComplement}
+                          onChange={(e) => setAddressComplement(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="profile-district">Bairro</Label>
+                        <Input
+                          id="profile-district"
+                          value={addressDistrict}
+                          onChange={(e) => setAddressDistrict(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="profile-city">Cidade</Label>
+                        <Input
+                          id="profile-city"
+                          value={addressCity}
+                          onChange={(e) => setAddressCity(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="profile-contract-doc">Link do contrato (Drive)</Label>
+                      <Input
+                        id="profile-contract-doc"
+                        type="url"
+                        placeholder="https://drive.google.com/..."
+                        value={contractDocUrl}
+                        onChange={(e) => setContractDocUrl(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="profile-study-doc">Link do estudo (Drive)</Label>
+                      <Input
+                        id="profile-study-doc"
+                        type="url"
+                        placeholder="https://docs.google.com/..."
+                        value={studyDocUrl}
+                        onChange={(e) => setStudyDocUrl(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        disabled={profilePending}
+                        onClick={saveProfile}
+                      >
+                        {profilePending ? "Salvando..." : "Salvar"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        disabled={profilePending}
+                        onClick={() => setEditingProfile(false)}
+                      >
+                        Cancelar
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Aniversário</p>
+                        <p className="text-sm text-foreground">{birthLabel}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Endereço</p>
+                        <p className="text-sm text-foreground">{addressLabel}</p>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground">Documentos</p>
+                      <div className="flex flex-wrap gap-2">
+                        {client.contractDocUrl ? (
+                          <Button asChild variant="outline" size="sm">
+                            <a
+                              href={client.contractDocUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              Contrato
+                              <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
+                            </a>
+                          </Button>
+                        ) : null}
+                        {client.studyDocUrl ? (
+                          <Button asChild variant="outline" size="sm">
+                            <a
+                              href={client.studyDocUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              Estudo
+                              <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
+                            </a>
+                          </Button>
+                        ) : null}
+                        {!client.contractDocUrl && !client.studyDocUrl ? (
+                          <p className="text-sm text-muted-foreground">
+                            Nenhum documento cadastrado.
+                          </p>
+                        ) : null}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
 
             <Card>
               <CardHeader>

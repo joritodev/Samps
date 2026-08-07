@@ -88,6 +88,14 @@ function NewClientSheet({
   const [segment, setSegment] = useState("");
   const [planName, setPlanName] = useState("");
   const [notes, setNotes] = useState("");
+  const [birthDate, setBirthDate] = useState("");
+  const [addressZip, setAddressZip] = useState("");
+  const [addressStreet, setAddressStreet] = useState("");
+  const [addressNumber, setAddressNumber] = useState("");
+  const [addressComplement, setAddressComplement] = useState("");
+  const [addressDistrict, setAddressDistrict] = useState("");
+  const [addressCity, setAddressCity] = useState("");
+  const [addressState, setAddressState] = useState("");
   const [scopeRows, setScopeRows] = useState<ScopeFieldRow[]>(() =>
     buildScopeRows(contentTypes)
   );
@@ -99,6 +107,14 @@ function NewClientSheet({
     setSegment("");
     setPlanName("");
     setNotes("");
+    setBirthDate("");
+    setAddressZip("");
+    setAddressStreet("");
+    setAddressNumber("");
+    setAddressComplement("");
+    setAddressDistrict("");
+    setAddressCity("");
+    setAddressState("");
     setScopeRows(buildScopeRows(contentTypes));
   }
 
@@ -122,6 +138,14 @@ function NewClientSheet({
         planName,
         contractNotes: notes,
         services,
+        birthDate,
+        addressZip,
+        addressStreet,
+        addressNumber,
+        addressComplement,
+        addressDistrict,
+        addressCity,
+        addressState,
       });
 
       if (result.error) {
@@ -186,6 +210,86 @@ function NewClientSheet({
               value={segment}
               onChange={(e) => setSegment(e.target.value)}
             />
+          </div>
+
+          <div className="space-y-3 rounded-lg border border-border p-4">
+            <p className="text-sm font-medium text-foreground">
+              Dados cadastrais
+            </p>
+            <div className="space-y-2">
+              <Label htmlFor="client-birth">Aniversário</Label>
+              <Input
+                id="client-birth"
+                type="date"
+                value={birthDate}
+                onChange={(e) => setBirthDate(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="client-zip">CEP</Label>
+                <Input
+                  id="client-zip"
+                  placeholder="00000-000"
+                  value={addressZip}
+                  onChange={(e) => setAddressZip(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="client-state">UF</Label>
+                <Input
+                  id="client-state"
+                  placeholder="CE"
+                  maxLength={2}
+                  value={addressState}
+                  onChange={(e) => setAddressState(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="client-street">Rua</Label>
+              <Input
+                id="client-street"
+                value={addressStreet}
+                onChange={(e) => setAddressStreet(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="client-number">Número</Label>
+                <Input
+                  id="client-number"
+                  value={addressNumber}
+                  onChange={(e) => setAddressNumber(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="client-complement">Complemento</Label>
+                <Input
+                  id="client-complement"
+                  value={addressComplement}
+                  onChange={(e) => setAddressComplement(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="client-district">Bairro</Label>
+                <Input
+                  id="client-district"
+                  value={addressDistrict}
+                  onChange={(e) => setAddressDistrict(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="client-city">Cidade</Label>
+                <Input
+                  id="client-city"
+                  value={addressCity}
+                  onChange={(e) => setAddressCity(e.target.value)}
+                />
+              </div>
+            </div>
           </div>
 
           <div className="space-y-2">

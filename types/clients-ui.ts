@@ -29,6 +29,16 @@ export type ClientDetail = {
   active: boolean;
   segment: string | null;
   planName: string | null;
+  birthDate: string | null;
+  addressZip: string | null;
+  addressStreet: string | null;
+  addressNumber: string | null;
+  addressComplement: string | null;
+  addressDistrict: string | null;
+  addressCity: string | null;
+  addressState: string | null;
+  contractDocUrl: string | null;
+  studyDocUrl: string | null;
   contractServices: ClientContractService[];
   createdAt: string;
   openDemands: number;

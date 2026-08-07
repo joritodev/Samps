@@ -265,6 +265,7 @@ model User {
   name               String
   phone              String?
   avatarUrl          String?
+  birthDate          DateTime?
   userType           UserType
   roleId             String
   sectorId           String?
@@ -477,6 +478,16 @@ model Client {
   phone                   String?
   logoUrl                 String?
   brandColor              String?
+  birthDate               DateTime?
+  addressZip              String?
+  addressStreet           String?
+  addressNumber           String?
+  addressComplement       String?
+  addressDistrict         String?
+  addressCity             String?
+  addressState            String?
+  contractDocUrl          String?
+  studyDocUrl             String?
   status                  ClientStatus @default(ACTIVE)
   primaryResponsibleId    String?
   socialMediaId           String?

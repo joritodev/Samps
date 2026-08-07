@@ -8,6 +8,10 @@ import {
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import {
+  clientProfileSchema,
+  type ClientProfileInput,
+} from "@/lib/agency/client-fields";
+import {
   demandTypeFromContentSlug,
   normalizeScopeLines,
   type ContractScopeLine,
@@ -22,6 +26,19 @@ type ScopeInput = {
   contentTypeId: string;
   quantity: number;
   periodicity: string;
+};
+
+type ProfileFields = {
+  birthDate?: string;
+  addressZip?: string;
+  addressStreet?: string;
+  addressNumber?: string;
+  addressComplement?: string;
+  addressDistrict?: string;
+  addressCity?: string;
+  addressState?: string;
+  contractDocUrl?: string;
+  studyDocUrl?: string;
 };
 
 async function resolveServiceCreates(lines: ContractScopeLine[]) {
@@ -58,12 +75,17 @@ export async function createClient(input: {
   planName?: string;
   contractNotes?: string;
   services?: ScopeInput[];
-}) {
+} & ProfileFields) {
   const actor = await requirePermission("clients.create");
 
   const name = input.name?.trim();
   if (!name) {
     return { error: "O nome do cliente é obrigatório" };
+  }
+
+  const profile = clientProfileSchema.safeParse(input);
+  if (!profile.success) {
+    return { error: profile.error.issues[0]?.message ?? "Dados inválidos." };
   }
 
   const planName = input.planName?.trim();
@@ -78,6 +100,7 @@ export async function createClient(input: {
     const serviceCreates = await resolveServiceCreates(lines);
     const needsContract =
       Boolean(planName) || Boolean(contractNotes) || serviceCreates.length > 0;
+    const data = profile.data;
 
     const client = await db.client.create({
       data: {
@@ -86,6 +109,16 @@ export async function createClient(input: {
         status: input.active ? ClientStatus.ACTIVE : ClientStatus.PAUSED,
         primaryResponsibleId: actor.id,
         startedAt: new Date(),
+        birthDate: data.birthDate ? new Date(data.birthDate) : null,
+        addressZip: data.addressZip,
+        addressStreet: data.addressStreet,
+        addressNumber: data.addressNumber,
+        addressComplement: data.addressComplement,
+        addressDistrict: data.addressDistrict,
+        addressCity: data.addressCity,
+        addressState: data.addressState,
+        contractDocUrl: data.contractDocUrl,
+        studyDocUrl: data.studyDocUrl,
         contracts: needsContract
           ? {
               create: {
@@ -264,5 +297,51 @@ export async function syncClientContractServices(
   } catch (error) {
     console.error("syncClientContractServices", error);
     return { error: "Não foi possível salvar o escopo do contrato." };
+  }
+}
+
+export async function updateClientProfile(
+  clientId: string,
+  input: ClientProfileInput
+) {
+  const actor = await requirePermission("clients.edit");
+  await requireClientAccess(clientId);
+
+  const parsed = clientProfileSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+  }
+  const data = parsed.data;
+
+  try {
+    await db.client.update({
+      where: { id: clientId },
+      data: {
+        birthDate: data.birthDate ? new Date(data.birthDate) : null,
+        addressZip: data.addressZip,
+        addressStreet: data.addressStreet,
+        addressNumber: data.addressNumber,
+        addressComplement: data.addressComplement,
+        addressDistrict: data.addressDistrict,
+        addressCity: data.addressCity,
+        addressState: data.addressState,
+        contractDocUrl: data.contractDocUrl,
+        studyDocUrl: data.studyDocUrl,
+      },
+    });
+
+    await logAudit({
+      userId: actor.id,
+      action: AuditAction.CLIENT_UPDATED,
+      entityType: "Client",
+      entityId: clientId,
+      newValue: { profileUpdated: true },
+    });
+
+    revalidatePath(`/clientes/${clientId}`);
+    return { success: true };
+  } catch (error) {
+    console.error("updateClientProfile", error);
+    return { error: "Não foi possível atualizar os dados do cliente." };
   }
 }
