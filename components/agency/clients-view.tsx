@@ -167,7 +167,7 @@ function NewClientSheet({
         if (!next) reset();
       }}
     >
-      <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-lg">
+      <SheetContent className="flex w-full max-h-[90dvh] flex-col gap-0 overflow-y-auto p-0 sm:max-w-lg">
         <SheetHeader className="space-y-1 border-b border-border px-6 py-5 text-left">
           <SheetTitle>Novo Cliente</SheetTitle>
           <SheetDescription>
