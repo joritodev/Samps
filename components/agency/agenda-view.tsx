@@ -27,6 +27,8 @@ const KIND_CHIP: Record<AgendaEventKind, string> = {
   delivery:
     "bg-emerald-100 text-emerald-900 dark:bg-emerald-400/15 dark:text-emerald-200",
   publish: "bg-sky-100 text-sky-900 dark:bg-sky-400/15 dark:text-sky-200",
+  birthday:
+    "bg-fuchsia-100 text-fuchsia-900 dark:bg-fuchsia-400/15 dark:text-fuchsia-200",
 };
 
 const KIND_CARD: Record<AgendaEventKind, string> = {
@@ -35,6 +37,8 @@ const KIND_CARD: Record<AgendaEventKind, string> = {
     "border-emerald-200/70 bg-emerald-50/70 dark:border-emerald-400/30 dark:bg-emerald-400/10",
   publish:
     "border-sky-200/70 bg-sky-50/70 dark:border-sky-400/30 dark:bg-sky-400/10",
+  birthday:
+    "border-fuchsia-200/70 bg-fuchsia-50/70 dark:border-fuchsia-400/30 dark:bg-fuchsia-400/10",
 };
 
 const KIND_BADGE: Record<AgendaEventKind, string> = {
@@ -43,9 +47,16 @@ const KIND_BADGE: Record<AgendaEventKind, string> = {
     "border-emerald-200 bg-emerald-100/80 text-emerald-900 dark:border-emerald-400/40 dark:bg-emerald-400/15 dark:text-emerald-200",
   publish:
     "border-sky-200 bg-sky-100/80 text-sky-900 dark:border-sky-400/40 dark:bg-sky-400/15 dark:text-sky-200",
+  birthday:
+    "border-fuchsia-200 bg-fuchsia-100/80 text-fuchsia-900 dark:border-fuchsia-400/40 dark:bg-fuchsia-400/15 dark:text-fuchsia-200",
 };
 
-const KIND_OPTIONS: AgendaEventKind[] = ["due", "delivery", "publish"];
+const KIND_OPTIONS: AgendaEventKind[] = [
+  "due",
+  "delivery",
+  "publish",
+  "birthday",
+];
 
 function daysInMonth(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate();
@@ -76,6 +87,13 @@ function eventDayParts(iso: string) {
 }
 
 function eventHref(event: AgendaEvent) {
+  if (event.kind === "birthday") {
+    if (event.clientId) return `/clientes/${event.clientId}`;
+    return "/equipe";
+  }
+  if (event.demandId && event.clientId) {
+    return `/clientes/${event.clientId}/quadro`;
+  }
   if (event.clientId) return `/clientes/${event.clientId}/quadro`;
   return "/demandas";
 }
@@ -97,9 +115,9 @@ export function AgendaView({ events }: { events: AgendaEvent[] }) {
     return Array.from(map.entries()).map(([id, label]) => ({ id, label }));
   }, [events]);
 
-  const [enabledKinds, setEnabledKinds] = useState<Record<AgendaEventKind, boolean>>(
-    () => ({ due: true, delivery: true, publish: true })
-  );
+  const [enabledKinds, setEnabledKinds] = useState<
+    Record<AgendaEventKind, boolean>
+  >(() => ({ due: true, delivery: true, publish: true, birthday: true }));
   const [enabledSectors, setEnabledSectors] = useState<Record<string, boolean>>(
     () => Object.fromEntries(sectorOptions.map((s) => [s.id, true]))
   );
