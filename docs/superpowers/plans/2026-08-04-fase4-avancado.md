@@ -3,8 +3,11 @@
 **Janela:** 08/09 → 19/09/2026
 **Status deste documento:** escopo fechado, plano detalhado pendente.
 
+> **Playbook (obrigatório):** `docs/superpowers/plans/2026-08-07-playbook-metodologia.md` — matriz seção 5 Fase 4.
+>
+> **Metodologia:** 4.1 e 4.3 começam com `brainstorming` (mapa coluna↔status; Google Calendar sim/não) → `writing-plans` → SDD. 4.2 só com dados reais de `WorkSession`. 4.4 = DIR/SDD por item; upgrade Next 16 = plano próprio.
+>
 > Só entra depois de o operacional da Fase 3 estar em uso real. Cada fatia recebe plano detalhado no **Opus 5** antes da execução.
-
 **Goal da fase:** o que a reunião pediu mas que exige o sistema já rodando para fazer sentido — personalização por cliente, previsibilidade de carga e agenda organizacional.
 
 ---

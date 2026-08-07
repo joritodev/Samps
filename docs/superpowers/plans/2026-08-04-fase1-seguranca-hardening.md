@@ -1,6 +1,9 @@
 # Fase 1 — Segurança e hardening Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recomendado) ou superpowers:executing-plans para implementar tarefa a tarefa. Os passos usam checkbox (`- [ ]`).
+>
+> **Playbook (obrigatório):** `docs/superpowers/plans/2026-08-07-playbook-metodologia.md` — matriz seção 5 Fase 1.
+> **Retomar em:** Task 3 (`sec/rate-limit-login`). Tasks 1–2 já mergeadas.
 
 **Goal:** Deixar o sistema pronto para o time da Samps testar em produção sem risco de vazamento: dependência sem CVE, headers de segurança, rate limit no login, URL protegida, CI com verificação de segredos e RLS comprovado.
 
@@ -8,8 +11,20 @@
 
 **Tech Stack:** Next.js 14, NextAuth v5, Prisma 6, PostgreSQL (Neon), GitHub Actions, Vitest, TruffleHog.
 
-**Modelo sugerido:** `Opus 5` nas tarefas 1, 3 e 7 (auth, CVE, RLS). `cursor-grok-4.5-high-fast` nas tarefas 2, 5 e 6. `Auto` na tarefa 4.
+## Metodologia desta fase
 
+| Task | Motor | Modelo | Review | Estado (2026-08-07) |
+|------|-------|--------|--------|---------------------|
+| 1 CVE Next | EP/SDD | Opus (audit) + grok | nota deps | mergeada (#17) |
+| 2 Headers CSP | SDD/EP | grok-fast | — | mergeada (#18) |
+| **3 Rate limit** | **SDD** | **Opus controller**; implementer mid/forte | **Security Review** | **PRÓXIMA** |
+| 4 Acesso teste | DIR + DOC (+ humano Vercel) | Auto | nota | pendente |
+| 5 CI workflows | SDD/EP | grok-fast | Bugbot leve | pendente |
+| 6 Vitest | SDD + TDD | grok-fast / mid | Bugbot | pendente |
+| 7 check-rls | SDD | Opus | **Security Review** | pendente |
+| 8 Gate fase | Security + Bugbot + DOC | Opus | nota seguranca | pendente |
+
+**Regras:** uma branch/PR por task; não iniciar Fase 2 sem critério de saída abaixo; Task 4 exige ação humana no painel Vercel — o agent só documenta o que puder verificar.
 ## Global Constraints
 
 - Segredos vivem **somente** em `.env` local e nas Environment Variables da Vercel. Nunca em código, commit, log, PR ou issue.

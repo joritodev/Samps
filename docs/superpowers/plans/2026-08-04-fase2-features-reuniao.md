@@ -1,6 +1,9 @@
 # Fase 2 — Entregáveis da reunião de 28/07 (prazo 18/ago) Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recomendado) ou superpowers:executing-plans para implementar tarefa a tarefa. Os passos usam checkbox (`- [ ]`).
+>
+> **Playbook (obrigatório):** `docs/superpowers/plans/2026-08-07-playbook-metodologia.md` — matriz seção 5 Fase 2.
+> **Bloqueio:** só começar depois do critério de saída da Fase 1 (CI + Vitest + rate limit + RLS).
 
 **Goal:** Entregar, antes da reunião de 18/08, os cinco itens que a Samps pediu com nome e sobrenome: dados completos do cliente (endereço e aniversário), aniversariantes na agenda, mural de avisos na abertura da plataforma, registro de ausências da equipe visível para todos, e links de contrato/estudo no painel do cliente. Mais navegabilidade mobile mínima, porque o time vai testar pelo celular.
 
@@ -8,8 +11,18 @@
 
 **Tech Stack:** Next.js 14 App Router, Server Actions, Prisma 6, PostgreSQL (Neon), shadcn/ui, Tailwind, Vitest.
 
-**Modelo sugerido:** `Opus 5` no desenho das migrations (Tasks 1 e 3, Step 1 de cada). `cursor-grok-4.5-high-fast` no restante das Tasks 1–5. `Auto` na Task 6.
+## Metodologia desta fase
 
+| Task | Motor | Modelo | Review |
+|------|-------|--------|--------|
+| 1 Dados cliente | SDD (schema Step 1 com Opus se divergir) | Opus schema; grok UI | Bugbot + **Security** (PII) |
+| 2 Aniversários | SDD + TDD | grok-fast | Bugbot |
+| 3 Mural avisos | SDD | Opus schema; grok resto | Bugbot + Security |
+| 4 Ausências | SDD + TDD | Opus schema; grok resto | Bugbot + Security |
+| 5 Mobile | EP/SDD após inventário | grok-fast | Bugbot |
+| 6 Demo | DOC | Opus/Auto | — |
+
+**Crítico:** Tasks 1→5 são **sequenciais com merge entre cada uma**. Não rodar a fase inteira num único SDD sem PRs intermediários. Uma sessão = uma task.
 ## Global Constraints
 
 - Depende da Fase 1 concluída (CI verde, Vitest disponível, RLS verificado).
