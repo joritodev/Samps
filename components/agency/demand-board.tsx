@@ -67,14 +67,14 @@ export function DemandBoard({
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-card">
-      <header className="flex shrink-0 items-center justify-between gap-4 border-b border-border px-6 py-5">
+      <header className="flex shrink-0 flex-wrap items-center justify-between gap-4 border-b border-border px-6 py-5">
         <div className="min-w-0">
           <h1 className="truncate text-lg font-semibold tracking-tight text-foreground">
             {title}
           </h1>
           <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
           <Button
             variant="outline"
             size="sm"
@@ -95,14 +95,15 @@ export function DemandBoard({
         </div>
       </header>
 
-      <main className="min-h-0 flex-1 overflow-x-auto overflow-y-hidden bg-background">
+      <main className="min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden bg-background">
         <div className="flex h-full min-h-0 min-w-max gap-4 p-6">
           {columns.map((column) => (
-            <BoardColumnView
-              key={column.id}
-              column={column}
-              onOpenCard={handleOpenCard}
-            />
+            <div key={column.id} className="snap-start">
+              <BoardColumnView
+                column={column}
+                onOpenCard={handleOpenCard}
+              />
+            </div>
           ))}
         </div>
       </main>

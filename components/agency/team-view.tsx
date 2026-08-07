@@ -161,7 +161,7 @@ function InviteSheet({
         if (!next) reset();
       }}
     >
-      <SheetContent className="sm:max-w-md">
+      <SheetContent className="w-full overflow-y-auto sm:max-w-md max-h-[90dvh]">
         <SheetHeader>
           <SheetTitle>Convidar pessoa</SheetTitle>
           <SheetDescription>
@@ -344,7 +344,7 @@ export function TeamView({
 
       <div className="p-6">
         <Tabs defaultValue="membros">
-          <TabsList className="mb-4">
+          <TabsList className="mb-4 w-full justify-start overflow-x-auto">
             <TabsTrigger value="membros">
               Membros ({members.length})
             </TabsTrigger>
@@ -363,7 +363,7 @@ export function TeamView({
                 hint="Convide alguém para começar."
               />
             ) : (
-              <div className="overflow-hidden rounded-xl border border-border bg-card">
+              <div className="overflow-x-auto rounded-xl border border-border bg-card">
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">
@@ -436,7 +436,7 @@ export function TeamView({
                 hint="Registre uma folga ou férias para o time ver."
               />
             ) : (
-              <div className="overflow-hidden rounded-xl border border-border bg-card">
+              <div className="overflow-x-auto rounded-xl border border-border bg-card">
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">
@@ -494,7 +494,7 @@ export function TeamView({
                 hint="Todos os convites enviados já foram aceitos."
               />
             ) : (
-              <div className="overflow-hidden rounded-xl border border-border bg-card">
+              <div className="overflow-x-auto rounded-xl border border-border bg-card">
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">

@@ -24,7 +24,7 @@ export function BoardFilters({
 
   return (
     <div className="flex flex-wrap items-end gap-3">
-      <div className="min-w-40 flex-1 space-y-1 sm:max-w-56">
+      <div className="min-w-0 w-full flex-1 space-y-1 sm:max-w-56">
         <Label className="text-xs text-muted-foreground">Pesquisar</Label>
         <Input
           placeholder="Título..."
@@ -33,7 +33,7 @@ export function BoardFilters({
           onChange={(e) => update("busca", e.target.value)}
         />
       </div>
-      <div className="w-40 space-y-1">
+      <div className="w-full space-y-1 sm:w-40">
         <Label className="text-xs text-muted-foreground">Lista</Label>
         <select
           className={selectClass}
@@ -48,7 +48,7 @@ export function BoardFilters({
           ))}
         </select>
       </div>
-      <div className="w-44 space-y-1">
+      <div className="w-full space-y-1 sm:w-44">
         <Label className="text-xs text-muted-foreground">Status</Label>
         <select
           className={selectClass}
@@ -64,7 +64,7 @@ export function BoardFilters({
           <option value="DONE">Concluída</option>
         </select>
       </div>
-      <div className="w-36 space-y-1">
+      <div className="w-full space-y-1 sm:w-36">
         <Label className="text-xs text-muted-foreground">Visível cliente</Label>
         <select
           className={selectClass}

@@ -91,7 +91,7 @@ export function AbsenceSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-md">
+      <SheetContent className="flex w-full max-h-[90dvh] flex-col gap-0 overflow-y-auto p-0 sm:max-w-md">
         <SheetHeader className="space-y-1 border-b border-border px-6 py-5 text-left">
           <SheetTitle>Registrar ausência</SheetTitle>
           <SheetDescription>
@@ -138,7 +138,7 @@ export function AbsenceSheet({
             </Select>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="absence-start">Início</Label>
               <Input

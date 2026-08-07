@@ -206,14 +206,15 @@ export function SocialBoard({ columns }: { columns: BoardColumn[] }) {
         </Button>
       </header>
 
-      <main className="min-h-0 flex-1 overflow-x-auto overflow-y-hidden bg-background">
+      <main className="min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden bg-background">
         <div className="flex h-full min-h-0 min-w-max gap-4 p-6">
           {columns.map((column) => (
-            <SocialColumn
-              key={column.id}
-              column={column}
-              onOpenCard={handleOpenCard}
-            />
+            <div key={column.id} className="snap-start">
+              <SocialColumn
+                column={column}
+                onOpenCard={handleOpenCard}
+              />
+            </div>
           ))}
         </div>
       </main>

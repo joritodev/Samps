@@ -14,11 +14,14 @@ import {
   ListTodo,
   Layers,
   LogOut,
+  PanelLeft,
   Settings,
   UserRound,
   Users,
   type LucideIcon,
 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useTheme } from "next-themes";
 import type { AgencyUserProfile } from "@/lib/agency/current-user";
 import { isSectorCollaborator } from "@/types/auth";
 import { GlobalSearch } from "@/components/layout/global-search";
@@ -28,6 +31,7 @@ import type { PermissionCode } from "@/lib/permissions/codes";
 import { userInitials } from "@/lib/utils";
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,9 +39,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
 
 type NavItem = {
   href: string;
@@ -135,7 +143,11 @@ type AgencySidebarProps = {
   searchTypes: SearchType[];
 };
 
-export function AgencySidebar({ user, searchTypes }: AgencySidebarProps) {
+function SidebarBody({
+  user,
+  searchTypes,
+  onNavigate,
+}: AgencySidebarProps & { onNavigate?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
   const { resolvedTheme, setTheme } = useTheme();
@@ -169,8 +181,17 @@ export function AgencySidebar({ user, searchTypes }: AgencySidebarProps) {
     router.refresh();
   }
 
+  function linkClass(active: boolean) {
+    return cn(
+      "group flex min-h-10 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors",
+      "hover:bg-secondary hover:text-foreground",
+      active &&
+        "bg-[hsl(var(--sidebar-accent))] font-semibold text-[hsl(var(--sidebar-accent-foreground))]"
+    );
+  }
+
   return (
-    <aside className="flex h-full w-64 shrink-0 flex-col border-r border-border bg-card">
+    <div className="flex h-full w-full flex-col border-r border-border bg-card">
       <div className="border-b border-border px-5 py-6">
         <div className="flex items-center gap-3">
           <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[hsl(220_14%_12%)] dark:bg-primary">
@@ -216,12 +237,8 @@ export function AgencySidebar({ user, searchTypes }: AgencySidebarProps) {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className={cn(
-                    "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors",
-                    "hover:bg-secondary hover:text-foreground",
-                    active &&
-                      "bg-[hsl(var(--sidebar-accent))] font-semibold text-[hsl(var(--sidebar-accent-foreground))]"
-                  )}
+                  onClick={onNavigate}
+                  className={linkClass(active)}
                 >
                   <Icon
                     className={cn(
@@ -248,12 +265,8 @@ export function AgencySidebar({ user, searchTypes }: AgencySidebarProps) {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className={cn(
-                    "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors",
-                    "hover:bg-secondary hover:text-foreground",
-                    active &&
-                      "bg-[hsl(var(--sidebar-accent))] font-semibold text-[hsl(var(--sidebar-accent-foreground))]"
-                  )}
+                  onClick={onNavigate}
+                  className={linkClass(active)}
                 >
                   <Icon
                     className={cn(
@@ -269,16 +282,16 @@ export function AgencySidebar({ user, searchTypes }: AgencySidebarProps) {
           })}
 
           <li>
-            <div className="flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground">
+            <div className="flex min-h-10 items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground">
               <span>Tema</span>
               {mounted ? (
                 <AnimatedThemeToggler
                   theme={theme}
                   onThemeChange={setTheme}
-                  className="inline-flex size-8 items-center justify-center rounded-lg border border-border bg-secondary/80 text-foreground transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="inline-flex size-10 items-center justify-center rounded-lg border border-border bg-secondary/80 text-foreground transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
               ) : (
-                <span className="inline-flex size-8 rounded-lg border border-border bg-secondary/80" />
+                <span className="inline-flex size-10 rounded-lg border border-border bg-secondary/80" />
               )}
             </div>
           </li>
@@ -289,7 +302,7 @@ export function AgencySidebar({ user, searchTypes }: AgencySidebarProps) {
             <button
               type="button"
               className={cn(
-                "flex w-full items-center gap-3 rounded-lg border border-border bg-secondary/80 px-3 py-2.5 text-left transition-colors",
+                "flex min-h-11 w-full items-center gap-3 rounded-lg border border-border bg-secondary/80 px-3 py-2.5 text-left transition-colors",
                 "hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 pathname.startsWith("/perfil") && "ring-2 ring-primary/20"
               )}
@@ -314,7 +327,11 @@ export function AgencySidebar({ user, searchTypes }: AgencySidebarProps) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" side="top" className="w-56">
             <DropdownMenuItem asChild>
-              <Link href="/perfil" className="cursor-pointer">
+              <Link
+                href="/perfil"
+                className="cursor-pointer"
+                onClick={onNavigate}
+              >
                 <UserRound className="mr-2 h-4 w-4" />
                 Editar usuário
               </Link>
@@ -333,6 +350,44 @@ export function AgencySidebar({ user, searchTypes }: AgencySidebarProps) {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-    </aside>
+    </div>
+  );
+}
+
+export function AgencySidebar({ user, searchTypes }: AgencySidebarProps) {
+  const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  return (
+    <>
+      <aside className="hidden h-full w-64 shrink-0 lg:flex">
+        <SidebarBody user={user} searchTypes={searchTypes} />
+      </aside>
+
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+        <SheetTrigger asChild>
+          <Button
+            variant="outline"
+            size="icon"
+            className="fixed left-3 top-3 z-30 size-10 lg:hidden"
+            aria-label="Abrir menu"
+          >
+            <PanelLeft className="h-4 w-4" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="w-[min(100%,16rem)] p-0">
+          <SheetTitle className="sr-only">Menu de navegação</SheetTitle>
+          <SidebarBody
+            user={user}
+            searchTypes={searchTypes}
+            onNavigate={() => setMobileOpen(false)}
+          />
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }

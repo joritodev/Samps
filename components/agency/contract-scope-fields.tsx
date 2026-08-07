@@ -98,7 +98,7 @@ export function ContractScopeFields({
               return (
                 <li
                   key={ct.id}
-                  className="grid grid-cols-[minmax(0,1fr)_4.5rem_7.5rem] items-center gap-2"
+                  className="grid grid-cols-1 items-center gap-2 sm:grid-cols-[minmax(0,1fr)_4.5rem_7.5rem]"
                 >
                   <span className="truncate text-sm text-foreground">
                     {ct.name}

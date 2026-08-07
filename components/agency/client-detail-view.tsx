@@ -233,7 +233,7 @@ export function ClientDetailView({
 
       <div className="px-6 py-6">
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="h-auto w-full justify-start gap-1 rounded-none border-b border-border bg-transparent p-0">
+          <TabsList className="h-auto w-full justify-start gap-1 overflow-x-auto rounded-none border-b border-border bg-transparent p-0">
             <TabsTrigger value="overview" className={tabTriggerClass}>
               Visão Geral
             </TabsTrigger>

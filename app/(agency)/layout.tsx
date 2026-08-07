@@ -26,7 +26,7 @@ export default async function AgencyLayout({
     <Providers>
       <div className="flex h-dvh overflow-hidden bg-background">
         <AgencySidebar user={user} searchTypes={allowedSearchTypes(user)} />
-        <main className="flex min-w-0 flex-1 flex-col overflow-hidden p-4 sm:p-5">
+        <main className="flex min-w-0 flex-1 flex-col overflow-hidden p-4 pt-14 sm:p-5 lg:pt-5">
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-background shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
             <AnnouncementBanner
               announcements={announcements.map((a) => ({
