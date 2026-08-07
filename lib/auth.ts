@@ -12,11 +12,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         email: { label: "E-mail", type: "email" },
         password: { label: "Senha", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         if (!credentials?.email || !credentials?.password) return null;
+        const forwarded = request?.headers?.get("x-forwarded-for") ?? null;
+        const ipAddress = forwarded ? forwarded.split(",")[0].trim() : null;
         return validateCredentials(
           String(credentials.email),
-          String(credentials.password)
+          String(credentials.password),
+          ipAddress
         );
       },
     }),
