@@ -21,10 +21,14 @@ export async function listAllAnnouncements() {
   });
 }
 
-export async function listTodayBirthdays() {
+export async function listTodayBirthdays(clientScope?: { in: string[] }) {
   const [clients, users] = await Promise.all([
     db.client.findMany({
-      where: { status: ClientStatus.ACTIVE, birthDate: { not: null } },
+      where: {
+        status: ClientStatus.ACTIVE,
+        birthDate: { not: null },
+        ...(clientScope ? { id: clientScope } : {}),
+      },
       select: { id: true, name: true, birthDate: true },
     }),
     db.user.findMany({

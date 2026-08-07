@@ -50,6 +50,12 @@ export default async function EquipePage() {
     ])
   );
 
+  function visibleNote(ownerId: string, note: string | null) {
+    if (!note) return null;
+    if (canManageAbsences || ownerId === user.id) return note;
+    return null;
+  }
+
   const upcoming = upcomingAbsences
     .filter((a) => !isAbsentOn(a, now) || a.startsAt > now)
     .slice(0, 20)
@@ -59,7 +65,7 @@ export default async function EquipePage() {
       userName: a.user.name,
       kindLabel: absenceKindLabel(a.kind),
       rangeLabel: formatAbsenceRange(a.startsAt, a.endsAt),
-      note: a.note,
+      note: visibleNote(a.userId, a.note),
       canCancel: a.userId === user.id || canManageAbsences,
     }));
 
@@ -70,7 +76,7 @@ export default async function EquipePage() {
     userName: a.user.name,
     kindLabel: absenceKindLabel(a.kind),
     rangeLabel: formatAbsenceRange(a.startsAt, a.endsAt),
-    note: a.note,
+    note: visibleNote(a.userId, a.note),
     canCancel: a.userId === user.id || canManageAbsences,
   }));
 

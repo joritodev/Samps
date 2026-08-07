@@ -3,6 +3,7 @@ import { AgencySidebar } from "@/components/agency/agency-sidebar";
 import { AnnouncementBanner } from "@/components/agency/announcement-banner";
 import { Providers } from "@/components/providers";
 import { getCurrentAgencyUser } from "@/lib/agency/current-user";
+import { clientScopeFilter } from "@/lib/permissions/check";
 import {
   listActiveAnnouncements,
   listTodayBirthdays,
@@ -15,9 +16,10 @@ export default async function AgencyLayout({
   children: React.ReactNode;
 }) {
   const user = await getCurrentAgencyUser();
+  const clientScope = clientScopeFilter(user);
   const [announcements, birthdays] = await Promise.all([
     listActiveAnnouncements(),
-    listTodayBirthdays(),
+    listTodayBirthdays(clientScope),
   ]);
 
   return (

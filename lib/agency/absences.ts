@@ -58,9 +58,10 @@ export function mapAbsencesToAgendaEvents(
     const label = absenceKindLabel(absence.kind);
 
     while (cursor <= end) {
-      const date = utcDayDate(cursor);
+      // Meio-dia UTC evita virar o dia civil em fusos America/* na AgendaView.
+      const date = new Date(cursor + 12 * 60 * 60 * 1000);
       events.push({
-        id: `absence:${absence.id}:${date.toISOString().slice(0, 10)}`,
+        id: `absence:${absence.id}:${utcDayDate(cursor).toISOString().slice(0, 10)}`,
         demandId: null,
         title: `${label} — ${absence.user.name}`,
         clientId: null,

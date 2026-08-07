@@ -4,12 +4,13 @@ import { mapAbsencesToAgendaEvents } from "@/lib/agency/absences";
 import { mapDemandsToAgendaEvents } from "@/lib/agency/agenda-events";
 import { mapBirthdaysToAgendaEvents } from "@/lib/agency/birthdays";
 import { db } from "@/lib/db";
-import { requireAuth } from "@/lib/permissions/check";
+import { clientScopeFilter, requireAuth } from "@/lib/permissions/check";
 import { listAbsences } from "@/lib/services/absences.service";
 import { listDemands } from "@/lib/services/demands.service";
 
 export default async function AgendaPage() {
   const user = await requireAuth();
+  const clientScope = clientScopeFilter(user);
   const year = new Date().getUTCFullYear();
   const rangeFrom = new Date(Date.UTC(year, 0, 1));
   const rangeTo = new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999));
@@ -17,7 +18,11 @@ export default async function AgendaPage() {
   const [demands, clients, teammates, absences] = await Promise.all([
     listDemands(user, { context: "calendar" }),
     db.client.findMany({
-      where: { status: ClientStatus.ACTIVE, birthDate: { not: null } },
+      where: {
+        status: ClientStatus.ACTIVE,
+        birthDate: { not: null },
+        ...(clientScope ? { id: clientScope } : {}),
+      },
       select: { id: true, name: true, birthDate: true },
     }),
     db.user.findMany({

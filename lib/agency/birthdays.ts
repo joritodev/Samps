@@ -53,7 +53,11 @@ export function mapBirthdaysToAgendaEvents(
     sectorSlug: null,
     sectorName: null,
     kind: "birthday",
-    date: birthdayOccurrenceInYear(person.birthDate, year).toISOString(),
+    // Meio-dia UTC evita virar o dia civil em fusos America/* na AgendaView.
+    date: new Date(
+      birthdayOccurrenceInYear(person.birthDate, year).getTime() +
+        12 * 60 * 60 * 1000
+    ).toISOString(),
     status: "BIRTHDAY",
     assigneeName: person.kindOf === "user" ? person.name : null,
   }));

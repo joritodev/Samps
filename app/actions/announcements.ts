@@ -65,7 +65,7 @@ export async function createAnnouncement(input: {
       newValue: { title: row.title, kind: row.kind },
     });
 
-    revalidatePath("/");
+    revalidatePath("/", "layout");
     revalidatePath("/configuracoes/avisos");
     return { success: true, id: row.id };
   } catch (error) {
@@ -91,7 +91,7 @@ export async function toggleAnnouncement(id: string, active: boolean) {
       newValue: { active },
     });
 
-    revalidatePath("/");
+    revalidatePath("/", "layout");
     revalidatePath("/configuracoes/avisos");
     return { success: true };
   } catch (error) {
@@ -114,7 +114,7 @@ export async function deleteAnnouncement(id: string) {
       newValue: { deleted: true },
     });
 
-    revalidatePath("/");
+    revalidatePath("/", "layout");
     revalidatePath("/configuracoes/avisos");
     return { success: true };
   } catch (error) {

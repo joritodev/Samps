@@ -62,6 +62,7 @@ describe("mapAbsencesToAgendaEvents", () => {
       "2026-08-11",
       "2026-08-12",
     ]);
+    expect(events.every((e) => e.date.includes("T12:00:00.000Z"))).toBe(true);
   });
 
   it("ignora ausencias canceladas", () => {

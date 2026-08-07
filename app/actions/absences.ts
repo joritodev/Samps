@@ -141,7 +141,13 @@ export async function cancelAbsence(id: string) {
       entityType: "Absence",
       entityId: id,
       origin: "equipe/ausencias",
-      newValue: { canceled: true },
+      previousValue: {
+        userId: row.userId,
+        kind: row.kind,
+        startsAt: row.startsAt.toISOString(),
+        endsAt: row.endsAt.toISOString(),
+      },
+      newValue: { canceled: true, targetUserId: row.userId },
     });
 
     revalidatePath("/equipe");
