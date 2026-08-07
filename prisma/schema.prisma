@@ -264,6 +264,13 @@ enum AnnouncementKind {
   CELEBRATION
 }
 
+enum AbsenceKind {
+  DAY_OFF
+  VACATION
+  OFFLINE
+  SICK_LEAVE
+}
+
 model User {
   id                 String     @id @default(cuid())
   email              String     @unique
@@ -322,6 +329,7 @@ model User {
   assignmentsMade        DemandAssignment[]    @relation("AssignmentAssigner")
   workSessions           WorkSession[]
   announcements          Announcement[]        @relation("AnnouncementAuthor")
+  absences               Absence[]
 
   @@index([userType])
   @@index([status])
@@ -343,6 +351,22 @@ model Announcement {
   author User @relation("AnnouncementAuthor", fields: [authorId], references: [id])
 
   @@index([active, startsAt])
+}
+
+model Absence {
+  id         String      @id @default(cuid())
+  userId     String
+  kind       AbsenceKind
+  startsAt   DateTime
+  endsAt     DateTime
+  note       String?
+  canceledAt DateTime?
+  createdAt  DateTime    @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startsAt])
+  @@index([startsAt, endsAt])
 }
 
 model Role {

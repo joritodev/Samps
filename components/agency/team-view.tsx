@@ -1,8 +1,16 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { MailPlus, RotateCw, UserRoundX, Users } from "lucide-react";
+import {
+  CalendarOff,
+  MailPlus,
+  RotateCw,
+  UserRoundX,
+  Users,
+} from "lucide-react";
 import { toast } from "sonner";
+import { cancelAbsence } from "@/app/actions/absences";
+import { AbsenceSheet } from "@/components/agency/absence-sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,6 +56,22 @@ export interface TeamMember {
   roleName: string;
   sectorName: string | null;
   status: string;
+  absenceToday: {
+    id: string;
+    kind: string;
+    kindLabel: string;
+    rangeLabel: string;
+  } | null;
+}
+
+export interface TeamAbsenceRow {
+  id: string;
+  userId: string;
+  userName: string;
+  kindLabel: string;
+  rangeLabel: string;
+  note: string | null;
+  canCancel: boolean;
 }
 
 export interface TeamInvite {
@@ -119,31 +143,35 @@ function InviteSheet({
         roleId,
         sectorId: sectorId || undefined,
       });
-
       if (!result.ok) {
-        toast.error(result.error);
+        toast.error(result.error ?? "Não foi possível enviar o convite.");
         return;
       }
-
-      toast.success(`Convite enviado para ${email}.`);
+      toast.success("Convite enviado.");
       reset();
       onOpenChange(false);
     });
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="flex w-full flex-col sm:max-w-md">
+    <Sheet
+      open={open}
+      onOpenChange={(next) => {
+        onOpenChange(next);
+        if (!next) reset();
+      }}
+    >
+      <SheetContent className="sm:max-w-md">
         <SheetHeader>
           <SheetTitle>Convidar pessoa</SheetTitle>
           <SheetDescription>
-            A conta fica pendente até o convidado definir a própria senha.
+            Envia um e-mail com link para criar a senha.
           </SheetDescription>
         </SheetHeader>
 
-        <div className="flex-1 space-y-4 overflow-y-auto py-4">
+        <div className="mt-6 space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="invite-name">Nome completo</Label>
+            <Label htmlFor="invite-name">Nome</Label>
             <Input
               id="invite-name"
               value={name}
@@ -166,7 +194,7 @@ function InviteSheet({
               onValueChange={(v) => setUserType(v as UserType)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Selecione o cargo" />
+                <SelectValue placeholder="Selecione" />
               </SelectTrigger>
               <SelectContent>
                 {userTypes.map((type) => (
@@ -178,10 +206,10 @@ function InviteSheet({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Função (permissões)</Label>
+            <Label>Função</Label>
             <Select value={roleId} onValueChange={setRoleId}>
               <SelectTrigger>
-                <SelectValue placeholder="Selecione a função" />
+                <SelectValue placeholder="Selecione" />
               </SelectTrigger>
               <SelectContent>
                 {roles.map((role) => (
@@ -193,12 +221,16 @@ function InviteSheet({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Setor</Label>
-            <Select value={sectorId} onValueChange={setSectorId}>
+            <Label>Setor (opcional)</Label>
+            <Select
+              value={sectorId || "__none__"}
+              onValueChange={(v) => setSectorId(v === "__none__" ? "" : v)}
+            >
               <SelectTrigger>
-                <SelectValue placeholder="Opcional" />
+                <SelectValue placeholder="Sem setor" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="__none__">Sem setor</SelectItem>
                 {sectors.map((sector) => (
                   <SelectItem key={sector.id} value={sector.id}>
                     {sector.name}
@@ -222,21 +254,29 @@ function InviteSheet({
 export function TeamView({
   members,
   invites,
+  absences,
   roles,
   sectors,
   userTypes,
+  currentUserId,
   canInvite,
   canRevoke,
+  canManageAbsences,
 }: {
   members: TeamMember[];
   invites: TeamInvite[];
+  absences: TeamAbsenceRow[];
   roles: TeamOption[];
   sectors: TeamOption[];
   userTypes: UserType[];
+  currentUserId: string;
   canInvite: boolean;
   canRevoke: boolean;
+  canManageAbsences: boolean;
 }) {
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [absenceOpen, setAbsenceOpen] = useState(false);
+  const [absenceUserId, setAbsenceUserId] = useState<string | undefined>();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
@@ -257,25 +297,49 @@ export function TeamView({
     });
   }
 
+  function openAbsence(forUserId?: string) {
+    setAbsenceUserId(forUserId ?? currentUserId);
+    setAbsenceOpen(true);
+  }
+
+  function cancelRow(id: string) {
+    setPendingId(id);
+    startTransition(async () => {
+      const result = await cancelAbsence(id);
+      setPendingId(null);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success("Ausência cancelada.");
+    });
+  }
+
   const openInvites = invites.filter((i) => i.state !== "accepted");
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">
-      <header className="flex shrink-0 items-center justify-between gap-4 border-b border-border bg-card px-6 py-5">
+      <header className="flex shrink-0 flex-wrap items-center justify-between gap-4 border-b border-border bg-card px-6 py-5">
         <div>
           <h1 className="text-xl font-semibold tracking-tight text-foreground">
             Equipe
           </h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Pessoas ativas e convites em aberto
+            Pessoas ativas, ausências e convites em aberto
           </p>
         </div>
-        {canInvite ? (
-          <Button onClick={() => setSheetOpen(true)}>
-            <MailPlus className="h-4 w-4" />
-            Convidar
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => openAbsence(currentUserId)}>
+            <CalendarOff className="h-4 w-4" />
+            Minha ausência
           </Button>
-        ) : null}
+          {canInvite ? (
+            <Button onClick={() => setSheetOpen(true)}>
+              <MailPlus className="h-4 w-4" />
+              Convidar
+            </Button>
+          ) : null}
+        </div>
       </header>
 
       <div className="p-6">
@@ -283,6 +347,9 @@ export function TeamView({
           <TabsList className="mb-4">
             <TabsTrigger value="membros">
               Membros ({members.length})
+            </TabsTrigger>
+            <TabsTrigger value="ausencias">
+              Ausências ({absences.length})
             </TabsTrigger>
             <TabsTrigger value="convites">
               Convites ({openInvites.length})
@@ -303,7 +370,8 @@ export function TeamView({
                       <TableHead className="pl-6">Pessoa</TableHead>
                       <TableHead>Cargo</TableHead>
                       <TableHead>Função</TableHead>
-                      <TableHead className="pr-6">Setor</TableHead>
+                      <TableHead>Setor</TableHead>
+                      <TableHead className="pr-6 text-right">Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -323,8 +391,93 @@ export function TeamView({
                         <TableCell className="text-sm text-muted-foreground">
                           {member.roleName}
                         </TableCell>
-                        <TableCell className="pr-6 text-sm text-muted-foreground">
+                        <TableCell className="text-sm text-muted-foreground">
                           {member.sectorName ?? "—"}
+                        </TableCell>
+                        <TableCell className="pr-6 text-right">
+                          <div className="flex flex-col items-end gap-2">
+                            {member.absenceToday ? (
+                              <Badge
+                                variant="outline"
+                                className="border-rose-200 bg-rose-50 font-normal text-rose-800 dark:border-rose-400/30 dark:bg-rose-400/10 dark:text-rose-200"
+                              >
+                                {member.absenceToday.kindLabel} ·{" "}
+                                {member.absenceToday.rangeLabel}
+                              </Badge>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">
+                                Disponível
+                              </span>
+                            )}
+                            {canManageAbsences &&
+                            member.id !== currentUserId ? (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => openAbsence(member.id)}
+                              >
+                                Registrar ausência
+                              </Button>
+                            ) : null}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="ausencias">
+            {absences.length === 0 ? (
+              <EmptyState
+                message="Nenhuma ausência no período"
+                hint="Registre uma folga ou férias para o time ver."
+              />
+            ) : (
+              <div className="overflow-hidden rounded-xl border border-border bg-card">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="pl-6">Pessoa</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Período</TableHead>
+                      <TableHead>Obs.</TableHead>
+                      <TableHead className="pr-6 text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {absences.map((row) => (
+                      <TableRow key={row.id}>
+                        <TableCell className="pl-6 font-medium text-foreground">
+                          {row.userName}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className="border-rose-200 bg-rose-50 font-normal text-rose-800 dark:border-rose-400/30 dark:bg-rose-400/10 dark:text-rose-200"
+                          >
+                            {row.kindLabel}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm tabular-nums text-muted-foreground">
+                          {row.rangeLabel}
+                        </TableCell>
+                        <TableCell className="max-w-[12rem] truncate text-sm text-muted-foreground">
+                          {row.note ?? "—"}
+                        </TableCell>
+                        <TableCell className="pr-6 text-right">
+                          {row.canCancel ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              disabled={pendingId === row.id}
+                              onClick={() => cancelRow(row.id)}
+                            >
+                              Cancelar
+                            </Button>
+                          ) : null}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -434,6 +587,14 @@ export function TeamView({
         roles={roles}
         sectors={sectors}
         userTypes={userTypes}
+      />
+      <AbsenceSheet
+        open={absenceOpen}
+        onOpenChange={setAbsenceOpen}
+        currentUserId={currentUserId}
+        defaultUserId={absenceUserId}
+        members={members.map((m) => ({ id: m.id, name: m.name }))}
+        canManageOthers={canManageAbsences}
       />
     </div>
   );

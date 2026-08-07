@@ -1,14 +1,20 @@
 import { ClientStatus, UserStatus } from "@prisma/client";
 import { AgendaView } from "@/components/agency/agenda-view";
+import { mapAbsencesToAgendaEvents } from "@/lib/agency/absences";
 import { mapDemandsToAgendaEvents } from "@/lib/agency/agenda-events";
 import { mapBirthdaysToAgendaEvents } from "@/lib/agency/birthdays";
 import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/permissions/check";
+import { listAbsences } from "@/lib/services/absences.service";
 import { listDemands } from "@/lib/services/demands.service";
 
 export default async function AgendaPage() {
   const user = await requireAuth();
-  const [demands, clients, teammates] = await Promise.all([
+  const year = new Date().getUTCFullYear();
+  const rangeFrom = new Date(Date.UTC(year, 0, 1));
+  const rangeTo = new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999));
+
+  const [demands, clients, teammates, absences] = await Promise.all([
     listDemands(user, { context: "calendar" }),
     db.client.findMany({
       where: { status: ClientStatus.ACTIVE, birthDate: { not: null } },
@@ -18,9 +24,9 @@ export default async function AgendaPage() {
       where: { status: UserStatus.ACTIVE, birthDate: { not: null } },
       select: { id: true, name: true, birthDate: true },
     }),
+    listAbsences({ from: rangeFrom, to: rangeTo }),
   ]);
 
-  const year = new Date().getUTCFullYear();
   const events = [
     ...mapDemandsToAgendaEvents(demands),
     ...mapBirthdaysToAgendaEvents(
@@ -40,6 +46,7 @@ export default async function AgendaPage() {
       ],
       year
     ),
+    ...mapAbsencesToAgendaEvents(absences),
   ];
 
   return <AgendaView events={events} />;

@@ -1,4 +1,9 @@
-export type AgendaEventKind = "due" | "delivery" | "publish" | "birthday";
+export type AgendaEventKind =
+  | "due"
+  | "delivery"
+  | "publish"
+  | "birthday"
+  | "absence";
 
 export type AgendaEvent = {
   id: string;
@@ -21,6 +26,7 @@ export const AGENDA_KIND_LABEL: Record<AgendaEventKind, string> = {
   delivery: "Entrega",
   publish: "Publicação",
   birthday: "Aniversário",
+  absence: "Ausência",
 };
 
 type DemandLike = {

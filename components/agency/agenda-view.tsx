@@ -29,6 +29,8 @@ const KIND_CHIP: Record<AgendaEventKind, string> = {
   publish: "bg-sky-100 text-sky-900 dark:bg-sky-400/15 dark:text-sky-200",
   birthday:
     "bg-fuchsia-100 text-fuchsia-900 dark:bg-fuchsia-400/15 dark:text-fuchsia-200",
+  absence:
+    "bg-rose-100 text-rose-900 dark:bg-rose-400/15 dark:text-rose-200",
 };
 
 const KIND_CARD: Record<AgendaEventKind, string> = {
@@ -39,6 +41,8 @@ const KIND_CARD: Record<AgendaEventKind, string> = {
     "border-sky-200/70 bg-sky-50/70 dark:border-sky-400/30 dark:bg-sky-400/10",
   birthday:
     "border-fuchsia-200/70 bg-fuchsia-50/70 dark:border-fuchsia-400/30 dark:bg-fuchsia-400/10",
+  absence:
+    "border-rose-200/70 bg-rose-50/70 dark:border-rose-400/30 dark:bg-rose-400/10",
 };
 
 const KIND_BADGE: Record<AgendaEventKind, string> = {
@@ -49,6 +53,8 @@ const KIND_BADGE: Record<AgendaEventKind, string> = {
     "border-sky-200 bg-sky-100/80 text-sky-900 dark:border-sky-400/40 dark:bg-sky-400/15 dark:text-sky-200",
   birthday:
     "border-fuchsia-200 bg-fuchsia-100/80 text-fuchsia-900 dark:border-fuchsia-400/40 dark:bg-fuchsia-400/15 dark:text-fuchsia-200",
+  absence:
+    "border-rose-200 bg-rose-100/80 text-rose-900 dark:border-rose-400/40 dark:bg-rose-400/15 dark:text-rose-200",
 };
 
 const KIND_OPTIONS: AgendaEventKind[] = [
@@ -56,6 +62,7 @@ const KIND_OPTIONS: AgendaEventKind[] = [
   "delivery",
   "publish",
   "birthday",
+  "absence",
 ];
 
 function daysInMonth(year: number, month: number) {
@@ -91,6 +98,7 @@ function eventHref(event: AgendaEvent) {
     if (event.clientId) return `/clientes/${event.clientId}`;
     return "/equipe";
   }
+  if (event.kind === "absence") return "/equipe";
   if (event.demandId && event.clientId) {
     return `/clientes/${event.clientId}/quadro`;
   }
@@ -117,7 +125,13 @@ export function AgendaView({ events }: { events: AgendaEvent[] }) {
 
   const [enabledKinds, setEnabledKinds] = useState<
     Record<AgendaEventKind, boolean>
-  >(() => ({ due: true, delivery: true, publish: true, birthday: true }));
+  >(() => ({
+    due: true,
+    delivery: true,
+    publish: true,
+    birthday: true,
+    absence: true,
+  }));
   const [enabledSectors, setEnabledSectors] = useState<Record<string, boolean>>(
     () => Object.fromEntries(sectorOptions.map((s) => [s.id, true]))
   );
