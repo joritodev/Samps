@@ -1,6 +1,6 @@
 "use server";
 
-import { AbsenceKind, AuditAction } from "@prisma/client";
+import { AbsenceKind, AuditAction, UserStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/lib/db";
@@ -76,7 +76,7 @@ export async function createAbsence(input: {
   }
 
   const target = await db.user.findFirst({
-    where: { id: parsed.data.userId, status: "ACTIVE" },
+    where: { id: parsed.data.userId, status: UserStatus.ACTIVE },
     select: { id: true },
   });
   if (!target) {
