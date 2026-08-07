@@ -16,8 +16,9 @@ function windowStart() {
 }
 
 /**
- * Bloqueia por e-mail e, quando disponível, por IP. A checagem é feita antes de
- * comparar a senha, então nem o bcrypt roda em rajada de tentativas.
+ * Bloqueia por e-mail e, quando disponível, por IP.
+ * Usa advisory lock por e-mail para evitar corrida entre requests paralelos
+ * (check-then-act sem atomicidade).
  */
 export async function isLoginBlocked(
   email: string,
@@ -25,20 +26,29 @@ export async function isLoginBlocked(
 ) {
   const since = windowStart();
   const normalized = email.toLowerCase().trim();
+  const lockKey = `login:${normalized}`;
 
-  const [byEmail, byIp] = await Promise.all([
-    db.accessAttemptLog.count({
-      where: { email: normalized, success: false, createdAt: { gte: since } },
-    }),
-    ipAddress
-      ? db.accessAttemptLog.count({
-          where: { ipAddress, success: false, createdAt: { gte: since } },
-        })
-      : Promise.resolve(0),
-  ]);
+  return db.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`;
 
-  return (
-    exceedsAttemptLimit(byEmail) ||
-    exceedsAttemptLimit(byIp, LOGIN_MAX_ATTEMPTS * 4)
-  );
+    const [byEmail, byIp] = await Promise.all([
+      tx.accessAttemptLog.count({
+        where: { email: normalized, success: false, createdAt: { gte: since } },
+      }),
+      ipAddress
+        ? tx.accessAttemptLog.count({
+            where: {
+              ipAddress,
+              success: false,
+              createdAt: { gte: since },
+            },
+          })
+        : Promise.resolve(0),
+    ]);
+
+    return (
+      exceedsAttemptLimit(byEmail) ||
+      exceedsAttemptLimit(byIp, LOGIN_MAX_ATTEMPTS * 4)
+    );
+  });
 }

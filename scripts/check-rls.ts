@@ -20,7 +20,9 @@ async function main() {
   let failed = false;
 
   function report(label: string, ok: boolean, detail?: string) {
-    console.log(ok ? `OK: ${label}` : `VAZAMENTO: ${label}${detail ? ` — ${detail}` : ""}`);
+    console.log(
+      ok ? `OK: ${label}` : `VAZAMENTO: ${label}${detail ? ` — ${detail}` : ""}`
+    );
     if (!ok) failed = true;
   }
 
@@ -54,7 +56,9 @@ async function main() {
   const visibleClients = await withUserScope(cliente.id, (tx) =>
     tx.client.findMany({ select: { id: true, name: true } })
   );
-  const foreignClients = visibleClients.filter((c) => !allowedClientIds.has(c.id));
+  const foreignClients = visibleClients.filter(
+    (c) => !allowedClientIds.has(c.id)
+  );
   report(
     "client.findMany sob escopo do cliente externo",
     foreignClients.length === 0 &&
@@ -62,6 +66,9 @@ async function main() {
     `visíveis=${visibleClients.map((c) => c.name).join(", ") || "nenhum"}`
   );
 
+  const unscopedInternalComments = await prisma.comment.count({
+    where: { visibility: "INTERNAL" },
+  });
   const comments = await withUserScope(cliente.id, (tx) =>
     tx.comment.findMany({
       select: { id: true, visibility: true, demandId: true },
@@ -71,29 +78,56 @@ async function main() {
   report(
     "comment.findMany sob escopo do cliente externo sem comentários INTERNAL",
     internalComments.length === 0,
-    `${internalComments.length} internos / ${comments.length} total`
+    `${internalComments.length} internos / ${comments.length} total (unscoped INTERNAL=${unscopedInternalComments})`
   );
+  if (unscopedInternalComments === 0) {
+    console.log(
+      "AVISO: não há Comment INTERNAL no banco — policy de comentário não foi exercitada com fixture."
+    );
+  }
 
+  const unscopedSessions = await prisma.workSession.count();
   const sessions = await withUserScope(cliente.id, (tx) =>
     tx.workSession.findMany({ select: { id: true, demandId: true } })
   );
   report(
-    "workSession.findMany sob escopo do cliente externo vazio (sessões são internas)",
+    "workSession.findMany sob escopo do cliente externo vazio",
     sessions.length === 0,
-    `${sessions.length} sessões`
+    `${sessions.length} sessões (unscoped=${unscopedSessions})`
   );
+  if (unscopedSessions === 0) {
+    console.log(
+      "AVISO: não há WorkSession no banco — policy de sessão não foi exercitada com fixture."
+    );
+  }
 
   const attachments = await withUserScope(cliente.id, (tx) =>
     tx.attachment.findMany({
-      select: { id: true, clientId: true, demandId: true, visibleToClient: true },
+      select: {
+        id: true,
+        clientId: true,
+        demandId: true,
+        visibleToClient: true,
+      },
     })
+  );
+  const allowedDemandIds = new Set(
+    (
+      await withUserScope(cliente.id, (tx) =>
+        tx.demand.findMany({ select: { id: true } })
+      )
+    ).map((d) => d.id)
   );
   const foreignAttachments = attachments.filter((a) => {
     if (a.clientId && !allowedClientIds.has(a.clientId)) return true;
+    if (!a.clientId && a.demandId && !allowedDemandIds.has(a.demandId)) {
+      return true;
+    }
+    if (!a.clientId && !a.demandId) return true;
     return false;
   });
   report(
-    "attachment.findMany sem anexos de outros clientes",
+    "attachment.findMany sem anexos de outros clientes (incl. clientId null)",
     foreignAttachments.length === 0,
     `${foreignAttachments.length} estrangeiros / ${attachments.length} total`
   );

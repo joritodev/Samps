@@ -5,12 +5,15 @@
 | Achado | Severidade | Decisão | Onde tratar |
 |--------|-----------|---------|-------------|
 | Deployment Protection ausente (`/login` = HTTP 200) | alta | corrigir agora (humano na Vercel) | Task 4 — checklist em `2026-08-acesso-teste.md` |
-| `npm audit` high residual no Next 14.x (sem patch no major) | alta (mitigada) | aceitar até upgrade major | Fase 3/4 — Next 16; ver `2026-08-dependencias.md` |
-| Comment/WorkSession sem RLS (pré-Task 7) | alta | corrigir agora | migration `20260807010000_rls_comment_worksession` |
+| `npm audit` high residual no Next 14.x (sem patch no major) | alta (mitigada) | aceitar até upgrade major; job `audit` com `continue-on-error` | Fase 3/4 — Next 16; ver `2026-08-dependencias.md` |
+| Comment/WorkSession sem RLS (pré-Task 7) | alta | corrigido | migration + WITH CHECK alinhado ao USING |
+| Race no rate limit (check-then-act) | média | corrigido | `pg_advisory_xact_lock` em `isLoginBlocked` |
+| Counts sem índice em AccessAttemptLog | média | corrigido | índices na mesma migration |
+| TruffleHog `@main` | média | corrigido | pin SHA v3.96.0 |
 | CSP em Report-Only | média | próxima fase | Fase 3.7 enforce |
 | `check:rls` não rodou neste ambiente (sem DATABASE_URL) | média | corrigir agora (pós-deploy) | rodar após `migrate deploy` |
-| Attachment com `clientId` null passa em `app_can_access_client` | média | próxima fase | revisar policy / exigir clientId |
-| CI checks ainda não marcados como required no GitHub | média | corrigir agora (humano) | Settings → Branches → master |
+| Attachment com `clientId` null na policy SQL | média | próxima fase | revisar `app_can_access_client`; check-rls já flagra null órfão |
+| CI checks ainda não marcados como required no GitHub | média | corrigir agora (humano) | required: `verify` + `secrets` (não `audit` até Next 16) |
 | Rate limit depende de `x-forwarded-for` (confiável só atrás da Vercel) | baixa | aceitar risco | documentado; Vercel define o header |
 
 ## Corrigido nesta fase
