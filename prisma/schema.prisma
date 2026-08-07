@@ -258,6 +258,12 @@ enum DistributionMethod {
   MIXED
 }
 
+enum AnnouncementKind {
+  INFO
+  URGENT
+  CELEBRATION
+}
+
 model User {
   id                 String     @id @default(cuid())
   email              String     @unique
@@ -315,10 +321,28 @@ model User {
   demandAssignments      DemandAssignment[]    @relation("AssignmentExecutor")
   assignmentsMade        DemandAssignment[]    @relation("AssignmentAssigner")
   workSessions           WorkSession[]
+  announcements          Announcement[]        @relation("AnnouncementAuthor")
 
   @@index([userType])
   @@index([status])
   @@index([roleId])
+}
+
+model Announcement {
+  id        String           @id @default(cuid())
+  title     String
+  message   String
+  kind      AnnouncementKind @default(INFO)
+  startsAt  DateTime         @default(now())
+  endsAt    DateTime?
+  active    Boolean          @default(true)
+  authorId  String
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  author User @relation("AnnouncementAuthor", fields: [authorId], references: [id])
+
+  @@index([active, startsAt])
 }
 
 model Role {

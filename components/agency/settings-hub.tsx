@@ -11,6 +11,7 @@ import {
   Flag,
   Globe,
   Layers,
+  Megaphone,
   Palette,
   Shield,
   Users,
@@ -83,6 +84,12 @@ const SETTINGS_SECTIONS: {
     label: "Notificações",
     description: "Alertas e canais.",
     icon: Bell,
+  },
+  {
+    href: "/configuracoes/avisos",
+    label: "Avisos do mural",
+    description: "Comunicados internos para a equipe.",
+    icon: Megaphone,
   },
   {
     href: "/configuracoes/portal",

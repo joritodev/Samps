@@ -48,6 +48,10 @@ export const SETTINGS_SECTION_ACCESS: SettingsSectionAccess[] = [
     href: "/configuracoes/portal",
     anyOf: ["settings.access", "portal.view"],
   },
+  {
+    href: "/configuracoes/avisos",
+    anyOf: ["settings.access"],
+  },
 ];
 
 export function canSeeSettingsSection(
