@@ -4,7 +4,7 @@
 
 | Achado | Severidade | Decisão | Onde tratar |
 |--------|-----------|---------|-------------|
-| Deployment Protection ausente (`/login` = HTTP 200) | alta | corrigir agora (humano na Vercel) | Task 4 — checklist em `2026-08-acesso-teste.md` |
+| Domínio de Production público na borda (Hobby) | média (aceito) | aceitar risco no free | Vercel Auth + Standard Protection nos previews; Production protegida pelo `/login` do app — ver `2026-08-acesso-teste.md` |
 | `npm audit` high residual no Next 14.x (sem patch no major) | alta (mitigada) | aceitar até upgrade major; job `audit` com `continue-on-error` | Fase 3/4 — Next 16; ver `2026-08-dependencias.md` |
 | Comment/WorkSession sem RLS (pré-Task 7) | alta | corrigido | migration + WITH CHECK alinhado ao USING |
 | Race no rate limit (check-then-act) | média | corrigido | `pg_advisory_xact_lock` em `isLoginBlocked` |
