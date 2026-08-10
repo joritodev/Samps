@@ -1,42 +1,53 @@
 # Samps OS — Roadmap Master (ago → set 2026)
 
-**Data:** 2026-08-04
+**Data:** 2026-08-04 (estado de execução atualizado em 2026-08-07)
 **Origem:** reunião Samps Digital 28/07/2026 + backlog técnico pendente
 **Meta do cliente:** time testando em agosto, sistema operacional em setembro
 **Próxima reunião:** 18/08/2026
 
-Este documento é o índice. Cada fase tem um plano próprio em `docs/superpowers/plans/`.
-Nenhuma fase começa antes de a anterior ter PR mergeado e gate de revisão aprovado.
+Este documento é o índice do **o quê** e da **ordem**.  
+**Como executar** (skills, SDD vs execução direta, modelos, gates, prompts) está em:
+
+→ **`docs/superpowers/plans/2026-08-07-playbook-metodologia.md`** ← leia antes de qualquer sessão de implementação.
+
+Cada fase tem um plano próprio em `docs/superpowers/plans/`.  
+Nenhuma fase de código começa antes de a anterior ter PRs mergeados e gates aprovados (Fase 5 é exceção: pesquisa paralela, sem código de produção).
 
 ---
 
-## 1. Estado real hoje (verificado no repo)
+## 1. Estado real (2026-08-07)
 
 | Fato | Detalhe |
 |------|---------|
-| Branch atual | `feat/escopo-contrato-quantificado` (sem commits além do master) |
-| `stash@{0}` | Escopo de contrato quantificado + fix de build do deploy (`.gitignore`, `package.json` postinstall, remoção de `/notificacoes` duplicada) |
-| `stash@{1}` | Ações da demanda por status (`fix/demand-actions-by-status`) |
-| Produção | https://samps-os.vercel.app (build passou, mas o fix de build **não está commitado**) |
-| Segurança já existente | RLS com role `app_user`, `AccessAttemptLog`, sistema de permissões, `.env` no `.gitignore`, sem segredos versionados |
-| Risco aberto | `next@14.2.15` com CVE (aviso no build da Vercel), sem rate limit no login, sem headers de segurança, sem CI, URL pública sem Deployment Protection |
+| Fase 0 | Tasks 1–4 mergeadas (PRs #10–#15). Smoke browser ainda não feito. |
+| Fase 1 | Tasks 1–2 mergeadas (CVE Next #17, headers #18). **Parou na Task 3 (rate limit).** |
+| Fase 2+ | Não iniciada |
+| Playbook | `2026-08-07-playbook-metodologia.md` |
+| Produção | https://samps-os.vercel.app |
+| Next | `14.2.35` (CVE crítica do 14.2.15 resolvida; highs residuais → upgrade major na Fase 3/4) |
+| Ainda falta (Fase 1) | rate limit, Deployment Protection, CI, Vitest, RLS ampliado, gate Security |
 
-**Conclusão:** existe trabalho pronto fora do versionamento. A Fase 0 é obrigatória antes de qualquer feature nova.
+**Próxima fatia a executar:** Fase 1 Task 3 — `sec/rate-limit-login` (metodologia SDD + Security Review; ver playbook seção 5).
 
 ---
 
-## 2. Divisão de responsabilidade por modelo
+## 2. Metodologia e modelos (resumo)
 
-| Atividade | Modelo | Motivo |
-|-----------|--------|--------|
-| Planejamento, design de schema, decisões de segurança, revisão de arquitetura | **Opus 5** | Contexto largo, consequência alta |
-| Execução mecânica (UI, CRUD, wiring de páginas, refactor guiado) | **cursor-grok-4.5-high-fast** | Rápido e barato para tarefas descritas |
-| Tarefas triviais e correções pontuais | **Auto** | Roteamento automático |
-| Revisão de código por fase | subagente **Bugbot** | Bugs e regressões |
-| Revisão de segurança por fase | subagente **Security Review** | Vazamento, authz, injeção |
+Fonte completa: **playbook**. Resumo operacional:
 
-Regra: se durante a execução o modelo rápido precisar **mudar schema, permissão ou fluxo de auth**, ele para e devolve para replanejamento no Opus 5.
+| Atividade | Skill / motor | Modelo |
+|-----------|---------------|--------|
+| Feature/comportamento novo sem design | `brainstorming` → spec | Opus 5 |
+| Plano da fatia | `writing-plans` | Opus 5 |
+| Execução com plano (mesma sessão) | **`subagent-driven-development`** | Controller Opus; implementer grok-fast se mecânico |
+| Execução em sessão/cloud dedicada | `executing-plans` | conforme fatia |
+| Bug / regressão | `systematic-debugging` | conforme severidade |
+| Hotfix 1 arquivo | execução direta | Auto |
+| Review bugs | Bugbot | — |
+| Review auth/RLS/upload/PII | Security Review | — |
 
+Regra: se o modelo rápido precisar **mudar schema, permissão, RLS, auth ou upload** fora do plano → para e devolve ao Opus 5.  
+Unidade de execução = **fatia (1 PR)**, nunca a fase inteira.
 ---
 
 ## 3. Convenções de versionamento
@@ -63,17 +74,17 @@ Regra: se durante a execução o modelo rápido precisar **mudar schema, permiss
 
 ## 5. Fases
 
-| Fase | Plano | Janela | Objetivo |
-|------|-------|--------|----------|
-| **0** | `2026-08-04-fase0-recuperar-pendencias.md` | 04–06/ago | Trazer stashes para o versionamento, fechar escopo de contrato e ações por status, commitar fix de build |
-| **1** | `2026-08-04-fase1-seguranca-hardening.md` | 06–11/ago | CVE do Next, headers, rate limit, Deployment Protection, secret scanning, CI, verificação de RLS |
-| **2** | `2026-08-04-fase2-features-reuniao.md` | 11–18/ago | Entregáveis prometidos para a reunião do dia 18 |
-| **3** | `2026-08-04-fase3-operacional-setembro.md` | 19/ago–05/set | Fechar o uso diário: anexos, relatórios por tipo, briefing de vídeo, visibilidade, mobile |
-| **4** | `2026-08-04-fase4-avancado.md` | 08–19/set | Colunas por cliente, capacidade 8h, agenda organizacional |
-| **5** | `2026-08-04-fase5-pesquisa-decisoes.md` | paralelo, 1-pagers até 18/ago | IA, app mobile, SaaS/NestJS — documentos de decisão, sem código de produção |
+| Fase | Plano | Janela | Motor padrão | Objetivo |
+|------|-------|--------|--------------|----------|
+| **0** | `2026-08-04-fase0-recuperar-pendencias.md` | 04–06/ago | SDD/EP por fatia (quase fechada) | Trazer stashes, escopo de contrato, ações por status, fix de build |
+| **1** | `2026-08-04-fase1-seguranca-hardening.md` | 06–11/ago | SDD; Security nas tasks 3/7/8 | CVE, headers, rate limit, proteção Vercel, CI, Vitest, RLS |
+| **2** | `2026-08-04-fase2-features-reuniao.md` | 11–18/ago | SDD **por task** + merge entre elas | Entregáveis da reunião do dia 18 |
+| **3** | `2026-08-04-fase3-operacional-setembro.md` | 19/ago–05/set | WP just-in-time → SDD | Operação diária: anexos, relatórios, vídeo, visibilidade |
+| **4** | `2026-08-04-fase4-avancado.md` | 08–19/set | BR/WP → SDD | Colunas por cliente, capacidade 8h, agenda organizacional |
+| **5** | `2026-08-04-fase5-pesquisa-decisoes.md` | paralelo, até 18/ago | DOC (sem SDD de código) | IA, mobile, SaaS — 1-pagers de decisão |
 
-Fases 0, 1 e 2 estão detalhadas tarefa a tarefa. Fases 3, 4 e 5 estão com escopo, arquivos e critério de aceite; cada uma recebe plano detalhado no Opus 5 **imediatamente antes** de entrar em execução, para não planejar em cima de suposição.
-
+Matriz task-a-task: playbook seção 5.  
+Fases 0–2 detalhadas. Fases 3–4: escopo agora, plano detalhado no Opus **imediatamente antes** de executar. Fase 5: só documentos.
 ---
 
 ## 6. Cobertura da reunião de 28/07

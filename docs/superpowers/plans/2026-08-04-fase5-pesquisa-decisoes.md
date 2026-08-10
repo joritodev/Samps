@@ -3,10 +3,13 @@
 **Janela:** paralela às outras fases; os três 1-pagers ficam prontos até 18/08.
 **Status deste documento:** escopo fechado.
 
+> **Playbook (obrigatório):** `docs/superpowers/plans/2026-08-07-playbook-metodologia.md` — matriz seção 5 Fase 5.
+>
+> **Metodologia:** DOC apenas — **proibido** `subagent-driven-development` e qualquer PR de feature. Um documento por decisão (`5.1`, `5.2`, `5.3`), modelo forte (Opus 5), preços com busca web **no dia da escrita**.
+>
 > Esta fase **não produz código de produção**. Produz três documentos de decisão que a Samps precisa para responder o que perguntou na reunião. Cada um vira `docs/superpowers/notas/<data>-<assunto>.md`, com número em vez de opinião.
 >
 > Escrever no **Opus 5**. Coletar dado de preço e limite com busca na web no dia da escrita, porque preço de IA e de plataforma muda rápido.
-
 ---
 
 ## Decisão 5.1 — Assistente de IA

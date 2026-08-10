@@ -1,6 +1,8 @@
 # Fase 0 — Recuperar pendências e versionar Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recomendado) ou superpowers:executing-plans para implementar tarefa a tarefa. Os passos usam checkbox (`- [ ]`).
+>
+> **Playbook (obrigatório):** `docs/superpowers/plans/2026-08-07-playbook-metodologia.md` — matriz seção 5 Fase 0.
 
 **Goal:** Trazer para o versionamento todo o trabalho que hoje só existe em `git stash` (fix de build do deploy, escopo de contrato quantificado, ações da demanda por status) e confirmar que os itens que a reunião assumiu como prontos funcionam de fato.
 
@@ -8,8 +10,18 @@
 
 **Tech Stack:** Next.js 14.2.15, Prisma 6, PostgreSQL (Neon), TypeScript, Tailwind/shadcn, Vercel.
 
-**Modelo sugerido:** `cursor-grok-4.5-high-fast` (tarefas 1–3), `Auto` (tarefa 5). Tarefa 4 é validação manual.
+## Metodologia desta fase
 
+| Task | Motor | Modelo | Review | Estado (2026-08-07) |
+|------|-------|--------|--------|---------------------|
+| 1 Fix build | EP ou SDD | grok-fast | — | mergeada (#10) |
+| 2 Escopo contrato | SDD | grok-fast | Bugbot | mergeada (#12/#13) |
+| 3 Ações por status | SDD | grok-fast | Bugbot | mergeada (#14) |
+| 4 Validação fluxos | DIR / checklist | Auto | nota | mergeada (#15); smoke browser pendente |
+| 5 Limpeza | DIR | Auto | — | conferir stash vazio |
+
+**Modelo sugerido (histórico):** `cursor-grok-4.5-high-fast` (tarefas 1–3), `Auto` (tarefa 5). Tarefa 4 é validação manual.  
+**Residual permitido nesta fase:** atualizar a nota de validação com smoke browser (DIR / computerUse) — não reabrir Tasks 1–3.
 ## Global Constraints
 
 - Não existe test runner no repo nesta fase. Verificação = `npx tsc --noEmit`, `npm run lint`, `npm run build` e smoke manual descrito em cada tarefa. Vitest entra na Fase 1.

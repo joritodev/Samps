@@ -3,8 +3,11 @@
 **Janela:** 19/08 → 05/09/2026
 **Status deste documento:** escopo fechado, plano detalhado pendente.
 
+> **Playbook (obrigatório):** `docs/superpowers/plans/2026-08-07-playbook-metodologia.md` — matriz seção 5 Fase 3.
+>
+> **Metodologia:** para cada fatia 3.x → confirmar pré-requisitos da Samps → `writing-plans` (Opus 5) → `subagent-driven-development` (1 PR). Fatias 3.2/3.4 exigem Security Review. Fatia 3.2 começa com brainstorming curto da opção de storage.
+>
 > Cada fatia abaixo recebe um plano detalhado tarefa a tarefa (no padrão da skill `writing-plans`, escrito no **Opus 5**) **imediatamente antes** de entrar em execução. Detalhar agora as sete fatias produziria código chutado, porque três delas dependem de definições que a Samps ainda vai enviar.
-
 **Goal da fase:** o time consegue rodar o dia a dia inteiro dentro do sistema, sem WhatsApp para operação.
 
 ## Pré-requisitos
