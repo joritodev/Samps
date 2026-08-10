@@ -106,13 +106,13 @@ export function BoardKanban({
       onDragStart={(e) => setActiveId(String(e.active.id))}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex h-full min-h-0 gap-4 overflow-x-auto overflow-y-hidden p-6">
+      <div className="flex h-full min-h-0 gap-4 overflow-x-auto overflow-y-hidden p-6 snap-x snap-mandatory">
         {columns.map((col) => {
           const cards = itemsByColumn[col.id] ?? [];
           return (
             <section
               key={col.id}
-              className="flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-muted/80"
+              className="flex h-full w-80 shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-border bg-muted/80"
             >
               <header className="flex shrink-0 items-center justify-between px-4 py-3.5">
                 <h3 className="text-sm font-semibold text-foreground">

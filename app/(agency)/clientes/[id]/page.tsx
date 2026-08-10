@@ -3,6 +3,7 @@ import { ClientStatus, ContractStatus, DemandStatus } from "@prisma/client";
 import { db } from "@/lib/db";
 import { ClientDetailView } from "@/components/agency/client-detail-view";
 import { requireClientAccess } from "@/lib/permissions/check";
+import { listContentTypes } from "@/lib/services/settings.service";
 import type { ClientDetail } from "@/types/clients-ui";
 
 const CLOSED: DemandStatus[] = [
@@ -64,12 +65,23 @@ export default async function ClienteDetailPage({
         active: row.status === ClientStatus.ACTIVE,
         segment: row.segment,
         planName: contract?.planName ?? null,
+        birthDate: row.birthDate?.toISOString() ?? null,
+        addressZip: row.addressZip,
+        addressStreet: row.addressStreet,
+        addressNumber: row.addressNumber,
+        addressComplement: row.addressComplement,
+        addressDistrict: row.addressDistrict,
+        addressCity: row.addressCity,
+        addressState: row.addressState,
+        contractDocUrl: row.contractDocUrl,
+        studyDocUrl: row.studyDocUrl,
         contractServices:
           contract?.services.map((s) => ({
             id: s.id,
             name: s.name,
             quantity: s.quantity,
             periodicity: s.periodicity,
+            contentTypeId: s.contentTypeId,
           })) ?? [],
         createdAt: row.createdAt.toISOString(),
         openDemands: row.demands.filter((d) => !CLOSED.includes(d.status))
@@ -102,11 +114,19 @@ export default async function ClienteDetailPage({
 
   if (!client) notFound();
 
+  const contentTypes = (await listContentTypes(false)).map((t) => ({
+    id: t.id,
+    name: t.name,
+    slug: t.slug,
+  }));
+
   return (
     <ClientDetailView
       client={client}
+      contentTypes={contentTypes}
       canViewAsClient={user.permissions.includes("portal.view_as_client")}
       canCreateBoard={user.permissions.includes("clients.create")}
+      canEditContract={user.permissions.includes("clients.edit")}
     />
   );
 }

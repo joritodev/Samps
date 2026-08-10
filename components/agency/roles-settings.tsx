@@ -93,8 +93,8 @@ export function RolesSettings({
         </p>
       </header>
 
-      <div className="flex min-h-0 flex-1">
-        <aside className="w-64 shrink-0 overflow-y-auto border-r border-border p-3">
+      <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+        <aside className="max-h-48 w-full shrink-0 overflow-y-auto border-b border-border p-3 md:max-h-none md:w-64 md:border-b-0 md:border-r">
           {roles.map((role) => {
             const active = role.id === selectedId;
             return (

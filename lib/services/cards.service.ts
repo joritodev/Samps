@@ -1,5 +1,6 @@
 import { AuditAction, DemandOrigin, DemandStatus, NotificationType } from "@prisma/client";
 import { db } from "@/lib/db";
+import { BRIEFING_DEMAND_STATUSES } from "@/lib/agency/labels";
 import { logAudit } from "@/lib/services/audit.service";
 import { createNotification } from "@/lib/services/notifications.service";
 import {
@@ -76,6 +77,11 @@ export async function completeBriefingAndDemand(
   const card = await db.demand.findUnique({ where: { id: cardId } });
   if (!card) throw new Error("Cartão não encontrado");
   if (card.briefingLockedAt) throw new Error("Briefing já bloqueado");
+  if (!BRIEFING_DEMAND_STATUSES.includes(card.status)) {
+    throw new Error(
+      "Só é possível demandar cartões em planejamento. Status atual não permite esta ação."
+    );
+  }
 
   for (const field of BRIEFING_REQUIRED) {
     const value = data[field as keyof typeof data];

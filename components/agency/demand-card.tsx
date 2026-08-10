@@ -22,6 +22,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { concluirBriefing } from "@/app/actions/demand";
+import { canDemandBriefing, demandStatusLabel } from "@/lib/agency/labels";
 import type { BoardDemand, BoardTaxonomy } from "@/types/board-ui";
 
 function formatDeadline(iso: string | null) {
@@ -123,6 +124,11 @@ export function DemandDetailSheet({
 
   if (!demand) return null;
 
+  const canBriefing = canDemandBriefing(
+    demand.status,
+    (demand as { briefingLockedAt?: string | null }).briefingLockedAt
+  );
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
@@ -134,7 +140,8 @@ export function DemandDetailSheet({
             {demand.title}
           </SheetTitle>
           <SheetDescription className="text-sm text-muted-foreground">
-            Demanda #{shortCode(demand.id)} · {demand.clientName}
+            Demanda #{shortCode(demand.id)} · {demand.clientName} ·{" "}
+            {demandStatusLabel(demand.status)}
           </SheetDescription>
         </SheetHeader>
 
@@ -146,7 +153,11 @@ export function DemandDetailSheet({
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2 sm:col-span-2">
                 <Label htmlFor="sector">Setor responsável</Label>
-                <Select value={sector} onValueChange={setSector}>
+                <Select
+                  value={sector}
+                  onValueChange={setSector}
+                  disabled={!canBriefing}
+                >
                   <SelectTrigger id="sector">
                     <SelectValue placeholder="Selecione o setor" />
                   </SelectTrigger>
@@ -161,7 +172,11 @@ export function DemandDetailSheet({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="priority">Prioridade</Label>
-                <Select value={priority} onValueChange={setPriority}>
+                <Select
+                  value={priority}
+                  onValueChange={setPriority}
+                  disabled={!canBriefing}
+                >
                   <SelectTrigger id="priority">
                     <SelectValue placeholder="Prioridade" />
                   </SelectTrigger>
@@ -196,29 +211,49 @@ export function DemandDetailSheet({
                 rows={6}
                 placeholder="Descreva o briefing da demanda..."
                 className="resize-none text-sm leading-relaxed"
+                disabled={!canBriefing}
               />
             </div>
           </section>
         </div>
 
         <SheetFooter className="mt-auto flex-col gap-2 border-t border-border bg-muted/80 px-6 py-4 sm:flex-col sm:space-x-0">
-          <Button
-            type="button"
-            className="w-full"
-            disabled={pending}
-            onClick={handleSubmit}
-          >
-            {pending ? "Demandando..." : "Concluir briefing e demandar"}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            disabled={pending}
-            onClick={() => onOpenChange(false)}
-          >
-            Salvar rascunho
-          </Button>
+          {canBriefing ? (
+            <>
+              <Button
+                type="button"
+                className="w-full"
+                disabled={pending}
+                onClick={handleSubmit}
+              >
+                {pending ? "Demandando..." : "Concluir briefing e demandar"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                disabled={pending}
+                onClick={() => onOpenChange(false)}
+              >
+                Fechar
+              </Button>
+            </>
+          ) : (
+            <>
+              <p className="text-center text-xs text-muted-foreground">
+                Status atual: {demandStatusLabel(demand.status)}. O briefing só
+                pode ser demandado em planejamento.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => onOpenChange(false)}
+              >
+                Fechar
+              </Button>
+            </>
+          )}
         </SheetFooter>
       </SheetContent>
     </Sheet>

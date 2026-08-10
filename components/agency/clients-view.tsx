@@ -32,8 +32,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Textarea } from "@/components/ui/textarea";
+import {
+  buildScopeRows,
+  ContractScopeFields,
+  scopeRowsToPayload,
+  type ScopeFieldRow,
+} from "@/components/agency/contract-scope-fields";
 import { cn } from "@/lib/utils";
+import type { ContentTypeOption } from "@/lib/agency/contract-services";
 import type { ClientListItem } from "@/types/clients-ui";
 
 function ClientAvatar({
@@ -71,15 +77,28 @@ function ClientAvatar({
 function NewClientSheet({
   open,
   onOpenChange,
+  contentTypes,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  contentTypes: ContentTypeOption[];
 }) {
   const [name, setName] = useState("");
   const [status, setStatus] = useState<"active" | "paused">("active");
   const [segment, setSegment] = useState("");
   const [planName, setPlanName] = useState("");
-  const [scope, setScope] = useState("");
+  const [notes, setNotes] = useState("");
+  const [birthDate, setBirthDate] = useState("");
+  const [addressZip, setAddressZip] = useState("");
+  const [addressStreet, setAddressStreet] = useState("");
+  const [addressNumber, setAddressNumber] = useState("");
+  const [addressComplement, setAddressComplement] = useState("");
+  const [addressDistrict, setAddressDistrict] = useState("");
+  const [addressCity, setAddressCity] = useState("");
+  const [addressState, setAddressState] = useState("");
+  const [scopeRows, setScopeRows] = useState<ScopeFieldRow[]>(() =>
+    buildScopeRows(contentTypes)
+  );
   const [pending, startTransition] = useTransition();
 
   function reset() {
@@ -87,12 +106,27 @@ function NewClientSheet({
     setStatus("active");
     setSegment("");
     setPlanName("");
-    setScope("");
+    setNotes("");
+    setBirthDate("");
+    setAddressZip("");
+    setAddressStreet("");
+    setAddressNumber("");
+    setAddressComplement("");
+    setAddressDistrict("");
+    setAddressCity("");
+    setAddressState("");
+    setScopeRows(buildScopeRows(contentTypes));
   }
 
   function handleSubmit() {
     if (!name.trim()) {
       toast.error("O nome do cliente é obrigatório");
+      return;
+    }
+
+    const services = scopeRowsToPayload(scopeRows);
+    if (services.some((s) => Number.isNaN(s.quantity) || s.quantity < 0)) {
+      toast.error("Quantidade inválida");
       return;
     }
 
@@ -102,7 +136,16 @@ function NewClientSheet({
         active: status === "active",
         segment,
         planName,
-        contractNotes: scope,
+        contractNotes: notes,
+        services,
+        birthDate,
+        addressZip,
+        addressStreet,
+        addressNumber,
+        addressComplement,
+        addressDistrict,
+        addressCity,
+        addressState,
       });
 
       if (result.error) {
@@ -124,7 +167,7 @@ function NewClientSheet({
         if (!next) reset();
       }}
     >
-      <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-md">
+      <SheetContent className="flex w-full max-h-[90dvh] flex-col gap-0 overflow-y-auto p-0 sm:max-w-lg">
         <SheetHeader className="space-y-1 border-b border-border px-6 py-5 text-left">
           <SheetTitle>Novo Cliente</SheetTitle>
           <SheetDescription>
@@ -169,6 +212,86 @@ function NewClientSheet({
             />
           </div>
 
+          <div className="space-y-3 rounded-lg border border-border p-4">
+            <p className="text-sm font-medium text-foreground">
+              Dados cadastrais
+            </p>
+            <div className="space-y-2">
+              <Label htmlFor="client-birth">Aniversário</Label>
+              <Input
+                id="client-birth"
+                type="date"
+                value={birthDate}
+                onChange={(e) => setBirthDate(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="client-zip">CEP</Label>
+                <Input
+                  id="client-zip"
+                  placeholder="00000-000"
+                  value={addressZip}
+                  onChange={(e) => setAddressZip(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="client-state">UF</Label>
+                <Input
+                  id="client-state"
+                  placeholder="CE"
+                  maxLength={2}
+                  value={addressState}
+                  onChange={(e) => setAddressState(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="client-street">Rua</Label>
+              <Input
+                id="client-street"
+                value={addressStreet}
+                onChange={(e) => setAddressStreet(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="client-number">Número</Label>
+                <Input
+                  id="client-number"
+                  value={addressNumber}
+                  onChange={(e) => setAddressNumber(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="client-complement">Complemento</Label>
+                <Input
+                  id="client-complement"
+                  value={addressComplement}
+                  onChange={(e) => setAddressComplement(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="client-district">Bairro</Label>
+                <Input
+                  id="client-district"
+                  value={addressDistrict}
+                  onChange={(e) => setAddressDistrict(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="client-city">Cidade</Label>
+                <Input
+                  id="client-city"
+                  value={addressCity}
+                  onChange={(e) => setAddressCity(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="client-plan">Plano contratado</Label>
             <Input
@@ -179,20 +302,13 @@ function NewClientSheet({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="client-scope">Escopo do contrato</Label>
-            <Textarea
-              id="client-scope"
-              placeholder="Ex: 8 feeds, 12 stories, 2 reels / mês…"
-              value={scope}
-              onChange={(e) => setScope(e.target.value)}
-              className="min-h-[120px] resize-none"
-            />
-            <p className="text-xs text-muted-foreground">
-              Os itens quantificados do contrato são cadastrados na tela do
-              cliente.
-            </p>
-          </div>
+          <ContractScopeFields
+            contentTypes={contentTypes}
+            rows={scopeRows}
+            onChange={setScopeRows}
+            notes={notes}
+            onNotesChange={setNotes}
+          />
         </div>
 
         <SheetFooter className="border-t border-border bg-muted/80 px-6 py-4 sm:flex-col sm:space-x-0">
@@ -213,15 +329,17 @@ function NewClientSheet({
 export function ClientsView({
   clients,
   canCreate,
+  contentTypes,
 }: {
   clients: ClientListItem[];
   canCreate: boolean;
+  contentTypes: ContentTypeOption[];
 }) {
   const [sheetOpen, setSheetOpen] = useState(false);
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">
-      <header className="flex shrink-0 items-center justify-between gap-4 border-b border-border bg-card px-6 py-5">
+      <header className="flex shrink-0 flex-wrap items-center justify-between gap-4 border-b border-border bg-card px-6 py-5">
         <div>
           <h1 className="text-xl font-semibold tracking-tight text-foreground">
             Clientes
@@ -266,7 +384,7 @@ export function ClientsView({
             ) : null}
           </div>
         ) : (
-          <div className="overflow-hidden rounded-xl border border-border bg-card">
+          <div className="overflow-x-auto rounded-xl border border-border bg-card">
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
@@ -355,7 +473,11 @@ export function ClientsView({
         )}
       </div>
 
-      <NewClientSheet open={sheetOpen} onOpenChange={setSheetOpen} />
+      <NewClientSheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        contentTypes={contentTypes}
+      />
     </div>
   );
 }

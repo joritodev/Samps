@@ -258,6 +258,19 @@ enum DistributionMethod {
   MIXED
 }
 
+enum AnnouncementKind {
+  INFO
+  URGENT
+  CELEBRATION
+}
+
+enum AbsenceKind {
+  DAY_OFF
+  VACATION
+  OFFLINE
+  SICK_LEAVE
+}
+
 model User {
   id                 String     @id @default(cuid())
   email              String     @unique
@@ -265,6 +278,7 @@ model User {
   name               String
   phone              String?
   avatarUrl          String?
+  birthDate          DateTime?
   userType           UserType
   roleId             String
   sectorId           String?
@@ -314,10 +328,45 @@ model User {
   demandAssignments      DemandAssignment[]    @relation("AssignmentExecutor")
   assignmentsMade        DemandAssignment[]    @relation("AssignmentAssigner")
   workSessions           WorkSession[]
+  announcements          Announcement[]        @relation("AnnouncementAuthor")
+  absences               Absence[]
 
   @@index([userType])
   @@index([status])
   @@index([roleId])
+}
+
+model Announcement {
+  id        String           @id @default(cuid())
+  title     String
+  message   String
+  kind      AnnouncementKind @default(INFO)
+  startsAt  DateTime         @default(now())
+  endsAt    DateTime?
+  active    Boolean          @default(true)
+  authorId  String
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  author User @relation("AnnouncementAuthor", fields: [authorId], references: [id])
+
+  @@index([active, startsAt])
+}
+
+model Absence {
+  id         String      @id @default(cuid())
+  userId     String
+  kind       AbsenceKind
+  startsAt   DateTime
+  endsAt     DateTime
+  note       String?
+  canceledAt DateTime?
+  createdAt  DateTime    @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startsAt])
+  @@index([startsAt, endsAt])
 }
 
 model Role {
@@ -477,6 +526,16 @@ model Client {
   phone                   String?
   logoUrl                 String?
   brandColor              String?
+  birthDate               DateTime?
+  addressZip              String?
+  addressStreet           String?
+  addressNumber           String?
+  addressComplement       String?
+  addressDistrict         String?
+  addressCity             String?
+  addressState            String?
+  contractDocUrl          String?
+  studyDocUrl             String?
   status                  ClientStatus @default(ACTIVE)
   primaryResponsibleId    String?
   socialMediaId           String?

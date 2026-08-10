@@ -178,11 +178,11 @@ export function SectorBoardView({
         )}
       >
         {view === "kanban" ? (
-          <div className="flex h-full gap-3 overflow-x-auto pb-1">
+          <div className="flex h-full gap-3 overflow-x-auto snap-x snap-mandatory pb-1">
             {columns.map((col) => (
               <div
                 key={col.id}
-                className="flex h-full w-72 shrink-0 flex-col rounded-xl border border-border/60 bg-card p-3 shadow-soft"
+                className="flex h-full w-72 shrink-0 snap-start flex-col rounded-xl border border-border/60 bg-card p-3 shadow-soft"
               >
                 <div className="mb-2 flex shrink-0 items-center justify-between">
                   <h3 className="text-sm font-semibold text-foreground">
