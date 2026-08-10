@@ -38,6 +38,9 @@ next-env.d.ts
 
 /app/generated/prisma
 
+# git worktrees
+.worktrees/
+
 # superpowers / scratch
 .superpowers/
 _e.txt
