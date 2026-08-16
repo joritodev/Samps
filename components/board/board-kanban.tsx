@@ -16,10 +16,26 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useState, useTransition } from "react";
+import { MoreHorizontal, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState, useTransition } from "react";
 import { DemandCard } from "@/components/shared/demand-card";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import {
+  archiveBoardListAction,
+  createBoardListAction,
+  renameBoardListAction,
+} from "@/lib/actions/board.actions";
 import { moveCardAction } from "@/lib/actions/cards.actions";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 type Column = { id: string; title: string };
 type Demand = Parameters<typeof DemandCard>[0]["demand"] & {
@@ -57,17 +73,32 @@ function SortableDemandCard({
 
 export function BoardKanban({
   clientId,
-  columns,
+  boardId,
+  columns: initialColumns,
   itemsByColumn,
   onCardSelect,
+  canManageLists = false,
 }: {
   clientId: string;
+  boardId: string;
   columns: Column[];
   itemsByColumn: Record<string, Demand[]>;
   onCardSelect: (id: string) => void;
+  canManageLists?: boolean;
 }) {
+  const router = useRouter();
+  const [columns, setColumns] = useState(initialColumns);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [addingColumn, setAddingColumn] = useState(false);
+  const [newColumnName, setNewColumnName] = useState("");
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
   const [, startTransition] = useTransition();
+
+  useEffect(() => {
+    setColumns(initialColumns);
+  }, [initialColumns]);
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor)
@@ -99,6 +130,28 @@ export function BoardKanban({
     });
   }
 
+  function submitNewColumn() {
+    const name = newColumnName.trim();
+    if (!name) return;
+    startTransition(async () => {
+      const result = await createBoardListAction(boardId, clientId, name);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      if (result.list) {
+        setColumns((prev) => [
+          ...prev,
+          { id: result.list!.id, title: result.list!.name },
+        ]);
+      }
+      setNewColumnName("");
+      setAddingColumn(false);
+      toast.success("Coluna criada");
+      router.refresh();
+    });
+  }
+
   return (
     <DndContext
       sensors={sensors}
@@ -114,13 +167,105 @@ export function BoardKanban({
               key={col.id}
               className="flex h-full w-80 shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-border bg-muted/80"
             >
-              <header className="flex shrink-0 items-center justify-between px-4 py-3.5">
-                <h3 className="text-sm font-semibold text-foreground">
-                  {col.title}
-                </h3>
-                <span className="rounded-md border border-border bg-card px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-                  {cards.length}
-                </span>
+              <header className="flex shrink-0 items-center justify-between gap-2 px-3 py-3.5">
+                {renamingId === col.id ? (
+                  <Input
+                    className="h-8"
+                    value={renameValue}
+                    maxLength={60}
+                    autoFocus
+                    onChange={(e) => setRenameValue(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        startTransition(async () => {
+                          const result = await renameBoardListAction(
+                            col.id,
+                            clientId,
+                            renameValue
+                          );
+                          if (result.error) {
+                            toast.error(result.error);
+                            return;
+                          }
+                          setColumns((prev) =>
+                            prev.map((c) =>
+                              c.id === col.id
+                                ? { ...c, title: renameValue.trim() }
+                                : c
+                            )
+                          );
+                          setRenamingId(null);
+                          toast.success("Coluna renomeada");
+                          router.refresh();
+                        });
+                      }
+                      if (e.key === "Escape") setRenamingId(null);
+                    }}
+                  />
+                ) : (
+                  <h3 className="truncate text-sm font-semibold text-foreground">
+                    {col.title}
+                  </h3>
+                )}
+                <div className="flex shrink-0 items-center gap-1">
+                  <span className="rounded-md border border-border bg-card px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                    {cards.length}
+                  </span>
+                  {canManageLists ? (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          aria-label="Opções da coluna"
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setRenamingId(col.id);
+                            setRenameValue(col.title);
+                          }}
+                        >
+                          Renomear
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => {
+                            if (
+                              !confirm(
+                                `Arquivar "${col.title}"? Só funciona sem cartões na coluna.`
+                              )
+                            ) {
+                              return;
+                            }
+                            startTransition(async () => {
+                              const result = await archiveBoardListAction(
+                                col.id,
+                                clientId
+                              );
+                              if (result.error) {
+                                toast.error(result.error);
+                                return;
+                              }
+                              setColumns((prev) =>
+                                prev.filter((c) => c.id !== col.id)
+                              );
+                              toast.success("Coluna arquivada");
+                              router.refresh();
+                            });
+                          }}
+                        >
+                          Arquivar
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ) : null}
+                </div>
               </header>
               <SortableContext
                 id={col.id}
@@ -149,6 +294,53 @@ export function BoardKanban({
             </section>
           );
         })}
+
+        {canManageLists ? (
+          <section className="flex h-fit w-80 shrink-0 snap-start flex-col gap-2 rounded-xl border border-dashed border-border bg-muted/40 p-3">
+            {addingColumn ? (
+              <>
+                <Input
+                  placeholder="Nome da coluna"
+                  value={newColumnName}
+                  maxLength={60}
+                  autoFocus
+                  onChange={(e) => setNewColumnName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") submitNewColumn();
+                    if (e.key === "Escape") {
+                      setAddingColumn(false);
+                      setNewColumnName("");
+                    }
+                  }}
+                />
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={submitNewColumn}>
+                    Criar
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setAddingColumn(false);
+                      setNewColumnName("");
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <Button
+                variant="ghost"
+                className="justify-start text-muted-foreground"
+                onClick={() => setAddingColumn(true)}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Adicionar coluna
+              </Button>
+            )}
+          </section>
+        ) : null}
       </div>
       <DragOverlay>
         {activeItem ? (

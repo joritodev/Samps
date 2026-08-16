@@ -15,6 +15,9 @@ import { logAudit } from "@/lib/services/audit.service";
 import { createNotification } from "@/lib/services/notifications.service";
 import {
   DEFAULT_BOARD_LISTS,
+  boardColumnForList,
+  isValidBoardListName,
+  normalizeBoardListName,
   type BoardWizardInput,
 } from "@/types/board";
 
@@ -34,6 +37,16 @@ function serviceToListType(demandType: DemandType): BoardListType {
     default:
       return "FEEDS";
   }
+}
+
+/** Primeira lista de catálogo por tipo (ignora CUSTOM). */
+function catalogListByType<T extends { type: BoardListType }>(lists: T[]) {
+  const map = {} as Partial<Record<BoardListType, T>>;
+  for (const list of lists) {
+    if (list.type === "CUSTOM") continue;
+    if (!map[list.type]) map[list.type] = list;
+  }
+  return map;
 }
 
 function formatCardTitle(name: string, index: number, total: number, month: number) {
@@ -68,7 +81,7 @@ export async function generateContractualCards(params: {
     db.boardList.findMany({ where: { boardId, active: true } }),
   ]);
 
-  const listByType = Object.fromEntries(lists.map((l) => [l.type, l]));
+  const listByType = catalogListByType(lists);
   const cardData: Prisma.DemandCreateManyInput[] = [];
 
   for (const service of services) {
@@ -94,7 +107,7 @@ export async function generateContractualCards(params: {
         status: DemandStatus.PENDING_PLANNING,
         internalStatus: "Pendente de planejamento",
         externalStatus: "Planejamento",
-        boardColumn: list.type.toLowerCase(),
+        boardColumn: boardColumnForList(list),
         cardCode: `${demandType}-${month}-${padIndex(i, qty)}`,
         cardIndex: i,
         cardTotalInType: qty,
@@ -269,7 +282,7 @@ export async function createClientBoardTransaction(input: BoardWizardInput) {
       create: { userId: input.team.socialMediaId, clientId },
     });
 
-    const listByType = Object.fromEntries(lists.map((l) => [l.type, l]));
+    const listByType = catalogListByType(lists);
     const cardData: Prisma.DemandCreateManyInput[] = [];
 
     for (const service of contract.services) {
@@ -294,7 +307,7 @@ export async function createClientBoardTransaction(input: BoardWizardInput) {
           status: DemandStatus.PENDING_PLANNING,
           internalStatus: "Pendente de planejamento",
           externalStatus: "Planejamento",
-          boardColumn: list.type.toLowerCase(),
+          boardColumn: boardColumnForList(list),
           cardCode: `${demandType}-${input.contract.competenceMonth}-${padIndex(i, qty)}`,
           cardIndex: i,
           cardTotalInType: qty,
@@ -426,7 +439,10 @@ export async function groupBoardDemandsByList(
     orderBy: [{ sortOrder: "asc" }, { cardIndex: "asc" }, { createdAt: "asc" }],
   });
 
-  const listByType = Object.fromEntries(lists.map((l) => [l.type, l.id]));
+  const listByType = catalogListByType(lists);
+  const listIdByCatalogType = Object.fromEntries(
+    Object.entries(listByType).map(([type, list]) => [type, list.id])
+  ) as Partial<Record<BoardListType, string>>;
 
   // Cartões sem listId (seed antigo / migração) caem na lista do tipo correspondente.
   function resolveListId(demand: (typeof demands)[number]) {
@@ -434,13 +450,18 @@ export async function groupBoardDemandsByList(
       return demand.listId;
     }
     const byType: Partial<Record<string, string>> = {
-      FEED: listByType.FEEDS,
-      REEL: listByType.FEEDS,
-      DESIGN: listByType.FEEDS,
-      STORY: listByType.STORIES,
-      VIDEO: listByType.SHOOTS ?? listByType.FOLLOW_UP,
+      FEED: listIdByCatalogType.FEEDS,
+      REEL: listIdByCatalogType.FEEDS,
+      DESIGN: listIdByCatalogType.FEEDS,
+      STORY: listIdByCatalogType.STORIES,
+      VIDEO: listIdByCatalogType.SHOOTS ?? listIdByCatalogType.FOLLOW_UP,
     };
-    return byType[demand.type] ?? listByType.FOLLOW_UP ?? lists[0]?.id ?? null;
+    return (
+      byType[demand.type] ??
+      listIdByCatalogType.FOLLOW_UP ??
+      lists[0]?.id ??
+      null
+    );
   }
 
   const grouped: Record<string, typeof demands> = {};
@@ -457,4 +478,191 @@ export async function groupBoardDemandsByList(
   await syncDemandDelays(demands.map((d) => d.id));
 
   return { lists, grouped };
+}
+
+const BOARD_LIST_NAME_ERROR =
+  "Nome da coluna inválido (1 a 60 caracteres).";
+
+async function assertBoardOwnedByClient(boardId: string, clientId: string) {
+  const board = await db.clientBoard.findFirst({
+    where: { id: boardId, clientId },
+    select: { id: true, clientId: true },
+  });
+  if (!board) throw new Error("Quadro não encontrado para este cliente");
+  return board;
+}
+
+async function assertListOwnedByClient(listId: string, clientId: string) {
+  const list = await db.boardList.findFirst({
+    where: { id: listId, board: { clientId } },
+    include: { board: { select: { id: true, clientId: true } } },
+  });
+  if (!list) throw new Error("Coluna não encontrada para este cliente");
+  return list;
+}
+
+export async function createBoardList(params: {
+  boardId: string;
+  clientId: string;
+  name: string;
+  userId: string;
+}) {
+  const name = normalizeBoardListName(params.name);
+  if (!isValidBoardListName(name)) {
+    throw new Error(BOARD_LIST_NAME_ERROR);
+  }
+
+  await assertBoardOwnedByClient(params.boardId, params.clientId);
+
+  const maxSort = await db.boardList.aggregate({
+    where: { boardId: params.boardId },
+    _max: { sortOrder: true },
+  });
+  const sortOrder = (maxSort._max.sortOrder ?? 0) + 1;
+
+  const list = await db.boardList.create({
+    data: {
+      boardId: params.boardId,
+      name,
+      type: BoardListType.CUSTOM,
+      sortOrder,
+      active: true,
+    },
+  });
+
+  await logAudit({
+    userId: params.userId,
+    action: AuditAction.OTHER,
+    entityType: "BoardList",
+    entityId: list.id,
+    newValue: { boardId: params.boardId, name, type: "CUSTOM" },
+  });
+
+  return list;
+}
+
+export async function renameBoardList(params: {
+  listId: string;
+  clientId: string;
+  name: string;
+  userId: string;
+}) {
+  const name = normalizeBoardListName(params.name);
+  if (!isValidBoardListName(name)) {
+    throw new Error(BOARD_LIST_NAME_ERROR);
+  }
+
+  const existing = await assertListOwnedByClient(params.listId, params.clientId);
+
+  const list = await db.boardList.update({
+    where: { id: params.listId },
+    data: { name },
+  });
+
+  await logAudit({
+    userId: params.userId,
+    action: AuditAction.OTHER,
+    entityType: "BoardList",
+    entityId: list.id,
+    previousValue: { name: existing.name },
+    newValue: { name },
+  });
+
+  return list;
+}
+
+export async function reorderBoardLists(params: {
+  boardId: string;
+  clientId: string;
+  orderedListIds: string[];
+  userId: string;
+}) {
+  await assertBoardOwnedByClient(params.boardId, params.clientId);
+
+  const lists = await db.boardList.findMany({
+    where: { boardId: params.boardId },
+    select: { id: true },
+  });
+  const known = new Set(lists.map((l) => l.id));
+  if (
+    params.orderedListIds.length !== known.size ||
+    params.orderedListIds.some((id) => !known.has(id))
+  ) {
+    throw new Error("Ordem de colunas inválida");
+  }
+
+  await db.$transaction(
+    params.orderedListIds.map((id, index) =>
+      db.boardList.update({
+        where: { id },
+        data: { sortOrder: index + 1 },
+      })
+    )
+  );
+
+  await logAudit({
+    userId: params.userId,
+    action: AuditAction.OTHER,
+    entityType: "ClientBoard",
+    entityId: params.boardId,
+    newValue: { reorderedLists: params.orderedListIds },
+  });
+}
+
+export async function archiveBoardList(params: {
+  listId: string;
+  clientId: string;
+  userId: string;
+}) {
+  const list = await assertListOwnedByClient(params.listId, params.clientId);
+
+  const cardCount = await db.demand.count({
+    where: {
+      listId: params.listId,
+      status: { notIn: [DemandStatus.CANCELLED] },
+    },
+  });
+  if (cardCount > 0) {
+    throw new Error(
+      `Mova os ${cardCount} cartão(ões) desta coluna antes de arquivá-la.`
+    );
+  }
+
+  const updated = await db.boardList.update({
+    where: { id: params.listId },
+    data: { active: false },
+  });
+
+  await logAudit({
+    userId: params.userId,
+    action: AuditAction.BOARD_ARCHIVED,
+    entityType: "BoardList",
+    entityId: list.id,
+    newValue: { name: list.name, active: false },
+  });
+
+  return updated;
+}
+
+export async function unarchiveBoardList(params: {
+  listId: string;
+  clientId: string;
+  userId: string;
+}) {
+  const list = await assertListOwnedByClient(params.listId, params.clientId);
+
+  const updated = await db.boardList.update({
+    where: { id: params.listId },
+    data: { active: true },
+  });
+
+  await logAudit({
+    userId: params.userId,
+    action: AuditAction.OTHER,
+    entityType: "BoardList",
+    entityId: list.id,
+    newValue: { name: list.name, active: true },
+  });
+
+  return updated;
 }

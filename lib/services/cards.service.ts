@@ -275,13 +275,13 @@ export async function updateDemandListAndOrder(
   listId: string,
   sortOrder: number
 ) {
-  const list = await db.boardList.findUnique({ where: { id: listId } });
+  // Só listId/sortOrder: boardColumn guarda a etapa do ciclo/setor
+  // (production, review…). O kanban do cliente agrupa por listId.
   return db.demand.update({
     where: { id: demandId },
     data: {
       listId,
       sortOrder,
-      boardColumn: list?.type.toLowerCase() ?? "open",
     },
   });
 }

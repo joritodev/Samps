@@ -80,6 +80,7 @@ const ROLE_DEFINITIONS: {
       "portal.release_info",
       "timers.view",
       "indicators.view",
+      "boards.manage_lists",
     ],
   },
   {
