@@ -1,6 +1,6 @@
 # Samps OS — Roadmap Master (ago → set 2026)
 
-**Data:** 2026-08-04 (estado de execução atualizado em 2026-08-07)
+**Data:** 2026-08-04 (estado de execução atualizado em 2026-08-16)
 **Origem:** reunião Samps Digital 28/07/2026 + backlog técnico pendente
 **Meta do cliente:** time testando em agosto, sistema operacional em setembro
 **Próxima reunião:** 18/08/2026
@@ -15,19 +15,25 @@ Nenhuma fase de código começa antes de a anterior ter PRs mergeados e gates ap
 
 ---
 
-## 1. Estado real (2026-08-07)
+## 1. Estado real (2026-08-16)
 
 | Fato | Detalhe |
 |------|---------|
-| Fase 0 | Tasks 1–4 mergeadas (PRs #10–#15). Smoke browser ainda não feito. |
-| Fase 1 | Tasks 1–2 mergeadas (CVE Next #17, headers #18). **Parou na Task 3 (rate limit).** |
-| Fase 2+ | Não iniciada |
+| Fase 0 | Feita (PRs #10–#15) |
+| Fase 1 | Feita no código (rate limit, CI, Vitest, RLS, gate) — ops humanos: Deployment Protection / checks obrigatórios |
+| Fase 2 | Feita (dados cliente, avisos, ausências, mobile) |
+| Fase 3.0 | Mergeada (#28) — higiene do ciclo |
+| Fase 4.1 | PR aberta [#29](https://github.com/joritodev/Samps/pull/29) — colunas livres no quadro do cliente (opção A); **não bloqueia 3.1** |
+| Fase 5 | Docs de decisão (IA / mobile / SaaS) |
 | Playbook | `2026-08-07-playbook-metodologia.md` |
 | Produção | https://samps-os.vercel.app |
-| Next | `14.2.35` (CVE crítica do 14.2.15 resolvida; highs residuais → upgrade major na Fase 3/4) |
-| Ainda falta (Fase 1) | rate limit, Deployment Protection, CI, Vitest, RLS ampliado, gate Security |
+| Spec Fase 3 | `docs/superpowers/specs/2026-08-16-fase3-gestao-agencia-design.md` |
 
-**Próxima fatia a executar:** Fase 1 Task 3 — `sec/rate-limit-login` (metodologia SDD + Security Review; ver playbook seção 5).
+**Próxima fatia a executar:** Fase **3.1** — relatórios em `/performance`  
+Plano detalhado: `docs/superpowers/plans/2026-08-16-fase3-1-relatorios-performance.md`  
+Motor: SDD · branch `feat/relatorios-performance`
+
+**Fila depois da 3.1:** 3.6 menções → 3.2 anexos (Drive-first) → 3.7 CSP → 3.3/3.4/3.5 (bloqueadas até input Samps) → restante Fase 4 (capacidade, agenda). Mergear #29 quando CI ok.
 
 ---
 
