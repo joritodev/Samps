@@ -25,7 +25,7 @@ import {
 } from "@/lib/actions/work-session.actions";
 import { requestAdjustmentAction } from "@/lib/actions/adjustment.actions";
 import { registerPublicationAction } from "@/lib/actions/cards.actions";
-import { aprovarDemanda, solicitarAjuste } from "@/app/actions/review";
+import { aprovarDemanda } from "@/app/actions/review";
 import { listDemandDelaysAction } from "@/lib/actions/deadline.actions";
 import { DeadlineChangeForm } from "@/components/shared/deadline-change-form";
 import {
@@ -124,7 +124,7 @@ export function SectorCardSheet({
   const canAdjust = canRequestAdjustment(card.status);
   const canPublish = canRegisterPublication(card.status);
   const showProductionActions =
-    !isSocialReview &&
+    (!isSocialReview || canProduce) &&
     !isAwaitingPublication &&
     (isAvailable || isExecutor || canAssign);
 
@@ -378,7 +378,12 @@ export function SectorCardSheet({
                     disabled={pending || !pauseDesc.trim()}
                     onClick={() =>
                       run(
-                        () => solicitarAjuste(card.id, pauseDesc),
+                        () =>
+                          requestAdjustmentAction(
+                            card.id,
+                            card.clientId,
+                            pauseDesc
+                          ),
                         "Ajuste solicitado"
                       )
                     }
