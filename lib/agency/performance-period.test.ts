@@ -43,6 +43,20 @@ describe("resolvePerformanceRange", () => {
     });
   });
 
+  it("swaps inverted custom dates", () => {
+    expect(
+      resolvePerformanceRange({
+        from: "2026-08-10",
+        to: "2026-08-01",
+        now,
+      }),
+    ).toEqual({
+      from: new Date(2026, 7, 1, 0, 0, 0, 0),
+      to: new Date(2026, 7, 10, 23, 59, 59, 999),
+      preset: "custom",
+    });
+  });
+
   it("falls back to the current month when from is invalid", () => {
     expect(
       resolvePerformanceRange({

@@ -368,27 +368,28 @@ export function PerformanceDashboard({
     let rows: (string | number)[][];
 
     if (activeTab === "resumo") {
+      const deliveries = report.byContentType.reduce((acc, row) => acc + row.n, 0);
       rows = [
         [
-          "Período",
-          "Concluídas",
-          "Em produção",
-          "Atrasadas",
-          "Ajustes",
-          "Sessões",
-          "Tempo trabalhado (s)",
-          "Tempo médio/sessão (s)",
+          "De",
+          "Até",
+          "Entregas (filtro)",
+          "Pessoas",
+          "Tipos",
+          "Snapshot hoje concluídas",
+          "Snapshot semana concluídas",
+          "Snapshot mês concluídas",
         ],
-        ...PERIODS.map(({ key, label }) => [
-          label,
-          byPeriod[key].completed,
-          byPeriod[key].inProgress,
-          byPeriod[key].overdue,
-          byPeriod[key].adjustments,
-          byPeriod[key].sessionsCount,
-          byPeriod[key].totalWorkedSeconds,
-          byPeriod[key].avgSessionSeconds,
-        ]),
+        [
+          report.from,
+          report.to,
+          deliveries,
+          report.byUser.length,
+          report.byContentType.length,
+          today.completed,
+          week.completed,
+          month.completed,
+        ],
       ];
     } else if (activeTab === "pessoas") {
       rows = [

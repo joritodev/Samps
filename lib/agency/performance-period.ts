@@ -61,9 +61,13 @@ export function resolvePerformanceRange(
   const customTo = parseLocalDate(input.to);
 
   if (customFrom && customTo) {
+    const ordered =
+      customFrom.getTime() <= customTo.getTime()
+        ? { start: customFrom, end: customTo }
+        : { start: customTo, end: customFrom };
     return {
-      from: startOfDay(customFrom),
-      to: endOfDay(customTo),
+      from: startOfDay(ordered.start),
+      to: endOfDay(ordered.end),
       preset: "custom",
     };
   }
