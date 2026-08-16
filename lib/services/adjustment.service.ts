@@ -5,6 +5,7 @@ import {
   NotificationType,
   WorkSessionStage,
 } from "@prisma/client";
+import { assertCanRequestAdjustment } from "@/lib/agency/labels";
 import { db } from "@/lib/db";
 import { logAudit } from "@/lib/services/audit.service";
 import { createNotification } from "@/lib/services/notifications.service";
@@ -21,6 +22,7 @@ export async function requestAdjustment(
 
   const demand = await db.demand.findUnique({ where: { id: demandId } });
   if (!demand) throw new Error("Demanda não encontrada");
+  assertCanRequestAdjustment(demand.status);
 
   const assignment = await getActiveAssignment(demandId);
   if (assignment) {

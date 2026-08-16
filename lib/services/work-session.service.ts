@@ -6,6 +6,7 @@ import {
   WorkSessionStage,
   WorkSessionStatus,
 } from "@prisma/client";
+import { assertCanCompleteProduction } from "@/lib/agency/labels";
 import { db } from "@/lib/db";
 import { logAudit } from "@/lib/services/audit.service";
 import { getActiveAssignment } from "@/lib/services/assignment.service";
@@ -200,6 +201,18 @@ export async function completeWorkSession(
 ) {
   if (!materialUrl?.trim()) throw new Error("Link do material é obrigatório");
 
+  const demand = await db.demand.findUnique({
+    where: { id: demandId },
+    select: {
+      status: true,
+      title: true,
+      clientId: true,
+      client: { select: { socialMediaId: true } },
+    },
+  });
+  if (!demand) throw new Error("Demanda não encontrada");
+  assertCanCompleteProduction(demand.status);
+
   const session = await db.workSession.findFirst({
     where: {
       demandId,
@@ -268,15 +281,7 @@ export async function completeWorkSession(
     await recalculateSectorPriorities(assignment.sectorId);
   }
 
-  const demand = await db.demand.findUnique({
-    where: { id: demandId },
-    select: {
-      title: true,
-      clientId: true,
-      client: { select: { socialMediaId: true } },
-    },
-  });
-  if (demand?.client?.socialMediaId) {
+  if (demand.client?.socialMediaId) {
     await createNotification({
       userId: demand.client.socialMediaId,
       type: NotificationType.OTHER,
