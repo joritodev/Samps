@@ -5,6 +5,23 @@ import type {
   PortalStatus,
 } from "@prisma/client";
 
+/** Tipos de coluna do wizard / catálogo — CUSTOM é só para colunas livres. */
+export type CatalogBoardListType = Exclude<BoardListType, "CUSTOM">;
+
+/** Denormaliza a coluna do card de forma estável (várias CUSTOM no mesmo quadro). */
+export function boardColumnForList(list: { id: string }): string {
+  return `list:${list.id}`;
+}
+
+export function normalizeBoardListName(value: string): string {
+  return value.trim().replace(/\s+/g, " ");
+}
+
+export function isValidBoardListName(value: string): boolean {
+  const name = normalizeBoardListName(value);
+  return name.length >= 1 && name.length <= 60;
+}
+
 export interface ContractServiceInput {
   name: string;
   quantity: number;
@@ -45,7 +62,7 @@ export interface BoardWizardInput {
     notes?: string;
     services: ContractServiceInput[];
   };
-  lists: Record<BoardListType, boolean>;
+  lists: Record<CatalogBoardListType, boolean>;
   portal: {
     displayName: string;
     logoUrl?: string;
@@ -60,7 +77,11 @@ export interface BoardWizardInput {
   createdById: string;
 }
 
-export const DEFAULT_BOARD_LISTS: { type: BoardListType; name: string; sortOrder: number }[] = [
+export const DEFAULT_BOARD_LISTS: {
+  type: CatalogBoardListType;
+  name: string;
+  sortOrder: number;
+}[] = [
   { type: "FEEDS", name: "Feeds obrigatórios", sortOrder: 1 },
   { type: "STORIES", name: "Stories obrigatórios", sortOrder: 2 },
   { type: "FOLLOW_UP", name: "Demandas e acompanhamentos", sortOrder: 3 },
@@ -78,7 +99,9 @@ export const SERVICE_TYPE_LABELS: Record<string, string> = {
   DESIGN: "Design",
 };
 
-export const LIST_TYPE_TO_DEMAND_TYPE: Partial<Record<BoardListType, DemandType>> = {
+export const LIST_TYPE_TO_DEMAND_TYPE: Partial<
+  Record<CatalogBoardListType, DemandType>
+> = {
   FEEDS: "FEED",
   STORIES: "STORY",
   FOLLOW_UP: "FOLLOW_UP",

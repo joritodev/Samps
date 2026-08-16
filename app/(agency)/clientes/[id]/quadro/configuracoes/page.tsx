@@ -14,7 +14,9 @@ export default async function QuadroConfiguracoesPage({
   params: { id: string };
 }) {
   const user = await requireClientAccess(params.id);
-  if (!hasPermission(user.permissions, "clients.edit")) {
+  const canEditBoard = hasPermission(user.permissions, "clients.edit");
+  const canManageLists = hasPermission(user.permissions, "boards.manage_lists");
+  if (!canEditBoard && !canManageLists) {
     redirect(`/clientes/${params.id}/quadro`);
   }
 
@@ -83,6 +85,8 @@ export default async function QuadroConfiguracoesPage({
             active: l.active,
           }))}
           externalUsers={externalUsers}
+          canManageLists={canManageLists}
+          canEditBoard={canEditBoard}
         />
       </div>
     </div>

@@ -5,6 +5,7 @@ import {
   groupBoardDemandsByList,
 } from "@/lib/services/board.service";
 import { requireClientAccess } from "@/lib/permissions/check";
+import { hasPermission } from "@/lib/permissions/resolve";
 
 export default async function ClienteQuadroPage({
   params,
@@ -19,7 +20,8 @@ export default async function ClienteQuadroPage({
     visivel?: string;
   };
 }) {
-  await requireClientAccess(params.id);
+  const user = await requireClientAccess(params.id);
+  const canManageLists = hasPermission(user.permissions, "boards.manage_lists");
 
   const board = await getActiveBoardByClientId(params.id);
   if (!board) {
@@ -80,6 +82,7 @@ export default async function ClienteQuadroPage({
       }))}
       currentCompetenceId={competenceId}
       lists={lists.map((l) => ({ id: l.id, name: l.name, type: l.type }))}
+      canManageLists={canManageLists}
       grouped={Object.fromEntries(
         Object.entries(grouped).map(([listId, demands]) => [
           listId,

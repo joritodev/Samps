@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
 import type {
-  BoardListType,
   ClientStatus,
   DemandType,
   PortalStatus,
@@ -15,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createBoardAction } from "@/lib/actions/board.actions";
-import { DEFAULT_BOARD_LISTS, type BoardWizardInput } from "@/types/board";
+import { DEFAULT_BOARD_LISTS, type BoardWizardInput, type CatalogBoardListType } from "@/types/board";
 import { toast } from "sonner";
 
 type UserOption = { id: string; name: string };
@@ -114,7 +113,7 @@ function buildInitialForm(
     },
     lists: Object.fromEntries(
       DEFAULT_BOARD_LISTS.map((l) => [l.type, true])
-    ) as Record<BoardListType, boolean>,
+    ) as Record<CatalogBoardListType, boolean>,
     portal: {
       displayName,
       logoUrl: initial?.logoUrl ?? "",

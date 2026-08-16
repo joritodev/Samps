@@ -5,7 +5,7 @@
 
 > **Playbook (obrigatório):** `docs/superpowers/plans/2026-08-07-playbook-metodologia.md` — matriz seção 5 Fase 4.
 >
-> **Metodologia:** 4.1 e 4.3 começam com `brainstorming` (mapa coluna↔status; Google Calendar sim/não) → `writing-plans` → SDD. 4.2 só com dados reais de `WorkSession`. 4.4 = DIR/SDD por item; upgrade Next 16 = plano próprio.
+> **Metodologia:** 4.1 (colunas livres no quadro do cliente — opção A) e 4.3 (Google Calendar sim/não) → `writing-plans` → SDD. 4.2 só com dados reais de `WorkSession`. 4.4 = DIR/SDD por item; upgrade Next 16 = plano próprio.
 >
 > Só entra depois de o operacional da Fase 3 estar em uso real. Cada fatia recebe plano detalhado no **Opus 5** antes da execução.
 **Goal da fase:** o que a reunião pediu mas que exige o sistema já rodando para fazer sentido — personalização por cliente, previsibilidade de carga e agenda organizacional.
@@ -14,19 +14,21 @@
 
 ## Fatia 4.1 — Colunas personalizadas por cliente
 
-**Pedido da reunião:** o modelo padrão de quatro colunas não serve para todo cliente (citado o método do Coco Bambu).
+**Pedido da reunião:** o modelo padrão de quatro colunas não serve para todo cliente (citado o método do Coco Bambu / quadros tipo Trello por campanha).
 
 **Já existe:** `ClientBoard`, `BoardList`, wizard de criação de quadro, `/clientes/[id]/quadro/configuracoes`.
 
+**Decisão (opção A):** coluna = organização visual livre no **quadro do cliente** apenas. Arrastar card entre colunas **não** muda `DemandStatus`. `/demandas` e setores ficam intactos. Sem mapa coluna→status. Templates de quadro ficam fora desta fatia.
+
 **Escopo:**
-- Criar, renomear, reordenar e arquivar colunas por quadro de cliente
-- Mapear cada coluna a um `DemandStatus` (a coluna é visual; o status é a regra) — isso é o ponto crítico: sem esse mapa, as validações da Fase 0 quebram
-- Templates de quadro reutilizáveis
-- Migração dos quadros existentes sem perder cartão
+- Criar, renomear, reordenar e arquivar colunas (`BoardList`, type `CUSTOM` + listas legadas)
+- Permissão `boards.manage_lists` (admin / gestão / líder)
+- UI na aba Listas e `+ Coluna` no kanban do cliente
+- Migration sem perder cartão; `boardColumn` denormalizado estável por `listId`
 
-**Aceite:** criar um quadro com seis colunas para um cliente, mover cartões, e as regras de ação por status continuarem valendo.
+**Aceite:** gestora cria colunas livres no quadro do cliente; colaborador move cards sem alterar status; gates do ciclo (Fase 3.0) continuam valendo.
 
-**Risco alto:** coluna livre com status implícito destrói o ciclo de vida da demanda. O plano precisa deixar o status como fonte da verdade.
+**Risco:** confundir coluna do quadro com etapa do ciclo — mitigado mantendo status como fonte da verdade e isolando a feature do board de `/demandas`.
 
 ---
 

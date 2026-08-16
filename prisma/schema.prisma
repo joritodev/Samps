@@ -108,6 +108,7 @@ enum BoardListType {
   SHOOTS
   PROJECTS
   USEFUL_LINKS
+  CUSTOM
 }
 
 enum DemandObjective {
@@ -845,7 +846,8 @@ model BoardList {
   board   ClientBoard @relation(fields: [boardId], references: [id], onDelete: Cascade)
   demands Demand[]
 
-  @@unique([boardId, type])
+  @@index([boardId, sortOrder])
+  @@index([boardId, active])
 }
 
 model Competence {

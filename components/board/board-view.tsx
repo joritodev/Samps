@@ -134,6 +134,7 @@ export function BoardView({
   grouped,
   calendarDemands,
   kpis,
+  canManageLists = false,
 }: {
   clientId: string;
   boardId: string;
@@ -148,6 +149,7 @@ export function BoardView({
   lists: List[];
   grouped: Record<string, Demand[]>;
   calendarDemands: Demand[];
+  canManageLists?: boolean;
   kpis: {
     feedsContracted: number;
     feedsDemanded: number;
@@ -218,9 +220,11 @@ export function BoardView({
         {view === "kanban" ? (
           <BoardKanban
             clientId={clientId}
+            boardId={boardId}
             columns={columns}
             itemsByColumn={grouped}
             onCardSelect={openCard}
+            canManageLists={canManageLists}
           />
         ) : (
           <div className="h-full min-h-0 overflow-hidden bg-background p-4">

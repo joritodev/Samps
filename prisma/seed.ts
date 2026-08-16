@@ -70,6 +70,7 @@ const ROLE_DEFINITIONS: {
     userType: UserType.SOCIAL_MEDIA,
     permissions: [
       "clients.view_assigned",
+      "clients.edit",
       "demands.create",
       "demands.edit",
       "demands.extra_create",
@@ -80,6 +81,7 @@ const ROLE_DEFINITIONS: {
       "portal.release_info",
       "timers.view",
       "indicators.view",
+      "boards.manage_lists",
     ],
   },
   {
