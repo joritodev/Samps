@@ -1,6 +1,7 @@
 "use server";
 
 import { AuditAction, CommentType, DemandStatus, NotificationType } from "@prisma/client";
+import { assertCanRequestAdjustment } from "@/lib/agency/labels";
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/permissions/check";
 import { revalidateOperationalViews } from "@/lib/revalidate-operational";
@@ -77,6 +78,7 @@ export async function solicitarAjuste(demandId: string, motivo: string) {
         assigneeId: true,
       },
     });
+    assertCanRequestAdjustment(previous.status);
 
     await db.$transaction([
       db.demand.update({
@@ -116,6 +118,11 @@ export async function solicitarAjuste(demandId: string, motivo: string) {
     return { success: true };
   } catch (error) {
     console.error("solicitarAjuste", error);
-    return { error: "Não foi possível solicitar o ajuste." };
+    return {
+      error:
+        error instanceof Error
+          ? error.message
+          : "Não foi possível solicitar o ajuste.",
+    };
   }
 }
