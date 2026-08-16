@@ -33,6 +33,11 @@ import {
   type DemandDelayRow,
 } from "@/components/shared/demand-delay-history";
 import { PAUSE_REASONS } from "@/lib/constants/work-session";
+import {
+  canCompleteProduction,
+  canRegisterPublication,
+  canRequestAdjustment,
+} from "@/lib/agency/labels";
 import { toast } from "sonner";
 
 export type SectorCardDetail = {
@@ -115,6 +120,9 @@ export function SectorCardSheet({
     card.status === "IN_REVIEW" || card.status === "ADJUSTMENTS";
   const isAwaitingPublication =
     card.status === "APPROVED" || card.status === "SCHEDULED";
+  const canProduce = canCompleteProduction(card.status);
+  const canAdjust = canRequestAdjustment(card.status);
+  const canPublish = canRegisterPublication(card.status);
   const showProductionActions =
     !isSocialReview &&
     !isAwaitingPublication &&
@@ -303,7 +311,7 @@ export function SectorCardSheet({
                 </Button>
               )}
 
-              {(session || assignment?.status === "IN_PROGRESS") && (
+              {(session || assignment?.status === "IN_PROGRESS") && canProduce && (
                 <div className="space-y-2">
                   <Label>Link do material</Label>
                   <Input
@@ -355,32 +363,34 @@ export function SectorCardSheet({
               >
                 Aprovar para publicação
               </Button>
-              <div className="space-y-2">
-                <Label>Solicitar ajuste</Label>
-                <Textarea
-                  value={pauseDesc}
-                  onChange={(e) => setPauseDesc(e.target.value)}
-                  placeholder="Descreva o ajuste necessário"
-                  rows={3}
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={pending || !pauseDesc.trim()}
-                  onClick={() =>
-                    run(
-                      () => solicitarAjuste(card.id, pauseDesc),
-                      "Ajuste solicitado"
-                    )
-                  }
-                >
-                  Solicitar ajuste
-                </Button>
-              </div>
+              {canAdjust && (
+                <div className="space-y-2">
+                  <Label>Solicitar ajuste</Label>
+                  <Textarea
+                    value={pauseDesc}
+                    onChange={(e) => setPauseDesc(e.target.value)}
+                    placeholder="Descreva o ajuste necessário"
+                    rows={3}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={pending || !pauseDesc.trim()}
+                    onClick={() =>
+                      run(
+                        () => solicitarAjuste(card.id, pauseDesc),
+                        "Ajuste solicitado"
+                      )
+                    }
+                  >
+                    Solicitar ajuste
+                  </Button>
+                </div>
+              )}
             </div>
           )}
 
-          {isAwaitingPublication && (
+          {canPublish && (
             <div className="space-y-2 rounded-lg border border-emerald-200 bg-emerald-50/80 p-3">
               <Label>Link da publicação</Label>
               <Input
@@ -405,10 +415,7 @@ export function SectorCardSheet({
             </div>
           )}
 
-          {!isSocialReview &&
-            !isAwaitingPublication &&
-            (card.status === "IN_REVIEW" ||
-              assignment?.status === "IN_REVIEW") && (
+          {canAdjust && !isSocialReview && (
               <div className="space-y-2 rounded-lg border border-amber-500/25 bg-amber-500/10 p-3 dark:border-amber-400/25 dark:bg-amber-400/10">
                 <Label>Solicitar ajuste</Label>
                 <Textarea

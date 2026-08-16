@@ -28,8 +28,7 @@ export async function getIndicators(params: {
     db.demand.count({
       where: {
         ...where,
-        status: { in: [DemandStatus.DONE, DemandStatus.PUBLISHED, DemandStatus.IN_REVIEW] },
-        updatedAt: { gte: from },
+        productionCompletedAt: { gte: from },
       },
     }),
     db.demand.count({
