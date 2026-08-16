@@ -91,3 +91,29 @@ export function canRegisterPublication(status: string) {
   );
 }
 
+export const DEMAND_ACTION_DENIED = {
+  production:
+    "Só é possível concluir produção em demandas em produção ou ajuste.",
+  adjustment: "Só é possível solicitar ajuste em demandas em revisão.",
+  publication:
+    "Só é possível registrar publicação em demandas aprovadas, agendadas ou em revisão.",
+} as const;
+
+export function assertCanCompleteProduction(status: string) {
+  if (!canCompleteProduction(status)) {
+    throw new Error(DEMAND_ACTION_DENIED.production);
+  }
+}
+
+export function assertCanRequestAdjustment(status: string) {
+  if (!canRequestAdjustment(status)) {
+    throw new Error(DEMAND_ACTION_DENIED.adjustment);
+  }
+}
+
+export function assertCanRegisterPublication(status: string) {
+  if (!canRegisterPublication(status)) {
+    throw new Error(DEMAND_ACTION_DENIED.publication);
+  }
+}
+
