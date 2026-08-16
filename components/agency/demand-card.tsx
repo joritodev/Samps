@@ -126,7 +126,7 @@ export function DemandDetailSheet({
 
   const canBriefing = canDemandBriefing(
     demand.status,
-    (demand as { briefingLockedAt?: string | null }).briefingLockedAt
+    demand.briefingLockedAt
   );
 
   return (

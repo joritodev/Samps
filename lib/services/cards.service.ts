@@ -1,6 +1,9 @@
 import { AuditAction, DemandOrigin, DemandStatus, NotificationType } from "@prisma/client";
 import { db } from "@/lib/db";
-import { BRIEFING_DEMAND_STATUSES } from "@/lib/agency/labels";
+import {
+  assertCanRegisterPublication,
+  BRIEFING_DEMAND_STATUSES,
+} from "@/lib/agency/labels";
 import { logAudit } from "@/lib/services/audit.service";
 import { createNotification } from "@/lib/services/notifications.service";
 import {
@@ -186,6 +189,18 @@ export async function registerPublicationAndComplete(
 ) {
   if (!data.publishedUrl) throw new Error("Link de publicação é obrigatório");
 
+  const card = await db.demand.findUnique({
+    where: { id: cardId },
+    select: {
+      status: true,
+      title: true,
+      clientId: true,
+      requesterId: true,
+    },
+  });
+  if (!card) throw new Error("Cartão não encontrado");
+  assertCanRegisterPublication(card.status);
+
   const updated = await db.demand.update({
     where: { id: cardId },
     data: {
@@ -206,22 +221,13 @@ export async function registerPublicationAndComplete(
     newValue: { publishedUrl: data.publishedUrl },
   });
 
-  const demand = await db.demand.findUnique({
-    where: { id: cardId },
-    select: {
-      title: true,
-      clientId: true,
-      requesterId: true,
-    },
-  });
-
-  if (demand?.requesterId && demand.requesterId !== user.id) {
+  if (card.requesterId && card.requesterId !== user.id) {
     await createNotification({
-      userId: demand.requesterId,
+      userId: card.requesterId,
       type: NotificationType.OTHER,
       title: "Conteúdo publicado",
-      message: demand.title,
-      link: `/clientes/${demand.clientId}/quadro`,
+      message: card.title,
+      link: `/clientes/${card.clientId}/quadro`,
     });
   }
 
@@ -234,13 +240,13 @@ export async function registerPublicationAndComplete(
     take: 10,
   });
   for (const m of managers) {
-    if (m.id === user.id || m.id === demand?.requesterId) continue;
+    if (m.id === user.id || m.id === card.requesterId) continue;
     await createNotification({
       userId: m.id,
       type: NotificationType.OTHER,
       title: "Conteúdo publicado",
-      message: demand?.title ?? "Publicação registrada",
-      link: `/clientes/${demand?.clientId}/quadro`,
+      message: card.title,
+      link: `/clientes/${card.clientId}/quadro`,
     });
   }
 

@@ -13,6 +13,7 @@ export const boardDemandSelect = {
   dueDate: true,
   materialUrl: true,
   publishedUrl: true,
+  briefingLockedAt: true,
   sector: { select: { name: true } },
   priority: { select: { name: true } },
   client: { select: { name: true } },
@@ -33,6 +34,7 @@ export function toBoardDemand(demand: BoardDemandRow): BoardDemand {
     dueDate: demand.dueDate?.toISOString() ?? null,
     materialUrl: demand.materialUrl,
     publishedUrl: demand.publishedUrl,
+    briefingLockedAt: demand.briefingLockedAt?.toISOString() ?? null,
     clientName: demand.client.name,
   };
 }

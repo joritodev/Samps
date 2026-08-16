@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  assertCanCompleteProduction,
+  assertCanRegisterPublication,
+  assertCanRequestAdjustment,
   canCompleteProduction,
   canDemandBriefing,
   canRegisterPublication,
   canRequestAdjustment,
+  DEMAND_ACTION_DENIED,
 } from "./labels";
 
 describe("regras de acao por status", () => {
@@ -34,5 +38,25 @@ describe("regras de acao por status", () => {
     expect(canRegisterPublication("SCHEDULED")).toBe(true);
     expect(canRegisterPublication("IN_REVIEW")).toBe(true);
     expect(canRegisterPublication("PLANNING")).toBe(false);
+  });
+});
+
+describe("assertCan*", () => {
+  it("nao lanca quando o status permite", () => {
+    expect(() => assertCanCompleteProduction("IN_PRODUCTION")).not.toThrow();
+    expect(() => assertCanRequestAdjustment("IN_REVIEW")).not.toThrow();
+    expect(() => assertCanRegisterPublication("APPROVED")).not.toThrow();
+  });
+
+  it("lanca a mensagem canonica quando o status nao permite", () => {
+    expect(() => assertCanCompleteProduction("PLANNING")).toThrow(
+      DEMAND_ACTION_DENIED.production
+    );
+    expect(() => assertCanRequestAdjustment("IN_PRODUCTION")).toThrow(
+      DEMAND_ACTION_DENIED.adjustment
+    );
+    expect(() => assertCanRegisterPublication("PLANNING")).toThrow(
+      DEMAND_ACTION_DENIED.publication
+    );
   });
 });

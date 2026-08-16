@@ -65,9 +65,15 @@ export async function completeProductionAction(
   materialUrl: string
 ) {
   const user = await requireAuth();
-  await completeProductionAndReview(cardId, user, materialUrl);
-  revalidateOperationalViews(clientId);
-  return { success: true };
+  try {
+    await completeProductionAndReview(cardId, user, materialUrl);
+    revalidateOperationalViews(clientId);
+    return { success: true as const };
+  } catch (e) {
+    return {
+      error: e instanceof Error ? e.message : "Erro ao concluir produção",
+    };
+  }
 }
 
 export async function registerPublicationAction(
