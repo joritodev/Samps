@@ -6,8 +6,11 @@ import {
 } from "@/types/board";
 
 describe("board list helpers", () => {
-  it("boardColumnForList is stable by list id", () => {
-    expect(boardColumnForList({ id: "abc123" })).toBe("list:abc123");
+  it("boardColumnForList is stable for CUSTOM and legacy for catalog", () => {
+    expect(boardColumnForList({ id: "abc123", type: "CUSTOM" })).toBe(
+      "list:abc123"
+    );
+    expect(boardColumnForList({ id: "x", type: "FEEDS" })).toBe("feeds");
   });
 
   it("normalizes and validates list names", () => {

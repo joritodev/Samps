@@ -126,7 +126,12 @@ export async function createBoardListAction(
   if (error || !user) return { error: error ?? "Sem permissão" };
 
   try {
-    const list = await createBoardList({ boardId, name, userId: user.id });
+    const list = await createBoardList({
+      boardId,
+      clientId,
+      name,
+      userId: user.id,
+    });
     revalidateBoardPaths(clientId);
     return { success: true, list: { id: list.id, name: list.name } };
   } catch (e) {
@@ -143,7 +148,7 @@ export async function renameBoardListAction(
   if (error || !user) return { error: error ?? "Sem permissão" };
 
   try {
-    await renameBoardList({ listId, name, userId: user.id });
+    await renameBoardList({ listId, clientId, name, userId: user.id });
     revalidateBoardPaths(clientId);
     return { success: true };
   } catch (e) {
@@ -162,7 +167,12 @@ export async function reorderBoardListsAction(
   if (error || !user) return { error: error ?? "Sem permissão" };
 
   try {
-    await reorderBoardLists({ boardId, orderedListIds, userId: user.id });
+    await reorderBoardLists({
+      boardId,
+      clientId,
+      orderedListIds,
+      userId: user.id,
+    });
     revalidateBoardPaths(clientId);
     return { success: true };
   } catch (e) {
@@ -177,7 +187,7 @@ export async function archiveBoardListAction(listId: string, clientId: string) {
   if (error || !user) return { error: error ?? "Sem permissão" };
 
   try {
-    await archiveBoardList({ listId, userId: user.id });
+    await archiveBoardList({ listId, clientId, userId: user.id });
     revalidateBoardPaths(clientId);
     return { success: true };
   } catch (e) {
@@ -195,7 +205,7 @@ export async function unarchiveBoardListAction(
   if (error || !user) return { error: error ?? "Sem permissão" };
 
   try {
-    await unarchiveBoardList({ listId, userId: user.id });
+    await unarchiveBoardList({ listId, clientId, userId: user.id });
     revalidateBoardPaths(clientId);
     return { success: true };
   } catch (e) {

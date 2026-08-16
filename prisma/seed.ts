@@ -70,7 +70,6 @@ const ROLE_DEFINITIONS: {
     userType: UserType.SOCIAL_MEDIA,
     permissions: [
       "clients.view_assigned",
-      "clients.edit",
       "demands.create",
       "demands.edit",
       "demands.extra_create",

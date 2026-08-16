@@ -483,8 +483,27 @@ export async function groupBoardDemandsByList(
 const BOARD_LIST_NAME_ERROR =
   "Nome da coluna inválido (1 a 60 caracteres).";
 
+async function assertBoardOwnedByClient(boardId: string, clientId: string) {
+  const board = await db.clientBoard.findFirst({
+    where: { id: boardId, clientId },
+    select: { id: true, clientId: true },
+  });
+  if (!board) throw new Error("Quadro não encontrado para este cliente");
+  return board;
+}
+
+async function assertListOwnedByClient(listId: string, clientId: string) {
+  const list = await db.boardList.findFirst({
+    where: { id: listId, board: { clientId } },
+    include: { board: { select: { id: true, clientId: true } } },
+  });
+  if (!list) throw new Error("Coluna não encontrada para este cliente");
+  return list;
+}
+
 export async function createBoardList(params: {
   boardId: string;
+  clientId: string;
   name: string;
   userId: string;
 }) {
@@ -493,11 +512,7 @@ export async function createBoardList(params: {
     throw new Error(BOARD_LIST_NAME_ERROR);
   }
 
-  const board = await db.clientBoard.findUnique({
-    where: { id: params.boardId },
-    select: { id: true, clientId: true },
-  });
-  if (!board) throw new Error("Quadro não encontrado");
+  await assertBoardOwnedByClient(params.boardId, params.clientId);
 
   const maxSort = await db.boardList.aggregate({
     where: { boardId: params.boardId },
@@ -517,7 +532,7 @@ export async function createBoardList(params: {
 
   await logAudit({
     userId: params.userId,
-    action: AuditAction.BOARD_CREATED,
+    action: AuditAction.OTHER,
     entityType: "BoardList",
     entityId: list.id,
     newValue: { boardId: params.boardId, name, type: "CUSTOM" },
@@ -528,6 +543,7 @@ export async function createBoardList(params: {
 
 export async function renameBoardList(params: {
   listId: string;
+  clientId: string;
   name: string;
   userId: string;
 }) {
@@ -536,10 +552,7 @@ export async function renameBoardList(params: {
     throw new Error(BOARD_LIST_NAME_ERROR);
   }
 
-  const existing = await db.boardList.findUnique({
-    where: { id: params.listId },
-  });
-  if (!existing) throw new Error("Coluna não encontrada");
+  const existing = await assertListOwnedByClient(params.listId, params.clientId);
 
   const list = await db.boardList.update({
     where: { id: params.listId },
@@ -548,7 +561,7 @@ export async function renameBoardList(params: {
 
   await logAudit({
     userId: params.userId,
-    action: AuditAction.BOARD_CREATED,
+    action: AuditAction.OTHER,
     entityType: "BoardList",
     entityId: list.id,
     previousValue: { name: existing.name },
@@ -560,9 +573,12 @@ export async function renameBoardList(params: {
 
 export async function reorderBoardLists(params: {
   boardId: string;
+  clientId: string;
   orderedListIds: string[];
   userId: string;
 }) {
+  await assertBoardOwnedByClient(params.boardId, params.clientId);
+
   const lists = await db.boardList.findMany({
     where: { boardId: params.boardId },
     select: { id: true },
@@ -586,7 +602,7 @@ export async function reorderBoardLists(params: {
 
   await logAudit({
     userId: params.userId,
-    action: AuditAction.BOARD_CREATED,
+    action: AuditAction.OTHER,
     entityType: "ClientBoard",
     entityId: params.boardId,
     newValue: { reorderedLists: params.orderedListIds },
@@ -595,13 +611,10 @@ export async function reorderBoardLists(params: {
 
 export async function archiveBoardList(params: {
   listId: string;
+  clientId: string;
   userId: string;
 }) {
-  const list = await db.boardList.findUnique({
-    where: { id: params.listId },
-    include: { board: { select: { id: true, clientId: true } } },
-  });
-  if (!list) throw new Error("Coluna não encontrada");
+  const list = await assertListOwnedByClient(params.listId, params.clientId);
 
   const cardCount = await db.demand.count({
     where: {
@@ -633,10 +646,10 @@ export async function archiveBoardList(params: {
 
 export async function unarchiveBoardList(params: {
   listId: string;
+  clientId: string;
   userId: string;
 }) {
-  const list = await db.boardList.findUnique({ where: { id: params.listId } });
-  if (!list) throw new Error("Coluna não encontrada");
+  const list = await assertListOwnedByClient(params.listId, params.clientId);
 
   const updated = await db.boardList.update({
     where: { id: params.listId },
@@ -645,7 +658,7 @@ export async function unarchiveBoardList(params: {
 
   await logAudit({
     userId: params.userId,
-    action: AuditAction.BOARD_CREATED,
+    action: AuditAction.OTHER,
     entityType: "BoardList",
     entityId: list.id,
     newValue: { name: list.name, active: true },

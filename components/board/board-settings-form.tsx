@@ -66,6 +66,7 @@ export function BoardSettingsForm({
     const index = lists.findIndex((l) => l.id === id);
     const target = index + direction;
     if (index < 0 || target < 0 || target >= lists.length) return;
+    const previous = lists;
     const next = [...lists];
     const [row] = next.splice(index, 1);
     next.splice(target, 0, row);
@@ -77,7 +78,7 @@ export function BoardSettingsForm({
         next.map((l) => l.id)
       );
       if (result.error) {
-        setLists(initialLists);
+        setLists(previous);
         toast.error(result.error);
         return;
       }

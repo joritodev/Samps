@@ -8,9 +8,16 @@ import type {
 /** Tipos de coluna do wizard / catálogo — CUSTOM é só para colunas livres. */
 export type CatalogBoardListType = Exclude<BoardListType, "CUSTOM">;
 
-/** Denormaliza a coluna do card de forma estável (várias CUSTOM no mesmo quadro). */
-export function boardColumnForList(list: { id: string }): string {
-  return `list:${list.id}`;
+/** Denormaliza coluna do card no quadro do cliente.
+ * CUSTOM usa id estável; tipos de catálogo mantêm o slug legado (feeds, stories…).
+ * Não usar para etapas de setor (production/review) — isso vive em outro fluxo.
+ */
+export function boardColumnForList(list: {
+  id: string;
+  type: string;
+}): string {
+  if (list.type === "CUSTOM") return `list:${list.id}`;
+  return list.type.toLowerCase();
 }
 
 export function normalizeBoardListName(value: string): string {

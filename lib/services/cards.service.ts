@@ -13,7 +13,6 @@ import {
 import { completeWorkSession } from "@/lib/services/work-session.service";
 import { resolveDelayOnTerminalStatus } from "@/lib/services/deadline.service";
 import type { SessionUser } from "@/types/auth";
-import { boardColumnForList } from "@/types/board";
 
 const BRIEFING_REQUIRED = ["title", "description", "format"] as const;
 
@@ -276,13 +275,13 @@ export async function updateDemandListAndOrder(
   listId: string,
   sortOrder: number
 ) {
-  const list = await db.boardList.findUnique({ where: { id: listId } });
+  // Só listId/sortOrder: boardColumn guarda a etapa do ciclo/setor
+  // (production, review…). O kanban do cliente agrupa por listId.
   return db.demand.update({
     where: { id: demandId },
     data: {
       listId,
       sortOrder,
-      boardColumn: list ? boardColumnForList(list) : "open",
     },
   });
 }
