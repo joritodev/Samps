@@ -86,6 +86,7 @@ export async function generateContractualCards(params: {
         listId: list.id,
         competenceId,
         contractServiceId: service.id,
+        contentTypeId: service.contentTypeId,
         title: formatCardTitle(service.name, i, qty, month),
         type: demandType,
         origin: DemandOrigin.CLIENT_BOARD,

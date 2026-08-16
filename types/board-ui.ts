@@ -8,6 +8,7 @@ export type BoardDemand = {
   dueDate: string | null;
   materialUrl: string | null;
   publishedUrl: string | null;
+  briefingLockedAt: string | null;
   clientName: string;
 };
 
