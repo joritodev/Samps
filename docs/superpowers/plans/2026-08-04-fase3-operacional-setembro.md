@@ -1,7 +1,7 @@
 # Fase 3 — Operacional de setembro (escopo)
 
 **Janela:** 19/08 → 05/09/2026
-**Status deste documento:** escopo fechado, plano detalhado pendente.
+**Status deste documento:** escopo fechado. Decisões de produto em `docs/superpowers/specs/2026-08-16-fase3-gestao-agencia-design.md`. Primeira PR: `2026-08-16-fase3-0-higiene-ciclo.md`. Relatórios: `2026-08-16-fase3-1-relatorios-performance.md`.
 
 > **Playbook (obrigatório):** `docs/superpowers/plans/2026-08-07-playbook-metodologia.md` — matriz seção 5 Fase 3.
 >
