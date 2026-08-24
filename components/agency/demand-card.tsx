@@ -49,7 +49,7 @@ export function DemandCard({
       onClick={() => onOpen(demand)}
       className="w-full rounded-lg border border-border bg-card p-4 text-left transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
-      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
         {demand.clientName}
       </p>
       <h3 className="mt-1 text-sm font-medium leading-snug tracking-tight text-foreground">
@@ -57,15 +57,15 @@ export function DemandCard({
       </h3>
       <div className="mt-3 flex flex-wrap items-center gap-1.5">
         {demand.sector ? (
-          <Badge variant="outline" className="text-[10px] font-medium">
+          <Badge variant="outline" className="text-xs font-medium">
             {demand.sector}
           </Badge>
         ) : null}
-        <Badge variant="outline" className="text-[10px] font-medium">
+        <Badge variant="outline" className="text-xs font-medium">
           {demand.priority}
         </Badge>
         {deadline ? (
-          <span className="text-[10px] text-muted-foreground">{deadline}</span>
+          <span className="text-xs text-muted-foreground">{deadline}</span>
         ) : null}
       </div>
     </button>
