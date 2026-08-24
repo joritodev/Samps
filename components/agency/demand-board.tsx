@@ -38,7 +38,7 @@ function BoardColumnView({
             <DemandCard key={card.id} demand={card} onOpen={onOpenCard} />
           ))
         ) : (
-          <BoardColumnEmpty />
+          <BoardColumnEmpty description="Crie uma demanda ou aguarde novas atribuições." />
         )}
       </div>
     </section>

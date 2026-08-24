@@ -219,6 +219,7 @@ export function SectorCardSheet({
                   type="datetime-local"
                   value={scheduledAt}
                   onChange={(e) => setScheduledAt(e.target.value)}
+                  className="tabular-nums"
                 />
                 <Button
                   variant="outline"

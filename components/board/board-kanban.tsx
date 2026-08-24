@@ -208,7 +208,7 @@ export function BoardKanban({
                   </h3>
                 )}
                 <div className="flex shrink-0 items-center gap-1">
-                  <span className="rounded-md border border-border bg-card px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                  <span className="rounded-md border border-border bg-card px-2 py-0.5 text-xs font-medium text-muted-foreground">
                     {cards.length}
                   </span>
                   {canManageLists ? (

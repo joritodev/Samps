@@ -24,7 +24,10 @@ describe("DemandBoard empty columns", () => {
 
     expect(screen.getByText("Nenhum cartão nesta coluna")).toBeTruthy();
     expect(
-      screen.getByText("Arraste uma demanda para cá ou crie um cartão.")
+      screen.getByText("Crie uma demanda ou aguarde novas atribuições.")
     ).toBeTruthy();
+    expect(
+      screen.queryByText("Arraste uma demanda para cá ou crie um cartão.")
+    ).toBeNull();
   });
 });
