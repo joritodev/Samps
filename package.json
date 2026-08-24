@@ -14,8 +14,7 @@
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
-    "db:studio": "prisma studio",
-    "check:rls": "tsx scripts/check-rls.ts"
+    "db:studio": "prisma studio"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -63,6 +62,8 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/react": "^18",
@@ -70,6 +71,7 @@
     "@types/react-dom": "^18",
     "eslint": "^8",
     "eslint-config-next": "^14.2.35",
+    "jsdom": "^30.0.1",
     "postcss": "^8",
     "prisma": "^6.19.3",
     "tailwindcss": "^3.4.1",
