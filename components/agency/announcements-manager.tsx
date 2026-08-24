@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { AnnouncementKind } from "@prisma/client";
 import { toast } from "sonner";
 import {
@@ -60,6 +61,7 @@ export function AnnouncementsManager({
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
   const [pending, startTransition] = useTransition();
+  const router = useRouter();
 
   function resetForm() {
     setTitle("");
@@ -82,9 +84,13 @@ export function AnnouncementsManager({
         toast.error(result.error);
         return;
       }
-      toast.success("Aviso criado");
+      if (startsAt && new Date(startsAt) > new Date()) {
+        toast.success("Aviso agendado — aparece no mural a partir do início.");
+      } else {
+        toast.success("Aviso publicado no mural");
+      }
       resetForm();
-      // Recarrega a lista via router refresh no page; espelha localmente.
+      router.refresh();
       setItems((prev) => [
         {
           id: result.id!,
@@ -134,7 +140,9 @@ export function AnnouncementsManager({
         <div>
           <h2 className="text-base font-semibold text-foreground">Novo aviso</h2>
           <p className="text-sm text-muted-foreground">
-            Aparece no mural da área interna enquanto estiver ativo e na vigência.
+            Aparece no mural da área interna enquanto estiver ativo. Deixe
+            início vazio para publicar agora; se preencher um horário futuro, só
+            aparece a partir dele.
           </p>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
