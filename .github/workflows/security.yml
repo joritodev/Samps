@@ -23,6 +23,9 @@ jobs:
 
   audit:
     runs-on: ubuntu-latest
+    env:
+      # prisma generate no postinstall exige DATABASE_URL mesmo sem conectar.
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci?schema=public
     steps:
       - uses: actions/checkout@v4
 
