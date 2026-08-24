@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { MetricCard } from "@/components/shared/metric-card";
 import { DemandCard } from "@/components/shared/demand-card";
+import { BoardColumnEmpty } from "@/components/board/board-column-empty";
 import { BoardCalendar } from "@/components/board/board-calendar";
 import {
   SectorCardSheet,
@@ -179,31 +180,38 @@ export function SectorBoardView({
       >
         {view === "kanban" ? (
           <div className="flex h-full gap-3 overflow-x-auto snap-x snap-mandatory pb-1">
-            {columns.map((col) => (
-              <div
-                key={col.id}
-                className="flex h-full w-72 shrink-0 snap-start flex-col rounded-xl border border-border/60 bg-card p-3 shadow-soft"
-              >
-                <div className="mb-2 flex shrink-0 items-center justify-between">
-                  <h3 className="text-sm font-semibold text-foreground">
-                    {col.title}
-                  </h3>
-                  <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
-                    {(grouped[col.id] ?? []).length}
-                  </span>
+            {columns.map((col) => {
+              const cards = grouped[col.id] ?? [];
+              return (
+                <div
+                  key={col.id}
+                  className="flex h-full w-72 shrink-0 snap-start flex-col rounded-xl border border-border/60 bg-card p-3 shadow-soft"
+                >
+                  <div className="mb-2 flex shrink-0 items-center justify-between">
+                    <h3 className="text-sm font-semibold text-foreground">
+                      {col.title}
+                    </h3>
+                    <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
+                      {cards.length}
+                    </span>
+                  </div>
+                  <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
+                    {cards.length > 0 ? (
+                      cards.map((demand) => (
+                        <DemandCard
+                          key={demand.id}
+                          demand={demand}
+                          showOrigin
+                          onClick={() => setSelected(demand)}
+                        />
+                      ))
+                    ) : (
+                      <BoardColumnEmpty />
+                    )}
+                  </div>
                 </div>
-                <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
-                  {(grouped[col.id] ?? []).map((demand) => (
-                    <DemandCard
-                      key={demand.id}
-                      demand={demand}
-                      showOrigin
-                      onClick={() => setSelected(demand)}
-                    />
-                  ))}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : view === "calendar" ? (
           <BoardCalendar
