@@ -2,7 +2,6 @@
 
 import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "next-themes";
-import { ColorThemeProvider } from "@/components/theme/color-theme-provider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -13,7 +12,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         enableSystem={false}
         disableTransitionOnChange
       >
-        <ColorThemeProvider>{children}</ColorThemeProvider>
+        {children}
       </ThemeProvider>
     </SessionProvider>
   );

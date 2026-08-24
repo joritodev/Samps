@@ -1,11 +1,9 @@
 "use client";
 
-import { Check, ChevronLeft } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useColorTheme } from "@/components/theme/color-theme-provider";
-import { COLOR_THEMES } from "@/lib/theme/colors";
 import { startThemeViewTransition } from "@/lib/theme/view-transition";
 import { cn } from "@/lib/utils";
 
@@ -52,15 +50,13 @@ function AppearancePreview({ mode }: { mode: "light" | "dark" }) {
 }
 
 export function ThemesSettings() {
-  const { colorTheme, setColorTheme, mounted: colorMounted } = useColorTheme();
   const { theme, setTheme, resolvedTheme } = useTheme();
-  const [appearanceMounted, setAppearanceMounted] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setAppearanceMounted(true);
+    setMounted(true);
   }, []);
 
-  const mounted = colorMounted && appearanceMounted;
   const appearance = (resolvedTheme ?? theme) === "dark" ? "dark" : "light";
 
   function selectAppearance(
@@ -89,61 +85,18 @@ export function ThemesSettings() {
           Configurações
         </Link>
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          Temas
+          Aparência
         </h1>
         <p className="mt-0.5 text-sm text-muted-foreground">
-          Cor principal e aparência clara ou escura
+          Escolha o modo claro ou escuro.
         </p>
       </header>
 
       <div className="mx-auto w-full max-w-2xl space-y-10 p-6">
         <section>
-          <h2 className="text-base font-semibold text-foreground">
-            Cor do tema
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Escolha a cor preferida do aplicativo.
-          </p>
-          <div className="mt-4 flex flex-wrap gap-3">
-            {COLOR_THEMES.map((option) => {
-              const selected = mounted && colorTheme === option.id;
-              return (
-                <button
-                  key={option.id}
-                  type="button"
-                  title={option.label}
-                  aria-label={option.label}
-                  aria-pressed={selected}
-                  onClick={() => setColorTheme(option.id)}
-                  className={cn(
-                    "relative flex size-11 items-center justify-center rounded-xl transition-shadow",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                    selected && "ring-2 ring-offset-2 ring-offset-background"
-                  )}
-                  style={{
-                    backgroundColor: option.swatch,
-                    ...(selected
-                      ? { boxShadow: `0 0 0 2px ${option.swatch}` }
-                      : {}),
-                  }}
-                >
-                  {selected ? (
-                    <Check
-                      className="size-4 text-white drop-shadow"
-                      strokeWidth={2.5}
-                    />
-                  ) : null}
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        <section>
           <h2 className="text-base font-semibold text-foreground">Aparência</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Escolha o modo claro ou escuro. O botão do menu só alterna entre
-            estas duas aparências, mantendo a cor escolhida.
+            Escolha o modo claro ou escuro.
           </p>
           <div className="mt-4 grid grid-cols-2 gap-4">
             {(
