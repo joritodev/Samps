@@ -27,8 +27,8 @@ const SETTINGS_SECTIONS: {
 }[] = [
   {
     href: "/configuracoes/temas",
-    label: "Temas",
-    description: "Cor principal e aparência claro/escuro.",
+    label: "Aparência",
+    description: "Modo claro ou escuro.",
     icon: Palette,
   },
   {

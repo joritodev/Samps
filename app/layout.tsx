@@ -27,13 +27,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var c=localStorage.getItem("samps-color-theme");if(c)document.documentElement.setAttribute("data-color-theme",c);}catch(e){}})();`,
-          }}
-        />
-      </head>
       <body
         className={`${inter.variable} ${plusJakarta.variable} font-sans antialiased`}
       >
