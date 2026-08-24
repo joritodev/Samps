@@ -67,6 +67,7 @@ export async function createAnnouncement(input: {
 
     revalidatePath("/", "layout");
     revalidatePath("/configuracoes/avisos");
+    revalidatePath("/painel-gestao");
     return { success: true, id: row.id };
   } catch (error) {
     console.error("createAnnouncement", error);
@@ -93,6 +94,7 @@ export async function toggleAnnouncement(id: string, active: boolean) {
 
     revalidatePath("/", "layout");
     revalidatePath("/configuracoes/avisos");
+    revalidatePath("/painel-gestao");
     return { success: true };
   } catch (error) {
     console.error("toggleAnnouncement", error);
@@ -116,6 +118,7 @@ export async function deleteAnnouncement(id: string) {
 
     revalidatePath("/", "layout");
     revalidatePath("/configuracoes/avisos");
+    revalidatePath("/painel-gestao");
     return { success: true };
   } catch (error) {
     console.error("deleteAnnouncement", error);

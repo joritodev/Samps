@@ -215,7 +215,8 @@ function PeopleTable({ rows }: { rows: UserRow[] }) {
                 colSpan={5}
                 className="py-10 text-center text-muted-foreground"
               >
-                Nenhuma entrega encontrada no período.
+                Nenhuma entrega encontrada no período. Só entram demandas com
+                produção concluída (não “em produção” nem atraso do Resumo).
               </TableCell>
             </TableRow>
           ) : (
@@ -298,7 +299,8 @@ function ContentTypeTable({ rows }: { rows: ContentTypeStats[] }) {
                 colSpan={5}
                 className="py-10 text-center text-muted-foreground"
               >
-                Nenhuma entrega encontrada no período.
+                Nenhuma entrega encontrada no período. Só entram demandas com
+                produção concluída (não “em produção” nem atraso do Resumo).
               </TableCell>
             </TableRow>
           ) : (

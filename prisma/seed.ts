@@ -15,6 +15,8 @@ import {
   ShootStatus,
   UserStatus,
   UserType,
+  WorkSessionStage,
+  WorkSessionStatus,
 } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import {
@@ -27,10 +29,10 @@ const prisma = new PrismaClient();
 
 const DEFAULT_PASSWORD = "Samps@2026";
 
-function daysAgo(days: number, hour = 10) {
+function daysAgo(days: number, hour = 10, minute = 0) {
   const d = new Date();
   d.setDate(d.getDate() - days);
-  d.setHours(hour, 0, 0, 0);
+  d.setHours(hour, minute, 0, 0);
   return d;
 }
 
@@ -543,6 +545,8 @@ async function main() {
     createdAt: Date;
     dueDate: Date | null;
     updatedAt?: Date;
+    productionStartedAt?: Date | null;
+    productionCompletedAt?: Date | null;
   };
 
   const estatico = contentTypeBySlug.get("estatico")!.id;
@@ -694,6 +698,8 @@ async function main() {
       createdAt: daysAgo(6, 13),
       dueDate: daysFromNow(1),
       updatedAt: daysAgo(0, 11),
+      productionStartedAt: daysAgo(0, 9),
+      productionCompletedAt: daysAgo(0, 11),
     },
 
     // ── Em revisão ─────────────────────────────────────────────────────────
@@ -711,8 +717,10 @@ async function main() {
       requesterId: socialMedia.id,
       materialUrl: "https://drive.google.com/demo/sorriso-cultura",
       createdAt: daysAgo(7),
-      dueDate: daysAgo(2),
-      updatedAt: daysAgo(0, 15),
+      dueDate: daysAgo(3, 11),
+      updatedAt: daysAgo(4, 15),
+      productionStartedAt: daysAgo(4, 11),
+      productionCompletedAt: daysAgo(4, 15),
     },
     {
       title: "Stories — bastidores da clínica",
@@ -731,8 +739,10 @@ async function main() {
       deliveryDate: daysFromNow(1),
       publishDate: daysFromNow(3),
       createdAt: daysAgo(3, 16),
-      dueDate: daysFromNow(1),
-      updatedAt: daysAgo(0, 12),
+      dueDate: daysAgo(3, 18),
+      updatedAt: daysAgo(3, 12),
+      productionStartedAt: daysAgo(3, 11),
+      productionCompletedAt: daysAgo(3, 12),
     },
 
     // ── Aprovado — fila da Social publicar ─────────────────────────────────
@@ -753,8 +763,10 @@ async function main() {
       deliveryDate: daysFromNow(2),
       publishDate: daysFromNow(4),
       createdAt: daysAgo(6, 9),
-      dueDate: daysFromNow(1),
-      updatedAt: daysAgo(1, 17),
+      dueDate: daysAgo(5, 6),
+      updatedAt: daysAgo(5, 16),
+      productionStartedAt: daysAgo(5, 14),
+      productionCompletedAt: daysAgo(5, 16),
     },
     {
       title: "Carrossel — mitos sobre clareamento",
@@ -771,8 +783,10 @@ async function main() {
       materialUrl: "https://drive.google.com/demo/sorriso-mitos",
       visibleToClient: true,
       createdAt: daysAgo(5, 8),
-      dueDate: daysFromNow(0),
-      updatedAt: daysAgo(0, 18),
+      dueDate: daysAgo(2, 4),
+      updatedAt: daysAgo(2, 16),
+      productionStartedAt: daysAgo(2, 13),
+      productionCompletedAt: daysAgo(2, 16),
     },
 
     // ── Concluído / publicado — volume para os indicadores ─────────────────
@@ -787,9 +801,11 @@ async function main() {
       assigneeId: socialMedia.id,
       materialUrl: "https://drive.google.com/demo/sorriso-tip",
       visibleToClient: true,
-      createdAt: daysAgo(8),
-      dueDate: daysAgo(4),
-      updatedAt: daysAgo(3, 16),
+      createdAt: daysAgo(16),
+      dueDate: daysAgo(13),
+      updatedAt: daysAgo(14, 11),
+      productionStartedAt: daysAgo(14, 10),
+      productionCompletedAt: daysAgo(14, 11),
     },
     {
       title: "Reels — bastidores Bella",
@@ -805,9 +821,11 @@ async function main() {
       visibleToClient: true,
       deliveryDate: daysAgo(6),
       publishDate: daysAgo(5),
-      createdAt: daysAgo(9),
-      dueDate: daysAgo(5),
-      updatedAt: daysAgo(2, 19),
+      createdAt: daysAgo(12),
+      dueDate: daysAgo(9, 11),
+      updatedAt: daysAgo(10, 17),
+      productionStartedAt: daysAgo(10, 13),
+      productionCompletedAt: daysAgo(10, 17),
     },
     {
       title: "Feed — equipe Bella Clinic",
@@ -824,8 +842,10 @@ async function main() {
       deliveryDate: daysAgo(7),
       publishDate: daysAgo(6),
       createdAt: daysAgo(10),
-      dueDate: daysAgo(6),
-      updatedAt: daysAgo(1, 11),
+      dueDate: daysAgo(6, 23),
+      updatedAt: daysAgo(7, 15),
+      productionStartedAt: daysAgo(7, 13),
+      productionCompletedAt: daysAgo(7, 15),
     },
     {
       title: "Carrossel — FAQ odontológico",
@@ -838,9 +858,11 @@ async function main() {
       assigneeId: designer.id,
       materialUrl: "https://drive.google.com/demo/sorriso-faq",
       visibleToClient: true,
-      createdAt: daysAgo(11),
-      dueDate: daysAgo(7),
-      updatedAt: daysAgo(4, 10),
+      createdAt: daysAgo(14),
+      dueDate: daysAgo(13, 20),
+      updatedAt: daysAgo(12, 16),
+      productionStartedAt: daysAgo(12, 13),
+      productionCompletedAt: daysAgo(12, 16),
     },
     {
       title: "Stories — promoção avaliação",
@@ -857,8 +879,10 @@ async function main() {
       deliveryDate: daysAgo(2),
       publishDate: daysAgo(1),
       createdAt: daysAgo(4, 7),
-      dueDate: daysAgo(1),
-      updatedAt: daysAgo(0, 20),
+      dueDate: daysAgo(0, 16),
+      updatedAt: daysAgo(0, 10),
+      productionStartedAt: daysAgo(0, 9),
+      productionCompletedAt: daysAgo(0, 10),
     },
     {
       title: "Campanha Meta Ads — captação de leads",
@@ -888,6 +912,83 @@ async function main() {
             : undefined,
         createdAt,
         updatedAt: updatedAt ?? createdAt,
+      },
+    });
+  }
+
+  console.log("Criando sessões de trabalho…");
+
+  const seededDemands = await prisma.demand.findMany({
+    where: { productionCompletedAt: { not: null }, assigneeId: { not: null } },
+    select: {
+      id: true,
+      title: true,
+      assigneeId: true,
+      productionCompletedAt: true,
+    },
+  });
+
+  const sessionSecondsByTitle: Record<string, number> = {
+    "Carrossel — FAQ odontológico": 7920,
+    "Stories — tip da semana": 1500,
+    "Reels — bastidores Bella": 12600,
+    "Feed — equipe Bella Clinic": 3300,
+    "Feed — lançamento linha premium": 4800,
+    "Carrossel — cultura organizacional": 10080,
+    "Stories — bastidores da clínica": 1920,
+    "Carrossel — mitos sobre clareamento": 7560,
+    "Stories — promoção avaliação": 1680,
+    "Estático — pacote de limpeza": 4200,
+  };
+
+  for (const demand of seededDemands) {
+    const seconds = sessionSecondsByTitle[demand.title];
+    if (!seconds || !demand.assigneeId || !demand.productionCompletedAt) continue;
+
+    const endedAt = demand.productionCompletedAt;
+    const startedAt = new Date(endedAt.getTime() - seconds * 1000);
+    await prisma.workSession.create({
+      data: {
+        demandId: demand.id,
+        userId: demand.assigneeId,
+        stage: WorkSessionStage.PRODUCTION,
+        status: WorkSessionStatus.COMPLETED,
+        startedAt,
+        endedAt,
+        totalActiveSeconds: seconds,
+      },
+    });
+  }
+
+  const limpeza = seededDemands.find((d) => d.title === "Estático — pacote de limpeza");
+  const mitos = seededDemands.find(
+    (d) => d.title === "Carrossel — mitos sobre clareamento",
+  );
+
+  if (limpeza?.assigneeId && limpeza.productionCompletedAt) {
+    await prisma.workSession.create({
+      data: {
+        demandId: limpeza.id,
+        userId: limpeza.assigneeId,
+        stage: WorkSessionStage.ADJUSTMENT,
+        status: WorkSessionStatus.COMPLETED,
+        startedAt: daysAgo(0, 10),
+        endedAt: daysAgo(0, 10, 25),
+        totalActiveSeconds: 1500,
+      },
+    });
+  }
+
+  if (mitos?.assigneeId) {
+    await prisma.workSession.create({
+      data: {
+        demandId: mitos.id,
+        userId: mitos.assigneeId,
+        stage: WorkSessionStage.ADJUSTMENT,
+        status: WorkSessionStatus.COMPLETED,
+        startedAt: daysAgo(1, 14),
+        endedAt: daysAgo(1, 15),
+        totalActiveSeconds: 2100,
       },
     });
   }
