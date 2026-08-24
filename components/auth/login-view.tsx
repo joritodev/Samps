@@ -5,6 +5,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { resolveLoginRedirect } from "@/app/(auth)/login/actions";
+import { SampsLogo } from "@/components/brand/samps-logo";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export function LoginView({
   callbackUrl,
@@ -58,115 +64,125 @@ export function LoginView({
     }
   }
 
-  return (
-    <div className="samps-signin">
-      <div className="samps-signin-shell">
-        <section className="samps-signin-form">
-          <div className="samps-signin-brand">
-            <div className="samps-signin-mark" aria-hidden>
-              S
-            </div>
-            <span className="samps-signin-brand-name">SAMPS Digital</span>
-          </div>
+  const errorId = "login-error";
 
-          <div>
-            <h1 className="samps-signin-title">Entrar</h1>
-            <p className="samps-signin-subtitle">
+  return (
+    <div className="grid min-h-dvh md:grid-cols-2">
+      <main className="flex flex-col justify-center border-border bg-background px-6 pb-16 pt-20 md:border-e md:px-12 lg:px-16">
+        <div className="mx-auto w-full max-w-sm">
+          <SampsLogo withWordmark />
+
+          <div className="mt-8">
+            <h1 className="text-balance font-display text-2xl font-semibold tracking-tight text-foreground">
+              Entrar
+            </h1>
+            <p className="mt-2 text-pretty text-sm text-muted-foreground">
               Bem-vindo de volta! Acesse a intranet operacional.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit}>
+          <form
+            onSubmit={handleSubmit}
+            className="mt-8 space-y-4"
+            aria-busy={loading}
+          >
             {error ? (
-              <div
-                className="alert alert-error"
-                style={{ marginBottom: "var(--space-4)" }}
-              >
-                {error}
-              </div>
+              <Alert variant="destructive">
+                <AlertDescription id={errorId}>{error}</AlertDescription>
+              </Alert>
             ) : null}
 
-            <div className="form-group">
-              <label className="form-label" htmlFor="email">
-                E-mail
-              </label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="email">E-mail</Label>
+              <Input
                 id="email"
+                name="email"
                 type="email"
-                className="input"
-                placeholder="voce@samps.digital"
+                autoComplete="email"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                placeholder="voce@empresa.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                autoComplete="email"
                 required
+                aria-invalid={error ? true : undefined}
+                aria-describedby={error ? errorId : undefined}
               />
             </div>
 
-            <div className="form-group">
-              <label className="form-label" htmlFor="password">
-                Senha
-              </label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="password">Senha</Label>
+              <Input
                 id="password"
+                name="password"
                 type="password"
-                className="input"
+                autoComplete="current-password"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
                 required
+                aria-invalid={error ? true : undefined}
+                aria-describedby={error ? errorId : undefined}
               />
             </div>
 
-            <div className="samps-signin-row">
-              <label className="samps-signin-remember">
-                <input
-                  type="checkbox"
-                  className="checkbox"
+            <div className="flex min-h-10 items-center justify-between gap-4">
+              <div className="flex min-h-10 items-center gap-2">
+                <Checkbox
+                  id="remember"
                   checked={remember}
-                  onChange={(e) => setRemember(e.target.checked)}
+                  onCheckedChange={(value) => setRemember(value === true)}
                 />
-                Lembrar de mim
-              </label>
-              <Link href="/forgot-password" className="samps-signin-link">
+                <Label htmlFor="remember" className="cursor-pointer font-normal">
+                  Lembrar de mim
+                </Label>
+              </div>
+              <Link
+                href="/forgot-password"
+                className="inline-flex min-h-10 items-center text-sm text-primary underline-offset-4 hover:underline"
+              >
                 Esqueceu a senha?
               </Link>
             </div>
 
-            <button
+            <Button
               type="submit"
-              className="btn btn-primary"
-              style={{ width: "100%" }}
+              size="lg"
               disabled={loading}
+              className="w-full bg-gradient-to-r from-[hsl(var(--brand))] to-[hsl(var(--primary))] text-primary-foreground hover:opacity-95"
             >
               {loading ? "Entrando..." : "Entrar"}
-            </button>
+            </Button>
           </form>
 
-          <p className="samps-signin-footer">
+          <p className="mt-8 text-pretty text-center text-sm text-muted-foreground">
             Diagnóstico + Planejamento + Método ={" "}
-            <span className="samps-signin-accent">Resultado</span>
+            <span className="font-medium text-brand">Resultado</span>
           </p>
-        </section>
+        </div>
+      </main>
 
-        <aside className="samps-signin-visual" aria-hidden>
-          <div className="samps-signin-blob samps-signin-blob-1" />
-          <div className="samps-signin-blob samps-signin-blob-2" />
-          <div className="samps-signin-portal">
-            <span className="samps-signin-ring samps-signin-ring-outer" />
-            <span className="samps-signin-ring samps-signin-ring-mid" />
-            <span className="samps-signin-ring samps-signin-ring-inner" />
-            <span className="samps-signin-core" />
+      <aside
+        className="relative hidden overflow-hidden md:flex md:flex-col md:items-center md:justify-center md:px-12"
+        aria-hidden="true"
+      >
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-brand/20 via-background to-primary/20" />
+        <div className="pointer-events-none absolute -start-16 top-24 size-64 rounded-full bg-brand/25 blur-3xl" />
+        <div className="pointer-events-none absolute -end-10 bottom-16 size-72 rounded-full bg-primary/25 blur-3xl" />
+        <div className="relative z-10 flex max-w-sm flex-col items-center text-center">
+          <div className="scale-125">
+            <SampsLogo withWordmark />
           </div>
-          <div className="samps-signin-visual-content">
-            <h2>Bem-vindo à Samps</h2>
-            <p>
-              Sua central de operação criativa — demandas, setores, agenda e
-              performance em um só lugar, com método e resultado.
-            </p>
-          </div>
-        </aside>
-      </div>
+          <p className="mt-8 text-balance font-display text-2xl font-semibold text-foreground">
+            Bem-vindo à Samps
+          </p>
+          <p className="mt-3 text-pretty text-sm leading-relaxed text-muted-foreground">
+            Sua central de operação criativa — demandas, setores, agenda e
+            performance em um só lugar, com método e resultado.
+          </p>
+        </div>
+      </aside>
     </div>
   );
 }
