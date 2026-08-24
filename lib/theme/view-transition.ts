@@ -1,5 +1,7 @@
 import { flushSync } from "react-dom";
 
+import { prefersReducedMotion } from "@/lib/theme/prefers-reduced-motion";
+
 export type ThemeTransitionVariant = "circle";
 
 type StartThemeViewTransitionOptions = {
@@ -44,6 +46,18 @@ export function startThemeViewTransition({
     return;
   }
 
+  const doc = document as Document & {
+    startViewTransition?: (cb: () => void) => {
+      ready: Promise<void>;
+      finished: Promise<void>;
+    };
+  };
+
+  if (prefersReducedMotion() || typeof doc.startViewTransition !== "function") {
+    flushSync(apply);
+    return;
+  }
+
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
 
@@ -66,18 +80,6 @@ export function startThemeViewTransition({
   const runApply = () => {
     flushSync(apply);
   };
-
-  const doc = document as Document & {
-    startViewTransition?: (cb: () => void) => {
-      ready: Promise<void>;
-      finished: Promise<void>;
-    };
-  };
-
-  if (typeof doc.startViewTransition !== "function") {
-    runApply();
-    return;
-  }
 
   const clipPath = circleClipPaths(
     x,

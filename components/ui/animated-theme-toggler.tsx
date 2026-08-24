@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Moon, Sun } from "lucide-react";
 import { flushSync } from "react-dom";
 
+import { prefersReducedMotion } from "@/lib/theme/prefers-reduced-motion";
 import { cn } from "@/lib/utils";
 
 export type TransitionVariant =
@@ -223,7 +224,7 @@ export function AnimatedThemeToggler({
       };
     };
 
-    if (typeof doc.startViewTransition !== "function") {
+    if (prefersReducedMotion() || typeof doc.startViewTransition !== "function") {
       applyTheme();
       return;
     }
