@@ -27,25 +27,29 @@ export default async function AcceptInvitePage({
 
   if (state !== "valid" || !invite?.user) {
     return (
-      <Card className="w-full max-w-md rounded-2xl border-0 shadow-lg">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Convite indisponível</CardTitle>
-          <CardDescription>{INVALID_MESSAGE[state]}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button asChild className="w-full">
-            <Link href="/login">Ir para o login</Link>
-          </Button>
-        </CardContent>
-      </Card>
+      <div className="mx-auto flex min-h-dvh items-center justify-center p-6">
+        <Card className="w-full max-w-md rounded-2xl border-0 shadow-lg">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl">Convite indisponível</CardTitle>
+            <CardDescription>{INVALID_MESSAGE[state]}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild className="w-full">
+              <Link href="/login">Ir para o login</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   return (
-    <AcceptInviteForm
-      token={params.token}
-      defaultName={invite.user.name}
-      email={invite.user.email}
-    />
+    <div className="mx-auto flex min-h-dvh items-center justify-center p-6">
+      <AcceptInviteForm
+        token={params.token}
+        defaultName={invite.user.name}
+        email={invite.user.email}
+      />
+    </div>
   );
 }

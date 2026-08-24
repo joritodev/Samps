@@ -6,5 +6,9 @@ export default async function ResetPasswordPage({
   params: Promise<{ token: string }>;
 }) {
   const { token } = await params;
-  return <ResetPasswordForm token={token} />;
+  return (
+    <div className="mx-auto flex min-h-dvh items-center justify-center p-6">
+      <ResetPasswordForm token={token} />
+    </div>
+  );
 }
