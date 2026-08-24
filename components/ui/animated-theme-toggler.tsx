@@ -293,8 +293,11 @@ export function AnimatedThemeToggler({
       aria-label="Alternar tema"
       {...props}
     >
-      {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
-      <span className="sr-only">Alternar tema</span>
+      {isDark ? (
+        <Sun className="size-4" aria-hidden />
+      ) : (
+        <Moon className="size-4" aria-hidden />
+      )}
     </button>
   );
 }
