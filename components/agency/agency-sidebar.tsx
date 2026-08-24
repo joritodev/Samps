@@ -24,6 +24,7 @@ import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import type { AgencyUserProfile } from "@/lib/agency/current-user";
 import { isSectorCollaborator } from "@/types/auth";
+import { SampsLogo } from "@/components/brand/samps-logo";
 import { GlobalSearch } from "@/components/layout/global-search";
 import { NotificationBell } from "@/components/layout/notification-bell";
 import type { SearchType } from "@/lib/agency/search-types";
@@ -192,24 +193,8 @@ function SidebarBody({
 
   return (
     <div className="flex h-full w-full flex-col border-r border-border bg-card">
-      <div className="border-b border-border px-5 py-6">
-        <div className="flex items-center gap-3">
-          <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[hsl(220_14%_12%)] dark:bg-primary">
-            <span className="absolute inset-[3px] rounded-full border-2 border-brand" />
-            <span className="absolute inset-[7px] rounded-full border border-primary/80 dark:border-primary-foreground/40" />
-            <span className="text-[11px] font-bold tracking-tight text-white">
-              S
-            </span>
-          </div>
-          <div className="min-w-0">
-            <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-              Intranet
-            </p>
-            <h1 className="truncate text-[15px] font-semibold tracking-tight text-foreground">
-              SAMPS Digital
-            </h1>
-          </div>
-        </div>
+      <div className="border-b border-border px-5 py-5">
+        <SampsLogo />
         <p className="mt-3 text-xs text-muted-foreground">
           Diagnóstico + Planejamento + Método
         </p>
