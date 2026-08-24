@@ -24,8 +24,15 @@ export function NotificationBell() {
 
   return (
     <Button variant="ghost" size="icon" asChild className="relative">
-      <Link href="/notificacoes">
-        <Bell className="h-5 w-5" />
+      <Link
+        href="/notificacoes"
+        aria-label={
+          count > 0
+            ? `Notificações, ${count} não lidas`
+            : "Notificações"
+        }
+      >
+        <Bell className="h-5 w-5" aria-hidden />
         {count > 0 && (
           <Badge className="absolute -right-1 -top-1 h-5 min-w-5 border-0 bg-destructive px-1 text-[10px] text-destructive-foreground">
             {count > 9 ? "9+" : count}
