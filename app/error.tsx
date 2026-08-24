@@ -22,7 +22,7 @@ export default function GlobalError({
         <Button type="button" onClick={reset}>
           Tentar de novo
         </Button>
-        <Button type="button" variant="outline" asChild>
+        <Button variant="outline" asChild>
           <Link href="/painel-gestao">Voltar ao painel</Link>
         </Button>
       </div>

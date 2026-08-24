@@ -94,11 +94,7 @@ export function ThemesSettings() {
 
       <div className="mx-auto w-full max-w-2xl space-y-10 p-6">
         <section>
-          <h2 className="text-base font-semibold text-foreground">Aparência</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Escolha o modo claro ou escuro.
-          </p>
-          <div className="mt-4 grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             {(
               [
                 { id: "light" as const, label: "Claro" },
