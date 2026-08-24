@@ -1,8 +1,13 @@
 import { revalidatePath } from "next/cache";
 
-/** Agency + legacy operational views after demand/assignment/timer mutations. */
+/** Agency operational views após mutações de demanda/assignment/timer.
+ *
+ * As rotas (app) legadas (/gestao, /quadros/*, /painel/*) não estão mais aqui —
+ * são redirects 308 em next.config.mjs apontando para as rotas (agency),
+ * e redirects não possuem cache de RSC para invalidar.
+ */
 export function revalidateOperationalViews(clientId?: string) {
-  // Agency (live shell)
+  // Agency (live shell) — (agency) route group
   revalidatePath("/setores");
   revalidatePath("/setores/design");
   revalidatePath("/setores/video");
@@ -15,16 +20,6 @@ export function revalidateOperationalViews(clientId?: string) {
   revalidatePath("/painel-gestao");
   revalidatePath("/demandas");
   revalidatePath("/notificacoes");
-
-  // Legacy (app) routes
-  revalidatePath("/quadros/design");
-  revalidatePath("/quadros/video");
-  revalidatePath("/quadros/trafego");
-  revalidatePath("/quadros/social-media");
-  revalidatePath("/painel/design");
-  revalidatePath("/painel/video");
-  revalidatePath("/painel/social-media");
-  revalidatePath("/gestao");
 
   if (clientId) {
     revalidatePath(`/clientes/${clientId}/quadro`);
