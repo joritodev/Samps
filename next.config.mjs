@@ -35,6 +35,22 @@ const nextConfig = {
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
+  async redirects() {
+    return [
+      // Painel de gestão
+      { source: "/gestao", destination: "/painel-gestao", permanent: true },
+      // Quadros de setor (visão geral do setor)
+      { source: "/quadros/design", destination: "/setores/design", permanent: true },
+      { source: "/quadros/video", destination: "/setores/video", permanent: true },
+      { source: "/quadros/trafego", destination: "/setores/trafego", permanent: true },
+      { source: "/quadros/social-media", destination: "/setores/social", permanent: true },
+      // Painéis pessoais dos colaboradores
+      { source: "/painel/design", destination: "/meu-painel/design", permanent: true },
+      { source: "/painel/video", destination: "/meu-painel/video", permanent: true },
+      { source: "/painel/social-media", destination: "/meu-painel/social", permanent: true },
+      { source: "/painel/trafego", destination: "/meu-painel/trafego", permanent: true },
+    ];
+  },
 };
 
 export default nextConfig;
