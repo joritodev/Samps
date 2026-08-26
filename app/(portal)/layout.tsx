@@ -1,5 +1,6 @@
 import { Toaster } from "sonner";
 import { PortalSidebar } from "@/components/layout/portal-sidebar";
+import { PortalPreviewBanner } from "@/components/portal/portal-preview-banner";
 import { Providers } from "@/components/providers";
 import { requireAuth } from "@/lib/permissions/check";
 import { getPortalClientId, getPortalForClient } from "@/lib/services/portal.service";
@@ -24,15 +25,15 @@ export default async function PortalLayout({
   return (
     <Providers>
       <div className="flex h-dvh overflow-hidden bg-background">
-        <PortalSidebar user={user} clientName={clientName} />
-        <main className="flex min-w-0 flex-1 flex-col overflow-y-auto">
+        <PortalSidebar user={user} clientName={clientName} isPreview={isPreview} />
+        <main className="flex min-w-0 flex-1 flex-col overflow-y-auto bg-background pt-14 lg:pt-0">
           {isPreview ? (
-            <div className="shrink-0 border-b border-amber-200 bg-amber-50 px-6 py-2 text-sm text-amber-800">
+            <PortalPreviewBanner>
               Você está visualizando o portal como cliente. Nada aqui reflete a
               operação interna.
-            </div>
+            </PortalPreviewBanner>
           ) : null}
-          <div className="flex-1 p-6">{children}</div>
+          <div className="flex-1 p-6 md:p-8">{children}</div>
         </main>
         <Toaster richColors position="top-right" />
       </div>
