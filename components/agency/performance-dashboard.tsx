@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Download } from "lucide-react";
+import { MetricCard } from "@/components/agency/metric-card";
 import { PerformanceFilters, type PerformanceFiltersProps } from "@/components/agency/performance-filters";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -75,49 +76,10 @@ function SmallSampleBadge() {
   return <Badge variant="warning">Amostra pequena</Badge>;
 }
 
-function Metric({
-  label,
-  value,
-  tone = "default",
-}: {
-  label: string;
-  value: string | number;
-  tone?: "default" | "danger" | "teal" | "primary";
-}) {
-  return (
-    <div
-      className={cn(
-        "rounded-lg border bg-card px-3 py-2.5",
-        tone === "default" && "border-border",
-        tone === "danger" &&
-          "border-destructive/40 dark:border-destructive/35 dark:bg-destructive/10",
-        tone === "teal" &&
-          "border-emerald-500/35 bg-emerald-500/5 dark:border-emerald-400/30 dark:bg-emerald-400/10",
-        tone === "primary" &&
-          "border-primary/35 bg-primary/5 dark:border-primary/40 dark:bg-primary/10"
-      )}
-    >
-      <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-        {label}
-      </p>
-      <p
-        className={cn(
-          "mt-0.5 text-xl font-semibold tabular-nums tracking-tight text-foreground",
-          tone === "danger" && "text-destructive",
-          tone === "primary" && "text-primary",
-          tone === "teal" && "text-emerald-700 dark:text-emerald-300"
-        )}
-      >
-        {value}
-      </p>
-    </div>
-  );
-}
-
 function MiniStat({ label, value }: { label: string; value: number }) {
   return (
     <div>
-      <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
         {label}
       </p>
       <p className="mt-0.5 text-base font-semibold tabular-nums text-foreground">
@@ -177,16 +139,16 @@ function PeriodDetail({
         Detalhe — {title}
       </h2>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Metric label="Concluídas" value={data.completed} tone="primary" />
-        <Metric label="Em produção" value={data.inProgress} tone="teal" />
-        <Metric label="Atrasadas" value={data.overdue} tone="danger" />
-        <Metric label="Ajustes" value={data.adjustments} tone="danger" />
-        <Metric label="Sessões" value={data.sessionsCount} />
-        <Metric
+        <MetricCard label="Concluídas" value={data.completed} tone="primary" />
+        <MetricCard label="Em produção" value={data.inProgress} tone="success" />
+        <MetricCard label="Atrasadas" value={data.overdue} tone="danger" />
+        <MetricCard label="Ajustes" value={data.adjustments} tone="danger" />
+        <MetricCard label="Sessões" value={data.sessionsCount} />
+        <MetricCard
           label="Tempo trabalhado"
           value={hours(data.totalWorkedSeconds)}
         />
-        <Metric
+        <MetricCard
           label="Tempo médio/sessão"
           value={hours(data.avgSessionSeconds)}
         />
@@ -259,7 +221,7 @@ function PeopleTable({ rows }: { rows: UserRow[] }) {
                             {duration(type.avgSeconds)} · n={type.n}
                           </span>
                           {type.n < SMALL_SAMPLE_N ? (
-                            <span className="text-amber-700 dark:text-amber-400">
+                            <span className="text-warning">
                               Amostra pequena
                             </span>
                           ) : null}

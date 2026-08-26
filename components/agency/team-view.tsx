@@ -97,6 +97,17 @@ const INVITE_STATE_LABEL: Record<TeamInvite["state"], string> = {
   not_found: "Desconhecido",
 };
 
+const ABSENCE_BADGE =
+  "border-destructive/35 bg-destructive/10 font-normal text-destructive";
+
+const INVITE_BADGE: Record<TeamInvite["state"], string> = {
+  valid: "border-primary/35 bg-primary/10 text-primary",
+  accepted: "border-success/35 bg-success/10 text-success",
+  expired: "border-warning/35 bg-warning/10 text-warning",
+  revoked: "border-border bg-muted text-muted-foreground",
+  not_found: "border-border bg-muted text-muted-foreground",
+};
+
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString("pt-BR");
 }
@@ -319,7 +330,7 @@ export function TeamView({
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">
-      <header className="flex shrink-0 flex-wrap items-center justify-between gap-4 border-b border-border bg-card px-6 py-5">
+      <header className="flex shrink-0 flex-wrap items-center justify-between gap-4 border-b border-border bg-background px-6 py-5">
         <div>
           <h1 className="text-xl font-semibold tracking-tight text-foreground">
             Equipe
@@ -397,10 +408,7 @@ export function TeamView({
                         <TableCell className="pr-6 text-right">
                           <div className="flex flex-col items-end gap-2">
                             {member.absenceToday ? (
-                              <Badge
-                                variant="outline"
-                                className="border-rose-200 bg-rose-50 font-normal text-rose-800 dark:border-rose-400/30 dark:bg-rose-400/10 dark:text-rose-200"
-                              >
+                              <Badge variant="outline" className={ABSENCE_BADGE}>
                                 {member.absenceToday.kindLabel} ·{" "}
                                 {member.absenceToday.rangeLabel}
                               </Badge>
@@ -454,10 +462,7 @@ export function TeamView({
                           {row.userName}
                         </TableCell>
                         <TableCell>
-                          <Badge
-                            variant="outline"
-                            className="border-rose-200 bg-rose-50 font-normal text-rose-800 dark:border-rose-400/30 dark:bg-rose-400/10 dark:text-rose-200"
-                          >
+                          <Badge variant="outline" className={ABSENCE_BADGE}>
                             {row.kindLabel}
                           </Badge>
                         </TableCell>
@@ -514,15 +519,7 @@ export function TeamView({
                         <TableCell>
                           <Badge
                             variant="outline"
-                            className={cn(
-                              "font-normal",
-                              invite.state === "valid" &&
-                                "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-400/30 dark:bg-sky-400/10 dark:text-sky-200",
-                              invite.state === "expired" &&
-                                "border-amber-500/25 bg-amber-500/10 text-amber-800 dark:border-amber-400/25 dark:bg-amber-400/10 dark:text-amber-200",
-                              invite.state === "revoked" &&
-                                "border-border bg-muted text-muted-foreground"
-                            )}
+                            className={cn("font-normal", INVITE_BADGE[invite.state])}
                           >
                             {INVITE_STATE_LABEL[invite.state]}
                           </Badge>

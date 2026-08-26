@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   AGENDA_KIND_LABEL,
@@ -23,38 +23,27 @@ import { cn } from "@/lib/utils";
 const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 const KIND_CHIP: Record<AgendaEventKind, string> = {
-  due: "bg-amber-100 text-amber-900 dark:bg-amber-400/15 dark:text-amber-200",
-  delivery:
-    "bg-emerald-100 text-emerald-900 dark:bg-emerald-400/15 dark:text-emerald-200",
-  publish: "bg-sky-100 text-sky-900 dark:bg-sky-400/15 dark:text-sky-200",
-  birthday:
-    "bg-fuchsia-100 text-fuchsia-900 dark:bg-fuchsia-400/15 dark:text-fuchsia-200",
-  absence:
-    "bg-rose-100 text-rose-900 dark:bg-rose-400/15 dark:text-rose-200",
+  due: "bg-warning/15 text-warning",
+  delivery: "bg-success/15 text-success",
+  publish: "bg-primary/15 text-primary",
+  birthday: "bg-brand/15 text-brand",
+  absence: "bg-destructive/15 text-destructive",
 };
 
 const KIND_CARD: Record<AgendaEventKind, string> = {
-  due: "border-amber-200/70 bg-amber-50/70 dark:border-amber-400/30 dark:bg-amber-400/10",
-  delivery:
-    "border-emerald-200/70 bg-emerald-50/70 dark:border-emerald-400/30 dark:bg-emerald-400/10",
-  publish:
-    "border-sky-200/70 bg-sky-50/70 dark:border-sky-400/30 dark:bg-sky-400/10",
-  birthday:
-    "border-fuchsia-200/70 bg-fuchsia-50/70 dark:border-fuchsia-400/30 dark:bg-fuchsia-400/10",
-  absence:
-    "border-rose-200/70 bg-rose-50/70 dark:border-rose-400/30 dark:bg-rose-400/10",
+  due: "border-warning/35 bg-warning/5",
+  delivery: "border-success/35 bg-success/5",
+  publish: "border-primary/35 bg-primary/5",
+  birthday: "border-brand/35 bg-brand/5",
+  absence: "border-destructive/35 bg-destructive/5",
 };
 
 const KIND_BADGE: Record<AgendaEventKind, string> = {
-  due: "border-amber-200 bg-amber-100/80 text-amber-900 dark:border-amber-400/40 dark:bg-amber-400/15 dark:text-amber-200",
-  delivery:
-    "border-emerald-200 bg-emerald-100/80 text-emerald-900 dark:border-emerald-400/40 dark:bg-emerald-400/15 dark:text-emerald-200",
-  publish:
-    "border-sky-200 bg-sky-100/80 text-sky-900 dark:border-sky-400/40 dark:bg-sky-400/15 dark:text-sky-200",
-  birthday:
-    "border-fuchsia-200 bg-fuchsia-100/80 text-fuchsia-900 dark:border-fuchsia-400/40 dark:bg-fuchsia-400/15 dark:text-fuchsia-200",
-  absence:
-    "border-rose-200 bg-rose-100/80 text-rose-900 dark:border-rose-400/40 dark:bg-rose-400/15 dark:text-rose-200",
+  due: "border-warning/35 bg-warning/10 text-warning",
+  delivery: "border-success/35 bg-success/10 text-success",
+  publish: "border-primary/35 bg-primary/10 text-primary",
+  birthday: "border-brand/35 bg-brand/10 text-brand",
+  absence: "border-destructive/35 bg-destructive/10 text-destructive",
 };
 
 const KIND_OPTIONS: AgendaEventKind[] = [
@@ -208,10 +197,8 @@ export function AgendaView({ events }: { events: AgendaEvent[] }) {
         label: "Eventos no mês",
         value: monthEvents.length,
         icon: Package,
-        className:
-          "border-emerald-200/70 bg-emerald-50/80 dark:border-emerald-400/30 dark:bg-emerald-400/10",
-        iconClass:
-          "bg-emerald-100 text-emerald-700 dark:bg-emerald-400/20 dark:text-emerald-200",
+        className: "border-success/35 bg-success/5",
+        iconClass: "bg-success/15 text-success",
       },
       ...sectorKpis.map((s, i) => ({
         id: `sector-${i}`,
@@ -242,7 +229,7 @@ export function AgendaView({ events }: { events: AgendaEvent[] }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-background">
-      <header className="shrink-0 border-b border-border bg-card px-6 py-4">
+      <header className="shrink-0 border-b border-border bg-background px-6 py-4">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
           Agenda
         </h1>
@@ -270,7 +257,7 @@ export function AgendaView({ events }: { events: AgendaEvent[] }) {
                     <Icon className="h-5 w-5" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm text-muted-foreground">{kpi.label}</p>
+                    <p className="text-xs text-muted-foreground">{kpi.label}</p>
                     <p className="mt-0.5 text-xl font-semibold tabular-nums tracking-tight text-foreground">
                       {kpi.value}
                     </p>
@@ -282,71 +269,65 @@ export function AgendaView({ events }: { events: AgendaEvent[] }) {
         </section>
 
         <section className="grid min-h-0 flex-1 grid-cols-1 gap-4 xl:grid-cols-12">
-          <aside className="min-h-0 xl:col-span-2">
-            <Card className="rounded-2xl shadow-none">
-              <CardHeader className="pb-3 pt-4">
-                <CardTitle className="text-sm font-semibold tracking-tight">
-                  Filtros
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-5">
+          <aside className="min-h-0 border-b border-border bg-background pb-4 xl:col-span-2 xl:border-b-0 xl:border-r xl:pb-0 xl:pr-4">
+            <h2 className="text-sm font-semibold tracking-tight">Filtros</h2>
+            <div className="mt-4 space-y-5">
+              <div className="space-y-3">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Tipos
+                </p>
+                {KIND_OPTIONS.map((kind) => (
+                  <label
+                    key={kind}
+                    className="flex cursor-pointer items-center gap-2.5 text-sm text-muted-foreground"
+                  >
+                    <Checkbox
+                      checked={enabledKinds[kind]}
+                      onCheckedChange={(checked) =>
+                        setEnabledKinds((prev) => ({
+                          ...prev,
+                          [kind]: checked === true,
+                        }))
+                      }
+                    />
+                    {AGENDA_KIND_LABEL[kind]}
+                  </label>
+                ))}
+              </div>
+
+              {sectorOptions.length > 0 ? (
                 <div className="space-y-3">
                   <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    Tipos
+                    Setores
                   </p>
-                  {KIND_OPTIONS.map((kind) => (
+                  {sectorOptions.map((s) => (
                     <label
-                      key={kind}
+                      key={s.id}
                       className="flex cursor-pointer items-center gap-2.5 text-sm text-muted-foreground"
                     >
                       <Checkbox
-                        checked={enabledKinds[kind]}
+                        checked={enabledSectors[s.id] !== false}
                         onCheckedChange={(checked) =>
-                          setEnabledKinds((prev) => ({
+                          setEnabledSectors((prev) => ({
                             ...prev,
-                            [kind]: checked === true,
+                            [s.id]: checked === true,
                           }))
                         }
                       />
-                      {AGENDA_KIND_LABEL[kind]}
+                      {s.label}
                     </label>
                   ))}
                 </div>
-
-                {sectorOptions.length > 0 ? (
-                  <div className="space-y-3">
-                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                      Setores
-                    </p>
-                    {sectorOptions.map((s) => (
-                      <label
-                        key={s.id}
-                        className="flex cursor-pointer items-center gap-2.5 text-sm text-muted-foreground"
-                      >
-                        <Checkbox
-                          checked={enabledSectors[s.id] !== false}
-                          onCheckedChange={(checked) =>
-                            setEnabledSectors((prev) => ({
-                              ...prev,
-                              [s.id]: checked === true,
-                            }))
-                          }
-                        />
-                        {s.label}
-                      </label>
-                    ))}
-                  </div>
-                ) : null}
-              </CardContent>
-            </Card>
+              ) : null}
+            </div>
           </aside>
 
           <div className="flex min-h-0 flex-col xl:col-span-7">
             <Card className="flex h-full min-h-0 flex-col rounded-2xl shadow-none">
               <CardHeader className="flex shrink-0 flex-row items-center justify-between space-y-0 pb-3 pt-4">
-                <CardTitle className="text-base font-semibold capitalize tracking-tight">
+                <h2 className="text-base font-semibold capitalize tracking-tight">
                   {monthLabel(year, month)}
-                </CardTitle>
+                </h2>
                 <div className="flex items-center gap-1">
                   <Button
                     variant="outline"
@@ -409,11 +390,8 @@ export function AgendaView({ events }: { events: AgendaEvent[] }) {
                           "flex min-h-0 flex-col overflow-hidden bg-card p-1.5 text-left transition-colors",
                           cell.day && "hover:bg-muted",
                           !cell.day && "bg-muted/80",
-                          isSelected &&
-                            "ring-2 ring-inset ring-emerald-400/70 dark:ring-emerald-400/50",
-                          isToday &&
-                            !isSelected &&
-                            "bg-emerald-50/40 dark:bg-emerald-400/10"
+                          isSelected && "ring-2 ring-inset ring-primary/70",
+                          isToday && !isSelected && "bg-primary/5"
                         )}
                       >
                         {cell.day ? (
@@ -421,8 +399,7 @@ export function AgendaView({ events }: { events: AgendaEvent[] }) {
                             <span
                               className={cn(
                                 "inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-medium text-muted-foreground",
-                                isToday &&
-                                  "bg-emerald-600 text-white dark:bg-emerald-500"
+                                isToday && "bg-primary text-primary-foreground"
                               )}
                             >
                               {cell.day}
@@ -434,7 +411,7 @@ export function AgendaView({ events }: { events: AgendaEvent[] }) {
                                   <div
                                     key={event.id}
                                     className={cn(
-                                      "truncate rounded-md px-1.5 py-0.5 text-[10px] font-medium leading-tight",
+                                      "truncate rounded-md px-1.5 py-0.5 text-xs font-medium leading-tight",
                                       KIND_CHIP[event.kind]
                                     )}
                                   >
@@ -446,7 +423,7 @@ export function AgendaView({ events }: { events: AgendaEvent[] }) {
                                 );
                               })}
                               {dayEvents.length > 2 ? (
-                                <p className="px-1 text-[10px] text-muted-foreground">
+                                <p className="px-1 text-xs text-muted-foreground">
                                   +{dayEvents.length - 2} mais
                                 </p>
                               ) : null}
@@ -464,9 +441,9 @@ export function AgendaView({ events }: { events: AgendaEvent[] }) {
           <aside className="flex min-h-0 flex-col xl:col-span-3">
             <Card className="flex h-full min-h-0 flex-col rounded-2xl shadow-none">
               <CardHeader className="shrink-0 pb-3 pt-4">
-                <CardTitle className="text-sm font-semibold tracking-tight">
+                <h2 className="text-sm font-semibold tracking-tight">
                   Detalhes do dia
-                </CardTitle>
+                </h2>
                 <p className="text-sm text-muted-foreground">{selectedDateLabel}</p>
               </CardHeader>
               <CardContent className="min-h-0 flex-1 space-y-3 overflow-y-auto">

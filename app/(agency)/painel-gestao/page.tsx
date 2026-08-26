@@ -9,17 +9,17 @@ import {
 import { requireAuth } from "@/lib/permissions/check";
 import { getManagementOverview } from "@/lib/services/management.service";
 import { DemandCard } from "@/components/shared/demand-card";
+import { MetricCard } from "@/components/agency/metric-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const sectorColors = [
-  "bg-primary",
-  "bg-violet-500",
-  "bg-blue-500",
-  "bg-amber-500",
-  "bg-teal-500",
-  "bg-rose-500",
+  "bg-chart-1",
+  "bg-chart-2",
+  "bg-chart-3",
+  "bg-chart-4",
+  "bg-chart-5",
 ];
 
 function sectorHref(slug: string) {
@@ -27,45 +27,6 @@ function sectorHref(slug: string) {
   if (slug === "trafego") return "/setores/trafego";
   if (slug === "video") return "/setores/video";
   return "/setores/design";
-}
-
-function Metric({
-  label,
-  value,
-  tone = "default",
-}: {
-  label: string;
-  value: number;
-  tone?: "default" | "danger" | "teal" | "primary";
-}) {
-  return (
-    <div
-      className={cn(
-        "rounded-lg border bg-card px-3 py-2.5",
-        tone === "default" && "border-border",
-        tone === "danger" &&
-          "border-destructive/40 dark:border-destructive/35 dark:bg-destructive/10",
-        tone === "teal" &&
-          "border-emerald-500/35 bg-emerald-500/5 dark:border-emerald-400/30 dark:bg-emerald-400/10",
-        tone === "primary" &&
-          "border-primary/35 bg-primary/5 dark:border-primary/40 dark:bg-primary/10"
-      )}
-    >
-      <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-        {label}
-      </p>
-      <p
-        className={cn(
-          "mt-0.5 text-xl font-semibold tabular-nums tracking-tight text-foreground",
-          tone === "danger" && "text-destructive",
-          tone === "primary" && "text-primary",
-          tone === "teal" && "text-emerald-700 dark:text-emerald-300"
-        )}
-      >
-        {value}
-      </p>
-    </div>
-  );
 }
 
 export default async function PainelGestaoPage() {
@@ -128,15 +89,15 @@ export default async function PainelGestaoPage() {
       </header>
 
       <div className="mt-3 grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-9">
-        <Metric label="Em aberto" value={kpis.open} tone="primary" />
-        <Metric label="Atrasadas" value={kpis.overdue} tone="danger" />
-        <Metric label="Atrasos/mês" value={kpis.delaysThisMonth} tone="danger" />
-        <Metric label="Hoje" value={kpis.doneToday} />
-        <Metric label="Produção" value={kpis.inProduction} tone="teal" />
-        <Metric label="Revisão" value={kpis.inReview} tone="teal" />
-        <Metric label="Ajustes" value={kpis.adjustments} tone="danger" />
-        <Metric label="Publicação" value={kpis.awaitingPublication} tone="primary" />
-        <Metric label="Sem resp." value={kpis.unassigned} />
+        <MetricCard label="Em aberto" value={kpis.open} tone="primary" />
+        <MetricCard label="Atrasadas" value={kpis.overdue} tone="danger" />
+        <MetricCard label="Atrasos/mês" value={kpis.delaysThisMonth} tone="danger" />
+        <MetricCard label="Hoje" value={kpis.doneToday} />
+        <MetricCard label="Produção" value={kpis.inProduction} tone="success" />
+        <MetricCard label="Revisão" value={kpis.inReview} tone="success" />
+        <MetricCard label="Ajustes" value={kpis.adjustments} tone="danger" />
+        <MetricCard label="Publicação" value={kpis.awaitingPublication} tone="primary" />
+        <MetricCard label="Sem resp." value={kpis.unassigned} />
       </div>
 
       <div className="mt-3 grid min-h-0 flex-1 gap-3 lg:grid-cols-12">
@@ -184,9 +145,9 @@ export default async function PainelGestaoPage() {
                 alerts.map((alert) => (
                   <div
                     key={alert}
-                    className="flex items-center gap-2 rounded-md border border-amber-500/25 bg-amber-500/10 px-2.5 py-1.5 text-xs text-amber-900 dark:border-amber-400/25 dark:bg-amber-400/10 dark:text-amber-200"
+                    className="flex items-center gap-2 rounded-md border border-warning/25 bg-warning/10 px-2.5 py-1.5 text-xs text-warning"
                   >
-                    <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-300" />
+                    <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-warning" />
                     {alert}
                   </div>
                 ))

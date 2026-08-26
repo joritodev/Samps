@@ -70,7 +70,7 @@ export function ScheduleView({
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">
-      <header className="shrink-0 border-b border-border bg-card px-6 py-5">
+      <header className="shrink-0 border-b border-border bg-background px-6 py-5">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
           {title}
         </h1>
@@ -149,6 +149,7 @@ export function ScheduleView({
                         size="icon"
                         className="h-8 w-8"
                         onClick={() => setMonth((m) => subMonths(m, 1))}
+                        aria-label="Mês anterior"
                       >
                         <ChevronLeft className="h-4 w-4" />
                       </Button>
@@ -160,6 +161,7 @@ export function ScheduleView({
                         size="icon"
                         className="h-8 w-8"
                         onClick={() => setMonth((m) => addMonths(m, 1))}
+                        aria-label="Próximo mês"
                       >
                         <ChevronRight className="h-4 w-4" />
                       </Button>
@@ -217,13 +219,13 @@ export function ScheduleView({
                             <span
                               key={entry.id}
                               title={entry.title}
-                              className="truncate rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium leading-tight text-foreground"
+                              className="truncate rounded bg-primary/10 px-1.5 py-0.5 text-xs font-medium leading-tight text-foreground"
                             >
                               {entry.title}
                             </span>
                           ))}
                           {entries.length > 2 ? (
-                            <span className="text-[10px] text-muted-foreground">
+                            <span className="text-xs text-muted-foreground">
                               +{entries.length - 2} mais
                             </span>
                           ) : null}

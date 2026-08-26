@@ -339,7 +339,7 @@ export function ClientsView({
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">
-      <header className="flex shrink-0 flex-wrap items-center justify-between gap-4 border-b border-border bg-card px-6 py-5">
+      <header className="flex shrink-0 flex-wrap items-center justify-between gap-4 border-b border-border bg-background px-6 py-5">
         <div>
           <h1 className="text-xl font-semibold tracking-tight text-foreground">
             Clientes
@@ -418,8 +418,8 @@ export function ClientsView({
                         className={cn(
                           "font-normal",
                           client.active
-                            ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-400/30 dark:bg-emerald-400/10 dark:text-emerald-200"
-                            : "border-amber-500/25 bg-amber-500/10 text-amber-800 dark:border-amber-400/25 dark:bg-amber-400/10 dark:text-amber-200"
+                            ? "border-success/35 bg-success/10 text-success"
+                            : "border-warning/35 bg-warning/10 text-warning"
                         )}
                       >
                         {client.active ? "Ativo" : "Pausado"}
