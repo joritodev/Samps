@@ -18,6 +18,15 @@ const toneClasses: Record<MetricTone, string> = {
   danger: "border-destructive/35 bg-destructive/5",
 };
 
+const valueToneClasses: Record<MetricTone, string> = {
+  default: "text-foreground",
+  primary: "text-primary",
+  brand: "text-brand",
+  success: "text-success",
+  warning: "text-warning",
+  danger: "text-destructive",
+};
+
 export function MetricCard({
   label,
   value,
@@ -40,7 +49,12 @@ export function MetricCard({
       <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
         {label}
       </p>
-      <p className="mt-0.5 text-xl font-semibold tabular-nums tracking-tight">
+      <p
+        className={cn(
+          "mt-0.5 text-xl font-semibold tabular-nums tracking-tight",
+          valueToneClasses[tone]
+        )}
+      >
         {value}
       </p>
     </div>
