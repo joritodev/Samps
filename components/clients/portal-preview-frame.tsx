@@ -24,7 +24,7 @@ export function PortalPreviewFrame({ clientId }: { clientId: string }) {
   }, [clientId, update]);
 
   if (error) {
-    return <p className="text-sm text-red-600">{error}</p>;
+    return <p className="text-sm text-destructive">{error}</p>;
   }
 
   if (!ready) {
@@ -40,7 +40,7 @@ export function PortalPreviewFrame({ clientId }: { clientId: string }) {
     <iframe
       src="/portal"
       title="Prévia do portal"
-      className="h-[70vh] w-full rounded-xl border shadow-sm bg-white"
+      className="h-[70vh] w-full rounded-xl border border-border/60 bg-card"
     />
   );
 }
