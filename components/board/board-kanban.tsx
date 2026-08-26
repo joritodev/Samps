@@ -19,6 +19,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { MoreHorizontal, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
+import { BoardColumnEmpty } from "@/components/board/board-column-empty";
 import { DemandCard } from "@/components/shared/demand-card";
 import { Button } from "@/components/ui/button";
 import {
@@ -60,13 +61,12 @@ function SortableDemandCard({
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <div onClick={() => onSelect(demand.id)}>
-        <DemandCard
-          demand={demand}
-          showOrigin
-          className={cn(isDragging && "opacity-50")}
-        />
-      </div>
+      <DemandCard
+        demand={demand}
+        showOrigin
+        className={cn(isDragging && "opacity-50")}
+        onClick={() => onSelect(demand.id)}
+      />
     </div>
   );
 }
@@ -208,7 +208,7 @@ export function BoardKanban({
                   </h3>
                 )}
                 <div className="flex shrink-0 items-center gap-1">
-                  <span className="rounded-md border border-border bg-card px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                  <span className="rounded-md border border-border bg-card px-2 py-0.5 text-xs font-medium text-muted-foreground">
                     {cards.length}
                   </span>
                   {canManageLists ? (
@@ -285,9 +285,7 @@ export function BoardKanban({
                       />
                     ))
                   ) : (
-                    <div className="rounded-md border border-dashed border-border px-3 py-6 text-center text-xs text-muted-foreground">
-                      Nenhum cartão
-                    </div>
+                    <BoardColumnEmpty />
                   )}
                 </div>
               </SortableContext>

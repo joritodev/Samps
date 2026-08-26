@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Filter, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { BoardColumnEmpty } from "@/components/board/board-column-empty";
 import {
   DemandCard,
   DemandDetailSheet,
@@ -27,7 +28,7 @@ function BoardColumnView({
         <h2 className="text-sm font-medium tracking-tight text-foreground">
           {column.title}
         </h2>
-        <span className="rounded-md border border-border bg-card px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+        <span className="rounded-md border border-border bg-card px-2 py-0.5 text-xs font-medium text-muted-foreground">
           {column.cards.length}
         </span>
       </header>
@@ -37,9 +38,7 @@ function BoardColumnView({
             <DemandCard key={card.id} demand={card} onOpen={onOpenCard} />
           ))
         ) : (
-          <div className="rounded-lg border border-dashed border-border px-3 py-8 text-center text-xs text-muted-foreground">
-            Nenhum cartão
-          </div>
+          <BoardColumnEmpty description="Crie uma demanda ou aguarde novas atribuições." />
         )}
       </div>
     </section>

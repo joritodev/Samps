@@ -62,15 +62,16 @@ export function DemandCard({
     demand.status !== "DONE" &&
     demand.status !== "CANCELLED";
 
-  return (
-    <Card
-      className={cn(
-        "cursor-pointer rounded-xl border-border/60 shadow-soft transition-shadow hover:shadow-md",
-        overdue && "border-destructive/50",
-        className
-      )}
-      onClick={onClick}
-    >
+  const cardClassName = cn(
+    "rounded-xl border-border/60 shadow-soft transition-shadow",
+    onClick &&
+      "w-full cursor-pointer text-left hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+    overdue && "border-destructive/50",
+    className
+  );
+
+  const body = (
+    <>
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-2">
           <CardTitle className="text-sm font-medium leading-snug text-foreground">
@@ -80,14 +81,14 @@ export function DemandCard({
             <Badge
               variant="outline"
               style={{ borderColor: demand.priority.color, color: demand.priority.color }}
-              className="shrink-0 text-[10px]"
+              className="shrink-0 text-xs"
             >
               {demand.priority.name}
             </Badge>
           )}
         </div>
         {originLabel && (
-          <p className="text-[11px] text-muted-foreground">{originLabel}</p>
+          <p className="text-xs text-muted-foreground">{originLabel}</p>
         )}
       </CardHeader>
       <CardContent className="space-y-2 text-xs text-muted-foreground">
@@ -104,15 +105,25 @@ export function DemandCard({
           {demand.assignee && <span>{demand.assignee.name}</span>}
         </div>
         {demand.timerPreview && (
-          <div className="rounded-md border border-amber-500/25 bg-amber-500/10 px-2 py-1 text-[11px] text-amber-900 dark:border-amber-400/25 dark:bg-amber-400/10 dark:text-amber-200">
+          <div className="rounded-md border border-amber-500/25 bg-amber-500/10 px-2 py-1 text-xs text-amber-950 dark:border-amber-400/25 dark:bg-amber-400/10 dark:text-amber-200">
             <p>Executor: {demand.timerPreview.executor.name}</p>
             <p>
               {demand.timerPreview.status === "PAUSED" ? "Pausada" : "Em execução"} há:{" "}
-              {demand.timerPreview.elapsedLabel}
+              <span className="tabular-nums">{demand.timerPreview.elapsedLabel}</span>
             </p>
           </div>
         )}
       </CardContent>
-    </Card>
+    </>
   );
+
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} className={cn("border bg-card text-card-foreground", cardClassName)}>
+        {body}
+      </button>
+    );
+  }
+
+  return <Card className={cardClassName}>{body}</Card>;
 }

@@ -16,6 +16,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { BoardColumnEmpty } from "@/components/board/board-column-empty";
 import { DemandCard } from "@/components/agency/demand-card";
 import { assumirDemanda, concluirProducao } from "@/app/actions/designer";
 import { aprovarDemanda, solicitarAjuste } from "@/app/actions/review";
@@ -54,7 +55,7 @@ function DesignColumn({
     <section className="flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-muted/80">
       <header className="flex shrink-0 items-center justify-between px-4 py-3.5">
         <h2 className="text-sm font-semibold text-foreground">{column.title}</h2>
-        <span className="rounded-md border border-border bg-card px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+        <span className="rounded-md border border-border bg-card px-2 py-0.5 text-xs font-medium text-muted-foreground">
           {column.cards.length}
         </span>
       </header>
@@ -64,9 +65,7 @@ function DesignColumn({
             <DemandCard key={card.id} demand={card} onOpen={handleOpen} />
           ))
         ) : (
-          <div className="rounded-md border border-dashed border-border px-3 py-6 text-center text-xs text-muted-foreground">
-            Nenhum cartão
-          </div>
+          <BoardColumnEmpty description="Aguarde novas demandas nesta etapa." />
         )}
       </div>
     </section>

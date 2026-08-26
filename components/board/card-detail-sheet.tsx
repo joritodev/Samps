@@ -222,7 +222,12 @@ export function CardDetailSheet({
                 {(fmt.includes("reel") || fmt.includes("video")) && (
                   <div className="space-y-1">
                     <Label>Duração (seg)</Label>
-                    <Input type="number" defaultValue={card.durationSeconds ?? ""} disabled={!canBriefing} />
+                    <Input
+                      type="number"
+                      defaultValue={card.durationSeconds ?? ""}
+                      disabled={!canBriefing}
+                      className="tabular-nums"
+                    />
                   </div>
                 )}
                 {canBriefing && (
