@@ -106,7 +106,7 @@ export function SettingsHub({ permissions }: { permissions: string[] }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">
-      <header className="shrink-0 border-b border-border bg-card px-6 py-5">
+      <header className="shrink-0 border-b border-border bg-background px-6 py-5">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
           Configurações
         </h1>
@@ -115,16 +115,16 @@ export function SettingsHub({ permissions }: { permissions: string[] }) {
         </p>
       </header>
 
-      <div className="grid gap-4 bg-muted/30 p-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 bg-background p-6 sm:grid-cols-2 lg:grid-cols-3">
         {sections.map((item) => {
           const Icon = item.icon;
           return (
             <Link
               key={item.href}
               href={item.href}
-              className="group flex items-start gap-4 rounded-xl border border-border bg-card p-5 shadow-sm transition-colors hover:bg-card/90 hover:shadow-md"
+              className="group flex items-start gap-4 rounded-xl border border-border bg-card p-5 transition-colors hover:bg-muted/40"
             >
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <Icon className="h-5 w-5" />
               </div>
               <div className="min-w-0 flex-1">
