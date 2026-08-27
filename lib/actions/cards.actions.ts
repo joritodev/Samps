@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/permissions/check";
 import { hasPermission } from "@/lib/permissions/resolve";
 import { revalidateOperationalViews } from "@/lib/revalidate-operational";
@@ -13,6 +14,7 @@ import {
   updateCardVisibility,
   updateDemandListAndOrder,
 } from "@/lib/services/cards.service";
+import { notifyCommentMentions } from "@/lib/services/mentions.service";
 
 export async function getCardDetailAction(cardId: string) {
   const user = await requireAuth();
@@ -125,6 +127,21 @@ export async function addCommentAction(
 ) {
   const user = await requireAuth();
   await addCardComment(cardId, user.id, text, commentType);
+
+  const demand = await db.demand.findUnique({
+    where: { id: cardId },
+    select: { title: true, clientId: true },
+  });
+
+  await notifyCommentMentions({
+    text,
+    authorUserId: user.id,
+    authorName: user.name,
+    demandTitle: demand?.title ?? "",
+    clientId: demand?.clientId ?? clientId,
+    demandId: cardId,
+  });
+
   revalidatePath(`/clientes/${clientId}/quadro`);
   return { success: true };
 }

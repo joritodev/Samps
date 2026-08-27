@@ -371,7 +371,12 @@ export function CardDetailSheet({
                     </div>
                   ))}
                 </div>
-                <Textarea value={comment} onChange={(e) => setComment(e.target.value)} rows={3} />
+                <Textarea
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  rows={3}
+                  placeholder="Comentário… Use @nome para mencionar alguém."
+                />
                 <Button
                   variant="outline"
                   size="sm"
