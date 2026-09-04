@@ -7,6 +7,7 @@ import {
   canDemandBriefing,
   canRegisterPublication,
   canRequestAdjustment,
+  canReviewDemand,
   DEMAND_ACTION_DENIED,
 } from "./labels";
 
@@ -38,6 +39,14 @@ describe("regras de acao por status", () => {
     expect(canRegisterPublication("SCHEDULED")).toBe(true);
     expect(canRegisterPublication("IN_REVIEW")).toBe(true);
     expect(canRegisterPublication("PLANNING")).toBe(false);
+  });
+
+  it("revisao so para social, gestao e admin", () => {
+    expect(canReviewDemand("SOCIAL_MEDIA")).toBe(true);
+    expect(canReviewDemand("MANAGEMENT")).toBe(true);
+    expect(canReviewDemand("ADMIN")).toBe(true);
+    expect(canReviewDemand("DESIGNER")).toBe(false);
+    expect(canReviewDemand("VIDEOMAKER")).toBe(false);
   });
 });
 

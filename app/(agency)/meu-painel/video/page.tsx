@@ -1,6 +1,7 @@
 import { requireAuth } from "@/lib/permissions/check";
 import { hasPermission } from "@/lib/permissions/resolve";
 import { requirePanelUserType } from "@/lib/agency/panel-access";
+import { canReviewDemand } from "@/lib/agency/labels";
 import {
   getSectorBoardData,
   getSectorBySlug,
@@ -38,6 +39,7 @@ export default async function VideoPanelPage() {
         calendarDemands={data.calendarDemands as never}
         currentUserId={user.id}
         canAssign={canAssign}
+        canReview={canReviewDemand(user.userType)}
         sectorUsers={sectorUsers}
       />
     </div>

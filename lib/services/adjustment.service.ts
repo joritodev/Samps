@@ -5,7 +5,7 @@ import {
   NotificationType,
   WorkSessionStage,
 } from "@prisma/client";
-import { assertCanRequestAdjustment } from "@/lib/agency/labels";
+import { assertCanRequestAdjustment, canReviewDemand, DEMAND_ACTION_DENIED } from "@/lib/agency/labels";
 import { db } from "@/lib/db";
 import { logAudit } from "@/lib/services/audit.service";
 import { createNotification } from "@/lib/services/notifications.service";
@@ -18,6 +18,9 @@ export async function requestAdjustment(
   user: SessionUser,
   description: string
 ) {
+  if (!canReviewDemand(user.userType)) {
+    throw new Error(DEMAND_ACTION_DENIED.review);
+  }
   if (!description.trim()) throw new Error("Descrição do ajuste é obrigatória");
 
   const demand = await db.demand.findUnique({ where: { id: demandId } });

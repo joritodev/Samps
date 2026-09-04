@@ -17,10 +17,10 @@ No primeiro acesso o middleware pode pedir `/first-access` se `mustResetPassword
 |--------|-------|--------------------------|
 | `gestao@samps.digital` | Gestão | Criar demanda em `/demandas`, ver quadro global, aprovar/publicar |
 | `social@samps.digital` | Social Media | Criar demanda, concluir briefing, acompanhar revisão/publicação |
-| `designer@samps.digital` | Designer | `/setores/design` ou `/meu-painel/design`: Assumir → Iniciar → Entregar revisão |
-| `videomaker@samps.digital` | Videomaker | Mesmo ciclo no setor vídeo |
-| `editor@samps.digital` | Editor | Fila de vídeo / ajustes |
-| `trafego@samps.digital` | Tráfego | Painel tráfego |
+| `designer@samps.digital` | Designer | `/meu-painel/design` (não use `/setores/design` — redireciona): Assumir → Iniciar → Entregar revisão |
+| `videomaker@samps.digital` | Videomaker | `/meu-painel/video` — mesmo ciclo |
+| `editor@samps.digital` | Editor | `/meu-painel/video` — fila / ajustes |
+| `trafego@samps.digital` | Tráfego | `/meu-painel/trafego` |
 | `admin@samps.digital` | Admin | Só se precisar de permissão total |
 | `cliente@samps.digital` | Cliente externo | Portal — **não** vê mural/ausências internos |
 

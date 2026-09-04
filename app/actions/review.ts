@@ -1,7 +1,11 @@
 "use server";
 
 import { AuditAction, CommentType, DemandStatus, NotificationType } from "@prisma/client";
-import { assertCanRequestAdjustment } from "@/lib/agency/labels";
+import {
+  assertCanRequestAdjustment,
+  canReviewDemand,
+  DEMAND_ACTION_DENIED,
+} from "@/lib/agency/labels";
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/permissions/check";
 import { revalidateOperationalViews } from "@/lib/revalidate-operational";
@@ -11,6 +15,10 @@ import { createNotification } from "@/lib/services/notifications.service";
 export async function aprovarDemanda(demandId: string) {
   const actor = await requirePermission("demands.edit");
 
+  if (!canReviewDemand(actor.userType)) {
+    return { error: DEMAND_ACTION_DENIED.review };
+  }
+
   try {
     const previous = await db.demand.findUniqueOrThrow({
       where: { id: demandId },
@@ -18,6 +26,7 @@ export async function aprovarDemanda(demandId: string) {
         status: true,
         title: true,
         clientId: true,
+        assigneeId: true,
         client: { select: { socialMediaId: true } },
       },
     });
@@ -27,6 +36,15 @@ export async function aprovarDemanda(demandId: string) {
         error:
           "Só é possível aprovar demandas em revisão. Status atual não permite esta ação.",
       };
+    }
+
+    // Executor não auto-aprova, mesmo que seja social da conta.
+    if (
+      previous.assigneeId === actor.id &&
+      actor.userType !== "MANAGEMENT" &&
+      actor.userType !== "ADMIN"
+    ) {
+      return { error: "Quem produziu a demanda não pode aprová-la." };
     }
 
     await db.demand.update({
@@ -69,6 +87,10 @@ export async function aprovarDemanda(demandId: string) {
 
 export async function solicitarAjuste(demandId: string, motivo: string) {
   const actor = await requirePermission("demands.edit");
+
+  if (!canReviewDemand(actor.userType)) {
+    return { error: DEMAND_ACTION_DENIED.review };
+  }
 
   const note = motivo?.trim();
   if (!note) {

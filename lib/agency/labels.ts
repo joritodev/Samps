@@ -91,12 +91,22 @@ export function canRegisterPublication(status: string) {
   );
 }
 
+/** Quem pode aprovar / pedir ajuste / publicar na revisão social. */
+export function canReviewDemand(userType: UserType | string) {
+  return (
+    userType === UserType.SOCIAL_MEDIA ||
+    userType === UserType.MANAGEMENT ||
+    userType === UserType.ADMIN
+  );
+}
+
 export const DEMAND_ACTION_DENIED = {
   production:
     "Só é possível concluir produção em demandas em produção ou ajuste.",
   adjustment: "Só é possível solicitar ajuste em demandas em revisão.",
   publication:
     "Só é possível registrar publicação em demandas aprovadas, agendadas ou em revisão.",
+  review: "Sem permissão para revisar esta demanda.",
 } as const;
 
 export function assertCanCompleteProduction(status: string) {

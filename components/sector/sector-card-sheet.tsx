@@ -72,6 +72,7 @@ export function SectorCardSheet({
   onOpenChange,
   currentUserId,
   canAssign,
+  canReview = false,
   canChangeDeadline = false,
   sectorUsers,
 }: {
@@ -80,6 +81,8 @@ export function SectorCardSheet({
   onOpenChange: (open: boolean) => void;
   currentUserId: string;
   canAssign: boolean;
+  /** Social / gestão / admin — aprovar, ajustar e publicar. */
+  canReview?: boolean;
   canChangeDeadline?: boolean;
   sectorUsers: { id: string; name: string }[];
 }) {
@@ -341,7 +344,7 @@ export function SectorCardSheet({
             </>
           )}
 
-          {isSocialReview && (
+          {isSocialReview && canReview && (
             <div className="space-y-3 rounded-lg border border-amber-500/25 bg-amber-500/10 p-3 dark:border-amber-400/25 dark:bg-amber-400/10">
               <p className="text-xs font-medium text-amber-900 dark:text-amber-200">
                 Aguardando revisão da Social
@@ -396,7 +399,24 @@ export function SectorCardSheet({
             </div>
           )}
 
-          {canPublish && (
+          {isSocialReview && !canReview && (
+            <div className="rounded-lg border border-border bg-muted/50 p-3 text-xs text-muted-foreground">
+              Em revisão — aguardando Social Media ou gestão aprovar ou pedir
+              ajuste.
+              {card.materialUrl ? (
+                <a
+                  href={card.materialUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-2 block truncate text-primary underline"
+                >
+                  Ver material enviado
+                </a>
+              ) : null}
+            </div>
+          )}
+
+          {canPublish && canReview && (
             <div className="space-y-2 rounded-lg border border-emerald-200 bg-emerald-50/80 p-3">
               <Label>Link da publicação</Label>
               <Input
@@ -421,7 +441,7 @@ export function SectorCardSheet({
             </div>
           )}
 
-          {canAdjust && !isSocialReview && (
+          {canAdjust && canReview && !isSocialReview && (
               <div className="space-y-2 rounded-lg border border-amber-500/25 bg-amber-500/10 p-3 dark:border-amber-400/25 dark:bg-amber-400/10">
                 <Label>Solicitar ajuste</Label>
                 <Textarea

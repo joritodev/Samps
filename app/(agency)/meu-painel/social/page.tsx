@@ -1,5 +1,6 @@
 import { requireAuth } from "@/lib/permissions/check";
 import { requirePanelUserType } from "@/lib/agency/panel-access";
+import { canReviewDemand } from "@/lib/agency/labels";
 import { getSocialBoardData } from "@/lib/services/social-board.service";
 import { SectorBoardView } from "@/components/sector/sector-board-view";
 
@@ -20,6 +21,7 @@ export default async function SocialPanelPage() {
         calendarDemands={data.calendarDemands as never}
         currentUserId={user.id}
         canAssign={false}
+        canReview={canReviewDemand(user.userType)}
         sectorUsers={[]}
       />
     </div>

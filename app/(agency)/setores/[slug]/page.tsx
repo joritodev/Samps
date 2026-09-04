@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { requireAuth } from "@/lib/permissions/check";
 import { hasPermission } from "@/lib/permissions/resolve";
+import { canReviewDemand } from "@/lib/agency/labels";
 import {
   getSectorBoardData,
   listSectorUsers,
@@ -52,6 +53,7 @@ export default async function SectorBoardPage({
         calendarDemands={data.calendarDemands as never}
         currentUserId={user.id}
         canAssign={false}
+        canReview={canReviewDemand(user.userType)}
         sectorUsers={[]}
       />
     </div>
@@ -87,6 +89,7 @@ export default async function SectorBoardPage({
         calendarDemands={data.calendarDemands as never}
         currentUserId={user.id}
         canAssign={canAssign}
+        canReview={canReviewDemand(user.userType)}
         canChangeDeadline={canChangeDeadline}
         sectorUsers={sectorUsers}
       />
