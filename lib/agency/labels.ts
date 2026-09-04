@@ -1,8 +1,8 @@
 import {
   DemandStatus,
+  UserType,
   type ProjectStatus,
   type ShootStatus,
-  type UserType,
 } from "@prisma/client";
 
 export const PROJECT_STATUS_LABEL: Record<ProjectStatus, string> = {
