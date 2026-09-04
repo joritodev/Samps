@@ -3,6 +3,10 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { DemandBoard } from "./demand-board";
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: vi.fn(), push: vi.fn(), replace: vi.fn() }),
+}));
+
 vi.mock("@/app/actions/demand", () => ({
   concluirBriefing: vi.fn(),
 }));

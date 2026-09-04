@@ -119,8 +119,7 @@ export function SectorCardSheet({
   const isAvailable =
     !assignment?.executorId &&
     (assignment?.status === "AVAILABLE" || !assignment);
-  const isSocialReview =
-    card.status === "IN_REVIEW" || card.status === "ADJUSTMENTS";
+  const isSocialReview = card.status === "IN_REVIEW";
   const isAwaitingPublication =
     card.status === "APPROVED" || card.status === "SCHEDULED";
   const canProduce = canCompleteProduction(card.status);

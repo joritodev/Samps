@@ -5,6 +5,7 @@ import {
   DemandOrigin,
   DemandStatus,
   DemandType,
+  UserType,
 } from "@prisma/client";
 import { z } from "zod";
 import { requirePermission } from "@/lib/permissions/check";
@@ -31,6 +32,20 @@ const createDemandSchema = z.object({
     }),
 });
 
+function originForActor(userType: UserType): DemandOrigin {
+  switch (userType) {
+    case UserType.SOCIAL_MEDIA:
+      return DemandOrigin.SOCIAL_PANEL;
+    case UserType.DESIGNER:
+      return DemandOrigin.DESIGN_BOARD;
+    case UserType.VIDEOMAKER:
+    case UserType.VIDEO_EDITOR:
+      return DemandOrigin.VIDEO_BOARD;
+    default:
+      return DemandOrigin.MANAGEMENT;
+  }
+}
+
 export async function createDemandAction(input: {
   clientId: string;
   title: string;
@@ -47,7 +62,6 @@ export async function createDemandAction(input: {
     return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
   }
 
-  // Sem create, quem só tem edit não abre demanda avulsa.
   if (!hasPermission(actor.permissions, "demands.create")) {
     return { error: "Sem permissão para criar demanda." };
   }
@@ -61,7 +75,7 @@ export async function createDemandAction(input: {
       sectorId: parsed.data.sectorId || undefined,
       priorityId: parsed.data.priorityId || undefined,
       type: parsed.data.type ?? DemandType.OTHER,
-      origin: DemandOrigin.MANAGEMENT,
+      origin: originForActor(actor.userType),
       status: DemandStatus.PENDING_PLANNING,
       boardColumn: "todo",
       dueDate: parsed.data.dueDate,
@@ -78,6 +92,7 @@ export async function createDemandAction(input: {
         title: row.title,
         clientId: row.clientId,
         status: row.status,
+        demandOrigin: row.origin,
       },
     });
 

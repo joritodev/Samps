@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -83,6 +84,7 @@ export function DemandDetailSheet({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const router = useRouter();
   const [description, setDescription] = useState("");
   const [sector, setSector] = useState("");
   const [priority, setPriority] = useState("");
@@ -117,8 +119,11 @@ export function DemandDetailSheet({
         toast.error(result.error);
         return;
       }
-      toast.success("Briefing concluído. Demanda disponível para o setor.");
+      toast.success(
+        "Briefing concluído. Demanda disponível para o setor — abra Meu painel ou Setores."
+      );
       onOpenChange(false);
+      router.refresh();
     });
   }
 

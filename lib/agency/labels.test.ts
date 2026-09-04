@@ -34,10 +34,10 @@ describe("regras de acao por status", () => {
     expect(canRequestAdjustment("IN_PRODUCTION")).toBe(false);
   });
 
-  it("libera publicacao em aprovado, agendado e revisao", () => {
+  it("libera publicacao em aprovado e agendado", () => {
     expect(canRegisterPublication("APPROVED")).toBe(true);
     expect(canRegisterPublication("SCHEDULED")).toBe(true);
-    expect(canRegisterPublication("IN_REVIEW")).toBe(true);
+    expect(canRegisterPublication("IN_REVIEW")).toBe(false);
     expect(canRegisterPublication("PLANNING")).toBe(false);
   });
 

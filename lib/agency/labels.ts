@@ -86,8 +86,7 @@ export function canRequestAdjustment(status: string) {
 export function canRegisterPublication(status: string) {
   return (
     status === DemandStatus.APPROVED ||
-    status === DemandStatus.SCHEDULED ||
-    status === DemandStatus.IN_REVIEW
+    status === DemandStatus.SCHEDULED
   );
 }
 
@@ -105,7 +104,7 @@ export const DEMAND_ACTION_DENIED = {
     "Só é possível concluir produção em demandas em produção ou ajuste.",
   adjustment: "Só é possível solicitar ajuste em demandas em revisão.",
   publication:
-    "Só é possível registrar publicação em demandas aprovadas, agendadas ou em revisão.",
+    "Só é possível registrar publicação em demandas aprovadas ou agendadas.",
   review: "Sem permissão para revisar esta demanda.",
 } as const;
 

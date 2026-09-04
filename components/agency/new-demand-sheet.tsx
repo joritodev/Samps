@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { DemandType } from "@prisma/client";
 import { toast } from "sonner";
 import { createDemandAction } from "@/app/actions/create-demand";
@@ -48,6 +49,7 @@ export function NewDemandSheet({
   sectors: TaxonomyOption[];
   priorities: TaxonomyOption[];
 }) {
+  const router = useRouter();
   const [clientId, setClientId] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -93,6 +95,7 @@ export function NewDemandSheet({
       }
       toast.success("Demanda criada. Complete o briefing para demandar o setor.");
       onOpenChange(false);
+      router.refresh();
     });
   }
 

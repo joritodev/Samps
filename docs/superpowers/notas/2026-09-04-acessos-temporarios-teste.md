@@ -11,12 +11,12 @@
 ## Contas seed (senha padrão)
 
 Senha de todos: `Samps@2026`  
-No primeiro acesso o middleware pode pedir `/first-access` se `mustResetPassword` estiver ativo — use o fluxo ou peça à gestão resetar.
+Seed marca `mustResetPassword: false` — sem fluxo de primeiro acesso nas contas demo.
 
 | E-mail | Papel | Rotina de teste sugerida |
 |--------|-------|--------------------------|
-| `gestao@samps.digital` | Gestão | Criar demanda em `/demandas`, ver quadro global, aprovar/publicar |
-| `social@samps.digital` | Social Media | Criar demanda, concluir briefing, acompanhar revisão/publicação |
+| `gestao@samps.digital` | Gestão | `/demandas` (criar), atribuição, overview; pode aprovar/publicar |
+| `social@samps.digital` | Social Media | `/demandas` (criar + briefing) → `/meu-painel/social` (aprovar / publicar) |
 | `designer@samps.digital` | Designer | `/meu-painel/design` (não use `/setores/design` — redireciona): Assumir → Iniciar → Entregar revisão |
 | `videomaker@samps.digital` | Videomaker | `/meu-painel/video` — mesmo ciclo |
 | `editor@samps.digital` | Editor | `/meu-painel/video` — fila / ajustes |
@@ -26,15 +26,16 @@ No primeiro acesso o middleware pode pedir `/first-access` se `mustResetPassword
 
 ## Ciclo mínimo a validar
 
-1. Social/Gestão: `/demandas` → **Nova Demanda** → cliente + título → criar (status *A planejar*).
+1. Social/Gestão: `/demandas` → **Nova Demanda** → cliente + título → criar (status *A planejar*; quadro atualiza na hora).
 2. Abrir o card → preencher briefing → **Concluir briefing** (vira *Demandada* no setor).
-3. Designer (ou executor do setor): Assumir → Iniciar produção → concluir com link do material → *Em revisão*.
-4. Revisor: **Solicitar ajuste** (volta *Em ajuste*) **ou** **Aprovar**.
-5. Após aprovado: registrar publicação (link) → *Publicada*.
+3. Social: acompanhar em `/meu-painel/social` (fila **Demandas**; extras = origem gestão).
+4. Designer (ou executor do setor): Assumir → Iniciar produção → concluir com link do material → *Em revisão*.
+5. Revisor (**Social / Gestão / Admin** — não o executor): **Solicitar ajuste** **ou** **Aprovar** (só com status *Em revisão*).
+6. Após *Aprovada*: registrar publicação (link) → *Publicada* (não dá para publicar direto de *Em revisão*).
 
 ## Antes de enviar os acessos
 
-1. [ ] `master` com a fatia de criar demanda mergeada e deploy Vercel **Ready**
+1. [ ] `master` com fatia criar demanda + correções QA mergeadas e deploy Vercel **Ready**
 2. [ ] `npx prisma migrate deploy` no Neon de Production (se ainda houver migration pendente)
 3. [ ] Confirmar login com `social@samps.digital` / `Samps@2026`
 4. [ ] Confirmar que o banco é **seed de demonstração** (sem dado real de cliente)

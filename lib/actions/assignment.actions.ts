@@ -2,7 +2,9 @@
 
 import { AssignmentMethod } from "@prisma/client";
 import { requireAuth } from "@/lib/permissions/check";
+import { hasPermission } from "@/lib/permissions/resolve";
 import { revalidateOperationalViews } from "@/lib/revalidate-operational";
+import { db } from "@/lib/db";
 import {
   assignDemand,
   claimDemand,
@@ -27,6 +29,22 @@ export async function assignDemandAction(
   method: AssignmentMethod = AssignmentMethod.MANAGEMENT
 ) {
   const user = await requireAuth();
+
+  const demand = await db.demand.findUnique({
+    where: { id: demandId },
+    select: { sectorId: true, sector: { select: { leaderId: true } } },
+  });
+  if (!demand?.sectorId) {
+    return { error: "Demanda sem setor." };
+  }
+
+  const isLeader = demand.sector?.leaderId === user.id;
+  const canAssign =
+    hasPermission(user.permissions, "demands.assign") || isLeader;
+  if (!canAssign) {
+    return { error: "Sem permissão para atribuir demanda." };
+  }
+
   try {
     await assignDemand(demandId, executorId, user, method);
     revalidateOperationalViews(clientId);
