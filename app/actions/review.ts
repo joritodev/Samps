@@ -22,6 +22,13 @@ export async function aprovarDemanda(demandId: string) {
       },
     });
 
+    if (previous.status !== DemandStatus.IN_REVIEW) {
+      return {
+        error:
+          "Só é possível aprovar demandas em revisão. Status atual não permite esta ação.",
+      };
+    }
+
     await db.demand.update({
       where: { id: demandId },
       data: {

@@ -204,19 +204,24 @@ export async function createDemand(
     throw new Error("Sem permissão para este cliente");
   }
 
+  if (!hasPermission(user.permissions, "demands.create")) {
+    throw new Error("Sem permissão para criar demanda");
+  }
+
   return db.demand.create({
     data: {
       title: data.title,
       description: data.description,
-      type: data.type,
-      origin: data.origin,
+      type: data.type ?? DemandType.OTHER,
+      origin: data.origin ?? DemandOrigin.MANAGEMENT,
       format: data.format,
-      status: data.status,
-      boardColumn: data.boardColumn,
+      status: data.status ?? DemandStatus.PENDING_PLANNING,
+      boardColumn: data.boardColumn ?? "todo",
       dueDate: data.dueDate,
       deliveryDate: data.deliveryDate,
       publishDate: data.publishDate,
       visibleToClient: data.visibleToClient ?? false,
+      internalStatus: "Pendente de planejamento",
       client: { connect: { id: data.clientId } },
       ...(data.assigneeId
         ? { assignee: { connect: { id: data.assigneeId as string } } }

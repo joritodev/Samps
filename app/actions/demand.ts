@@ -22,6 +22,10 @@ export async function concluirBriefing(
 ) {
   const actor = await requirePermission("demands.edit");
 
+  if (!payload.description?.trim()) {
+    return { error: "Descrição do briefing é obrigatória." };
+  }
+
   const [sector, priority] = await Promise.all([
     db.sector.findFirst({
       where: { OR: [{ id: payload.sector }, { slug: payload.sector }] },

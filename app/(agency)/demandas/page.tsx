@@ -1,19 +1,30 @@
-import { DemandStatus, Prisma } from "@prisma/client";
+import { ClientStatus, DemandStatus, Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { DemandBoard } from "@/components/agency/demand-board";
 import { boardDemandSelect, toBoardDemand } from "@/lib/agency/board-mapper";
 import { clientScopeFilter, requireAuth } from "@/lib/permissions/check";
+import { hasPermission } from "@/lib/permissions/resolve";
 import type { BoardColumn, BoardDemand } from "@/types/board-ui";
 
 /** Colunas do Kanban global — por status operacional, não por entregável. */
 function groupIntoStatusColumns(demands: BoardDemand[]): BoardColumn[] {
   return [
     {
-      id: "todo",
-      title: "Disponíveis / A Fazer",
+      id: "planning",
+      title: "A planejar",
       cards: demands.filter(
         (d) =>
-          d.status === DemandStatus.OPEN ||
+          d.status === DemandStatus.PENDING_PLANNING ||
+          d.status === DemandStatus.PLANNING ||
+          d.status === DemandStatus.BACKLOG ||
+          d.status === DemandStatus.OPEN
+      ),
+    },
+    {
+      id: "todo",
+      title: "Demandadas / A fazer",
+      cards: demands.filter(
+        (d) =>
           d.status === DemandStatus.AVAILABLE ||
           d.status === DemandStatus.DEMANDED
       ),
@@ -52,8 +63,10 @@ function groupIntoStatusColumns(demands: BoardDemand[]): BoardColumn[] {
 export default async function DemandasPage() {
   const user = await requireAuth();
   const seesEveryone = user.permissions.includes("clients.view_all");
+  const canCreate = hasPermission(user.permissions, "demands.create");
+  const scope = clientScopeFilter(user);
 
-  const [sectors, priorities] = await Promise.all([
+  const [sectors, priorities, clients] = await Promise.all([
     db.sector.findMany({
       where: { isActive: true },
       orderBy: { name: "asc" },
@@ -64,12 +77,21 @@ export default async function DemandasPage() {
       orderBy: { sortOrder: "asc" },
       select: { id: true, name: true },
     }),
+    canCreate
+      ? db.client.findMany({
+          where: {
+            status: ClientStatus.ACTIVE,
+            ...(scope ? { id: scope } : {}),
+          },
+          orderBy: { name: "asc" },
+          select: { id: true, name: true },
+        })
+      : Promise.resolve([]),
   ]);
 
   let demands: BoardDemand[] = [];
 
   try {
-    const scope = clientScopeFilter(user);
     const where: Prisma.DemandWhereInput = seesEveryone
       ? {}
       : // Quem não enxerga a operação inteira vê o que executa mais o que
@@ -103,6 +125,8 @@ export default async function DemandasPage() {
       }
       columns={columns}
       taxonomy={{ sectors, priorities }}
+      clients={clients}
+      canCreate={canCreate}
     />
   );
 }

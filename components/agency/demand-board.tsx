@@ -9,10 +9,12 @@ import {
   DemandCard,
   DemandDetailSheet,
 } from "@/components/agency/demand-card";
+import { NewDemandSheet } from "@/components/agency/new-demand-sheet";
 import type {
   BoardColumn,
   BoardDemand,
   BoardTaxonomy,
+  TaxonomyOption,
 } from "@/types/board-ui";
 
 function BoardColumnView({
@@ -50,14 +52,19 @@ export function DemandBoard({
   subtitle,
   columns,
   taxonomy,
+  clients = [],
+  canCreate = false,
 }: {
   title: string;
   subtitle: string;
   columns: BoardColumn[];
   taxonomy: BoardTaxonomy;
+  clients?: TaxonomyOption[];
+  canCreate?: boolean;
 }) {
   const [selected, setSelected] = useState<BoardDemand | null>(null);
   const [open, setOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
 
   function handleOpenCard(demand: BoardDemand) {
     setSelected(demand);
@@ -83,14 +90,17 @@ export function DemandBoard({
             <Filter className="h-3.5 w-3.5" />
             Filtros
           </Button>
-          <Button
-            size="sm"
-            type="button"
-            onClick={() => toast.message("Criação de demanda em breve.")}
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Nova Demanda
-          </Button>
+          {canCreate ? (
+            <Button
+              size="sm"
+              type="button"
+              onClick={() => setCreateOpen(true)}
+              disabled={clients.length === 0}
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Nova Demanda
+            </Button>
+          ) : null}
         </div>
       </header>
 
@@ -113,6 +123,15 @@ export function DemandBoard({
         open={open}
         onOpenChange={setOpen}
       />
+      {canCreate ? (
+        <NewDemandSheet
+          open={createOpen}
+          onOpenChange={setCreateOpen}
+          clients={clients}
+          sectors={taxonomy.sectors}
+          priorities={taxonomy.priorities}
+        />
+      ) : null}
     </div>
   );
 }
