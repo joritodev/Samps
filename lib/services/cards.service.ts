@@ -13,6 +13,7 @@ import {
 import { completeWorkSession } from "@/lib/services/work-session.service";
 import { resolveDelayOnTerminalStatus } from "@/lib/services/deadline.service";
 import type { SessionUser } from "@/types/auth";
+import { videoDemoMissingFields } from "@/lib/agency/video-demo-briefing";
 
 const BRIEFING_REQUIRED = ["title", "description", "format"] as const;
 
@@ -75,9 +76,14 @@ export async function completeBriefingAndDemand(
     complexityLevel?: number;
     slidesCount?: number;
     screensCount?: number;
+    durationSeconds?: number;
+    orientation?: string;
   }
 ) {
-  const card = await db.demand.findUnique({ where: { id: cardId } });
+  const card = await db.demand.findUnique({
+    where: { id: cardId },
+    include: { contentType: { select: { slug: true } } },
+  });
   if (!card) throw new Error("Cartão não encontrado");
   if (card.briefingLockedAt) throw new Error("Briefing já bloqueado");
   if (!BRIEFING_DEMAND_STATUSES.includes(card.status)) {
@@ -91,6 +97,19 @@ export async function completeBriefingAndDemand(
     if (typeof value !== "string" || !value.trim()) {
       throw new Error(`Campo obrigatório: ${field}`);
     }
+  }
+
+  const videoGaps = videoDemoMissingFields({
+    contentTypeSlug: card.contentType?.slug,
+    demandType: card.type,
+    durationSeconds: data.durationSeconds ?? card.durationSeconds,
+    format: data.format ?? card.format,
+    orientation: data.orientation ?? card.orientation,
+  });
+  if (videoGaps.length) {
+    throw new Error(
+      `Briefing de vídeo (demo): preencha ${videoGaps.join(" e ")}.`
+    );
   }
 
   const deadlines = data.publishDate
@@ -122,6 +141,8 @@ export async function completeBriefingAndDemand(
       complexityLevel: data.complexityLevel,
       slidesCount: data.slidesCount,
       screensCount: data.screensCount,
+      durationSeconds: data.durationSeconds,
+      orientation: data.orientation,
       ...deadlines,
       status: DemandStatus.DEMANDED,
       internalStatus: "Demandada",

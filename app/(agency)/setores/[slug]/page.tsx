@@ -9,7 +9,11 @@ import {
 } from "@/lib/services/sector-board.service";
 import { getSocialBoardData } from "@/lib/services/social-board.service";
 import { SectorBoardView } from "@/components/sector/sector-board-view";
-import { getDashboardPath, isSectorCollaborator } from "@/types/auth";
+import {
+  getDashboardPath,
+  getSectorSlugForUserType,
+  isSectorCollaborator,
+} from "@/types/auth";
 
 const OPERATIONAL_SLUGS = new Set<SectorSlug>(["design", "video", "trafego"]);
 
@@ -34,29 +38,37 @@ export default async function SectorBoardPage({
   params: { slug: string };
 }) {
   const user = await requireAuth();
-
-  if (isSectorCollaborator(user.userType)) {
-    redirect(getDashboardPath(user.userType));
-  }
+  const collaborator = isSectorCollaborator(user.userType);
+  const ownSlug = getSectorSlugForUserType(user.userType);
+  /** Demo 3.4: colaborador pode olhar outras filas só em leitura. */
+  const readOnly = collaborator;
 
   if (params.slug === "social") {
     const data = await getSocialBoardData(user, { individual: false });
     return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden p-4 sm:p-6">
-      <SectorBoardView
-        title="Quadro Geral da Social Media"
-        description="Demandas, revisões, publicações e extras dos clientes"
-        columns={data.columns}
-        grouped={data.grouped as never}
-        top5={data.top5 as never}
-        kpis={data.kpis}
-        calendarDemands={data.calendarDemands as never}
-        currentUserId={user.id}
-        canAssign={false}
-        canReview={canReviewDemand(user.userType)}
-        sectorUsers={[]}
-      />
-    </div>
+      <div className="flex h-full min-h-0 flex-col overflow-hidden p-4 sm:p-6">
+        <SectorBoardView
+          title="Quadro Geral da Social Media"
+          description="Demandas, revisões, publicações e extras dos clientes"
+          columns={data.columns}
+          grouped={data.grouped as never}
+          top5={data.top5 as never}
+          kpis={data.kpis}
+          calendarDemands={data.calendarDemands as never}
+          currentUserId={user.id}
+          canAssign={!readOnly}
+          canReview={!readOnly && canReviewDemand(user.userType)}
+          readOnly={readOnly}
+          readOnlyHint={
+            readOnly
+              ? ownSlug === "social"
+                ? "Modo leitura no quadro geral. Use Meu painel para operar."
+                : "Modo leitura (demo): você vê a fila da Social sem alterar."
+              : undefined
+          }
+          sectorUsers={[]}
+        />
+      </div>
     );
   }
 
@@ -66,15 +78,19 @@ export default async function SectorBoardPage({
     notFound();
   }
 
+  // Colaborador sem painel (não deve ocorrer) — redireciona
+  if (collaborator && !ownSlug) {
+    redirect(getDashboardPath(user.userType));
+  }
+
   const data = await getSectorBoardData(slug);
   const sectorUsers = await listSectorUsers(data.sector.id);
   const canAssign =
-    hasPermission(user.permissions, "demands.assign") ||
-    data.sector.leaderId === user.id;
-  const canChangeDeadline = hasPermission(
-    user.permissions,
-    "demands.change_deadline"
-  );
+    !readOnly &&
+    (hasPermission(user.permissions, "demands.assign") ||
+      data.sector.leaderId === user.id);
+  const canChangeDeadline =
+    !readOnly && hasPermission(user.permissions, "demands.change_deadline");
   const copy = TITLES[slug];
 
   return (
@@ -89,8 +105,16 @@ export default async function SectorBoardPage({
         calendarDemands={data.calendarDemands as never}
         currentUserId={user.id}
         canAssign={canAssign}
-        canReview={canReviewDemand(user.userType)}
+        canReview={!readOnly && canReviewDemand(user.userType)}
         canChangeDeadline={canChangeDeadline}
+        readOnly={readOnly}
+        readOnlyHint={
+          readOnly
+            ? ownSlug === slug
+              ? "Modo leitura no quadro geral. Use Meu painel para operar."
+              : `Modo leitura (demo): fila de ${copy.title.replace("Quadro Geral d", "").replace("o ", "").replace("e ", "")} só para acompanhar.`
+            : undefined
+        }
         sectorUsers={sectorUsers}
       />
     </div>

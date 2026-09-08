@@ -1,9 +1,7 @@
 import { DemandStatus } from "@prisma/client";
-import { redirect } from "next/navigation";
 import { SectorsListView } from "@/components/agency/sectors-list-view";
 import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/permissions/check";
-import { getDashboardPath, isSectorCollaborator } from "@/types/auth";
 
 const OPEN_STATUSES: DemandStatus[] = [
   DemandStatus.BACKLOG,
@@ -21,10 +19,7 @@ const OPEN_STATUSES: DemandStatus[] = [
 ];
 
 export default async function SetoresPage() {
-  const user = await requireAuth();
-  if (isSectorCollaborator(user.userType)) {
-    redirect(getDashboardPath(user.userType));
-  }
+  await requireAuth();
 
   const sectors = await db.sector.findMany({
     where: { isActive: true },

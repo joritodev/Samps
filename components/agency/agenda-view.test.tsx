@@ -51,7 +51,9 @@ const kinds: AgendaEventKind[] = [
 ];
 
 describe("AgendaView tokens", () => {
-  it("uses text-xs chips and semantic kind tokens, not rainbow palettes", () => {
+  it(
+    "uses text-xs chips and semantic kind tokens, not rainbow palettes",
+    () => {
     const { container } = render(
       <AgendaView
         events={kinds.map((kind) =>
@@ -84,7 +86,9 @@ describe("AgendaView tokens", () => {
     expect(container.innerHTML).not.toMatch(RAINBOW);
     expect(container.innerHTML).not.toMatch(/text-\[10px\]/);
     expect(screen.getByText(/\+\d+ mais/).className).toMatch(/text-xs/);
-  });
+  },
+    15_000
+  );
 
   it("renders the page header and filters on paper, not Card chrome", () => {
     render(

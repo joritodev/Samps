@@ -102,4 +102,21 @@ export function getPanelPathForSectorSlug(slug: string): string {
   return "/meu-painel/design";
 }
 
+/** Setor operacional do colaborador — null para gestão/admin/cliente. */
+export function getSectorSlugForUserType(userType: UserType): string | null {
+  switch (userType) {
+    case "DESIGNER":
+      return "design";
+    case "VIDEOMAKER":
+    case "VIDEO_EDITOR":
+      return "video";
+    case "SOCIAL_MEDIA":
+      return "social";
+    case "OTHER":
+      return "trafego";
+    default:
+      return null;
+  }
+}
+
 export type AuthRedirectTarget = ReturnType<typeof getDashboardPath>;

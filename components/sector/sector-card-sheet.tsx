@@ -74,6 +74,7 @@ export function SectorCardSheet({
   canAssign,
   canReview = false,
   canChangeDeadline = false,
+  readOnly = false,
   sectorUsers,
 }: {
   card: SectorCardDetail | null;
@@ -84,6 +85,7 @@ export function SectorCardSheet({
   /** Social / gestão / admin — aprovar, ajustar e publicar. */
   canReview?: boolean;
   canChangeDeadline?: boolean;
+  readOnly?: boolean;
   sectorUsers: { id: string; name: string }[];
 }) {
   const [pending, startTransition] = useTransition();
@@ -122,10 +124,11 @@ export function SectorCardSheet({
   const isSocialReview = card.status === "IN_REVIEW";
   const isAwaitingPublication =
     card.status === "APPROVED" || card.status === "SCHEDULED";
-  const canProduce = canCompleteProduction(card.status);
-  const canAdjust = canRequestAdjustment(card.status);
-  const canPublish = canRegisterPublication(card.status);
+  const canProduce = !readOnly && canCompleteProduction(card.status);
+  const canAdjust = !readOnly && canRequestAdjustment(card.status);
+  const canPublish = !readOnly && canRegisterPublication(card.status);
   const showProductionActions =
+    !readOnly &&
     (!isSocialReview || canProduce) &&
     !isAwaitingPublication &&
     (isAvailable || isExecutor || canAssign);
@@ -163,6 +166,13 @@ export function SectorCardSheet({
             <strong>Executor:</strong>{" "}
             {assignment?.executor?.name ?? card.assignee?.name ?? "—"}
           </p>
+
+          {readOnly ? (
+            <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+              Somente leitura — ações de produção ficam no Meu painel do seu
+              setor.
+            </p>
+          ) : null}
           {card.description && (
             <p className="whitespace-pre-wrap text-muted-foreground">
               {card.description}

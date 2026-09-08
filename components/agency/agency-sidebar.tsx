@@ -23,7 +23,6 @@ import {
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import type { AgencyUserProfile } from "@/lib/agency/current-user";
-import { isSectorCollaborator } from "@/types/auth";
 import { SampsLogo } from "@/components/brand/samps-logo";
 import { GlobalSearch } from "@/components/layout/global-search";
 import { NotificationBell } from "@/components/layout/notification-bell";
@@ -164,10 +163,6 @@ function SidebarBody({
   const canSee = visibleTo(user.permissions);
   const navItems = [
     ...NAV_ITEMS.filter(canSee)
-      .filter(
-        (item) =>
-          item.href !== "/setores" || !isSectorCollaborator(user.userType)
-      )
       .flatMap((item) =>
         item.href === "/demandas"
           ? [item, ...panelNavForUser(user.userType)]

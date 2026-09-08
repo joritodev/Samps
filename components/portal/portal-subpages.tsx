@@ -217,6 +217,7 @@ export function PortalArquivos({
     id: string;
     name: string;
     fileType: string | null;
+    url?: string | null;
     createdAt: Date | string;
   }>;
 }) {
@@ -234,7 +235,18 @@ export function PortalArquivos({
           className={`flex items-center justify-between gap-3 ${itemClass}`}
         >
           <div className="min-w-0">
-            <p className="font-medium text-foreground">{file.name}</p>
+            {file.url ? (
+              <a
+                href={file.url}
+                target="_blank"
+                rel="noreferrer"
+                className="font-medium text-primary underline-offset-2 hover:underline"
+              >
+                {file.name}
+              </a>
+            ) : (
+              <p className="font-medium text-foreground">{file.name}</p>
+            )}
             <p className="text-xs text-muted-foreground">
               {file.fileType ?? "Arquivo"}
             </p>

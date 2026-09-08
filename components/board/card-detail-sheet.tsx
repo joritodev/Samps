@@ -23,6 +23,7 @@ import {
   updateVisibilityAction,
   addCommentAction,
 } from "@/lib/actions/cards.actions";
+import { addDriveAttachmentAction } from "@/app/actions/attachments";
 import { requestAdjustmentAction } from "@/lib/actions/adjustment.actions";
 import { DeadlineChangeForm } from "@/components/shared/deadline-change-form";
 import {
@@ -60,11 +61,18 @@ type CardDetail = {
   slidesCount?: number | null;
   screensCount?: number | null;
   durationSeconds?: number | null;
+  orientation?: string | null;
   complexityLevel?: number | null;
   client?: { name: string };
   list?: { name: string } | null;
   competence?: { month: number; year: number } | null;
   assignee?: { name: string } | null;
+  attachments?: {
+    id: string;
+    name: string;
+    url: string;
+    visibleToClient: boolean;
+  }[];
   comments?: {
     id: string;
     text: string;
@@ -96,6 +104,11 @@ export function CardDetailSheet({
   const [publishedUrl, setPublishedUrl] = useState("");
   const [comment, setComment] = useState("");
   const [visible, setVisible] = useState(false);
+  const [durationSeconds, setDurationSeconds] = useState("");
+  const [orientation, setOrientation] = useState("");
+  const [attachName, setAttachName] = useState("");
+  const [attachUrl, setAttachUrl] = useState("");
+  const [attachVisible, setAttachVisible] = useState(false);
 
   if (card && title !== card.title && !open) {
     // reset handled on open
@@ -117,6 +130,13 @@ export function CardDetailSheet({
       setMaterialUrl(card.materialUrl ?? "");
       setPublishedUrl(card.publishedUrl ?? "");
       setVisible(card.visibleToClient);
+      setDurationSeconds(
+        card.durationSeconds != null ? String(card.durationSeconds) : ""
+      );
+      setOrientation(card.orientation ?? "");
+      setAttachName("");
+      setAttachUrl("");
+      setAttachVisible(false);
     }
   }, [card, open]);
 
@@ -220,15 +240,28 @@ export function CardDetailSheet({
                   </div>
                 )}
                 {(fmt.includes("reel") || fmt.includes("video")) && (
-                  <div className="space-y-1">
-                    <Label>Duração (seg)</Label>
-                    <Input
-                      type="number"
-                      defaultValue={card.durationSeconds ?? ""}
-                      disabled={!canBriefing}
-                      className="tabular-nums"
-                    />
-                  </div>
+                  <>
+                    <div className="space-y-1">
+                      <Label>Duração (seg) *</Label>
+                      <Input
+                        type="number"
+                        value={durationSeconds}
+                        onChange={(e) => setDurationSeconds(e.target.value)}
+                        disabled={!canBriefing}
+                        className="tabular-nums"
+                        placeholder="Ex.: 30"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Orientação / formato *</Label>
+                      <Input
+                        value={orientation}
+                        onChange={(e) => setOrientation(e.target.value)}
+                        disabled={!canBriefing}
+                        placeholder="Ex.: 9:16 vertical"
+                      />
+                    </div>
+                  </>
                 )}
                 {canBriefing && (
                   <Button
@@ -243,10 +276,17 @@ export function CardDetailSheet({
                           toast.error("Informe a descrição do briefing");
                           return;
                         }
+                        const duration = durationSeconds.trim()
+                          ? Number(durationSeconds)
+                          : undefined;
                         const r = await demandBriefingAction(card.id, clientId, {
                           title: title.trim(),
                           description: description.trim(),
                           format: card.format ?? "Feed",
+                          durationSeconds: Number.isFinite(duration)
+                            ? duration
+                            : undefined,
+                          orientation: orientation.trim() || undefined,
                         });
                         if ("success" in r && r.success) {
                           toast.success("Briefing demandado");
@@ -272,6 +312,79 @@ export function CardDetailSheet({
 
               <TabsContent value="production" className="space-y-3">
                 <p className="text-sm">Executor: {card.assignee?.name ?? "Não atribuído"}</p>
+                {(card.attachments?.length ?? 0) > 0 ? (
+                  <div className="space-y-2 rounded-lg border border-border p-3">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Anexos (links Drive — demo)
+                    </p>
+                    <ul className="space-y-1">
+                      {card.attachments!.map((a) => (
+                        <li key={a.id} className="truncate text-sm">
+                          <a
+                            href={a.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-primary underline"
+                          >
+                            {a.name}
+                          </a>
+                          {a.visibleToClient ? (
+                            <span className="ml-2 text-xs text-muted-foreground">
+                              visível ao cliente
+                            </span>
+                          ) : null}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+                <div className="space-y-2 rounded-lg border border-dashed border-border p-3">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Adicionar link (demo 3.2 — sem upload de arquivo)
+                  </p>
+                  <Input
+                    value={attachName}
+                    onChange={(e) => setAttachName(e.target.value)}
+                    placeholder="Nome do arquivo"
+                  />
+                  <Input
+                    value={attachUrl}
+                    onChange={(e) => setAttachUrl(e.target.value)}
+                    placeholder="https://drive.google.com/..."
+                  />
+                  <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Switch
+                      checked={attachVisible}
+                      onCheckedChange={setAttachVisible}
+                    />
+                    Visível no portal do cliente
+                  </label>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={pending || !attachName.trim() || !attachUrl.trim()}
+                    onClick={() =>
+                      startTransition(async () => {
+                        const r = await addDriveAttachmentAction({
+                          demandId: card.id,
+                          clientId,
+                          name: attachName,
+                          url: attachUrl,
+                          visibleToClient: attachVisible,
+                        });
+                        if (r.error) toast.error(r.error);
+                        else {
+                          toast.success("Anexo (link) adicionado");
+                          setAttachName("");
+                          setAttachUrl("");
+                          setAttachVisible(false);
+                        }
+                      })
+                    }
+                  >
+                    Anexar link
+                  </Button>
+                </div>
                 {canProduce ? (
                   <>
                     <div className="space-y-1">

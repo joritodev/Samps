@@ -43,6 +43,8 @@ export function SectorBoardView({
   canAssign,
   canReview = false,
   canChangeDeadline = false,
+  readOnly = false,
+  readOnlyHint,
   sectorUsers,
   shoots,
 }: {
@@ -68,6 +70,8 @@ export function SectorBoardView({
   canAssign: boolean;
   canReview?: boolean;
   canChangeDeadline?: boolean;
+  readOnly?: boolean;
+  readOnlyHint?: string;
   sectorUsers: { id: string; name: string }[];
   shoots?: {
     id: string;
@@ -139,6 +143,15 @@ export function SectorBoardView({
           )}
         </div>
       </header>
+
+      {readOnly && readOnlyHint ? (
+        <div
+          role="status"
+          className="mt-3 shrink-0 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground"
+        >
+          {readOnlyHint}
+        </div>
+      ) : null}
 
       {insightsOpen ? (
         <div className="mt-3 grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-5">
@@ -312,6 +325,7 @@ export function SectorBoardView({
         canAssign={canAssign}
         canReview={canReview}
         canChangeDeadline={canChangeDeadline}
+        readOnly={readOnly}
         sectorUsers={sectorUsers}
       />
     </div>

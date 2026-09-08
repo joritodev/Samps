@@ -136,6 +136,19 @@ const CONTENT_TYPES = [
   { name: "Reels", slug: "reels", sortOrder: 4 },
   { name: "Vídeo", slug: "video", sortOrder: 5 },
   { name: "Motion", slug: "motion", sortOrder: 6 },
+  // Demo 3.3 — lista oficial da Samps ainda pendente
+  { name: "Reels (demo)", slug: "reels-demo", sortOrder: 20 },
+  { name: "Stories em vídeo (demo)", slug: "stories-video-demo", sortOrder: 21 },
+  {
+    name: "Vídeo institucional (demo)",
+    slug: "video-institucional-demo",
+    sortOrder: 22,
+  },
+  { name: "Bastidores / making of (demo)", slug: "bastidores-demo", sortOrder: 23 },
+  { name: "Captação bruta (demo)", slug: "captacao-bruta-demo", sortOrder: 24 },
+  { name: "YouTube curto (demo)", slug: "youtube-curto-demo", sortOrder: 25 },
+  { name: "Podcast — clip (demo)", slug: "podcast-clip-demo", sortOrder: 26 },
+  { name: "Motion (demo)", slug: "motion-demo", sortOrder: 27 },
 ];
 
 /** `weight` alimenta o cálculo do Top 5 em lib/services/priority.service.ts. */
@@ -1128,6 +1141,34 @@ async function main() {
 
   const { syncDemandDelays } = await import("../lib/services/delay.service");
   await syncDemandDelays();
+
+  // Anexos Drive demo (visíveis no portal) — fatia 3.2 provisória
+  const publishedWithMaterial = await prisma.demand.findMany({
+    where: { materialUrl: { not: null }, visibleToClient: true },
+    select: { id: true, clientId: true, title: true, materialUrl: true },
+    take: 6,
+  });
+  if (publishedWithMaterial.length) {
+    await prisma.attachment.createMany({
+      data: publishedWithMaterial.map((d) => ({
+        demandId: d.id,
+        clientId: d.clientId,
+        name: `Material — ${d.title.slice(0, 48)} (demo)`,
+        url: d.materialUrl!,
+        fileType: "link",
+        visibleToClient: true,
+        entityType: "Demand",
+        entityId: d.id,
+      })),
+    });
+  }
+
+  const { recalculateSectorPriorities } = await import(
+    "../lib/services/priority.service"
+  );
+  for (const sector of await prisma.sector.findMany({ select: { id: true } })) {
+    await recalculateSectorPriorities(sector.id);
+  }
 
   console.log("\nSeed concluído.");
   console.log(`  Permissões: ${PERMISSION_CODES.length}`);

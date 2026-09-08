@@ -35,11 +35,13 @@ Seed marca `mustResetPassword: false` — sem fluxo de primeiro acesso nas conta
 
 ## Antes de enviar os acessos
 
-1. [ ] `master` com fatia criar demanda + correções QA mergeadas e deploy Vercel **Ready**
+1. [x] `master` com fatia criar demanda + correções QA mergeadas (local 2026-09-08 preparado; **deploy Vercel** ainda confirmar Ready)
 2. [ ] `npx prisma migrate deploy` no Neon de Production (se ainda houver migration pendente)
-3. [ ] Confirmar login com `social@samps.digital` / `Samps@2026`
-4. [ ] Confirmar que o banco é **seed de demonstração** (sem dado real de cliente)
+3. [ ] Confirmar login com `social@samps.digital` / `Samps@2026` em produção
+4. [x] Banco com seed/demo enriquecido (`prepare-test-demo-data` — anexos + tipos vídeo demo + Top 5)
 5. [ ] Combinar canal de bug (WhatsApp/e-mail da gestão) e avisar: *teste de refinamento, não operação oficial*
+
+Ver também: `2026-09-08-relatorio-preparacao-teste.md`.
 
 ## Mensagem pronta para colar
 
