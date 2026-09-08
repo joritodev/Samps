@@ -31,7 +31,11 @@ function tokenToSessionUser(token: JWT): SessionUser {
 }
 
 export const authConfig = {
-  session: { strategy: "jwt" },
+  session: {
+    strategy: "jwt",
+    /** Sessão / JWT: 7 dias. */
+    maxAge: 7 * 24 * 60 * 60,
+  },
   pages: {
     signIn: "/login",
   },

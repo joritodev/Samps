@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { resolveLoginRedirect } from "@/app/(auth)/login/actions";
@@ -11,6 +11,27 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
+/** Só e-mail — nunca senha. localStorage do dispositivo. */
+const REMEMBERED_EMAIL_KEY = "samps.login.rememberedEmail";
+
+function readRememberedEmail(): string | null {
+  try {
+    const value = localStorage.getItem(REMEMBERED_EMAIL_KEY)?.trim();
+    return value || null;
+  } catch {
+    return null;
+  }
+}
+
+function writeRememberedEmail(email: string | null) {
+  try {
+    if (email) localStorage.setItem(REMEMBERED_EMAIL_KEY, email);
+    else localStorage.removeItem(REMEMBERED_EMAIL_KEY);
+  } catch {
+    // private mode / blocked storage — ignore
+  }
+}
 
 export function LoginView({
   callbackUrl,
@@ -22,9 +43,18 @@ export function LoginView({
   const router = useRouter();
   const [email, setEmail] = useState(defaultEmail ?? "");
   const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(true);
+  const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (defaultEmail) return;
+    const saved = readRememberedEmail();
+    if (saved) {
+      setEmail(saved);
+      setRemember(true);
+    }
+  }, [defaultEmail]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -37,8 +67,10 @@ export function LoginView({
 
     setLoading(true);
 
+    const normalizedEmail = email.trim().toLowerCase();
+
     const result = await signIn("credentials", {
-      email: email.trim().toLowerCase(),
+      email: normalizedEmail,
       password,
       redirect: false,
     });
@@ -50,6 +82,8 @@ export function LoginView({
       setLoading(false);
       return;
     }
+
+    writeRememberedEmail(remember ? normalizedEmail : null);
 
     // O destino depende da função e de haver senha pendente de troca, que só
     // são conhecidos no servidor depois que a sessão existe.
@@ -132,10 +166,14 @@ export function LoginView({
                 <Checkbox
                   id="remember"
                   checked={remember}
-                  onCheckedChange={(value) => setRemember(value === true)}
+                  onCheckedChange={(value) => {
+                    const on = value === true;
+                    setRemember(on);
+                    if (!on) writeRememberedEmail(null);
+                  }}
                 />
                 <Label htmlFor="remember" className="cursor-pointer font-normal">
-                  Lembrar de mim
+                  Lembrar e-mail
                 </Label>
               </div>
               <Link
