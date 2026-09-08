@@ -1,9 +1,9 @@
 # Samps OS — Roadmap Master (ago → set 2026)
 
-**Data:** 2026-08-04 (estado de execução atualizado em 2026-08-16)
+**Data:** 2026-08-04 (estado de execução atualizado em 2026-09-08)
 **Origem:** reunião Samps Digital 28/07/2026 + backlog técnico pendente
 **Meta do cliente:** time testando em agosto, sistema operacional em setembro
-**Próxima reunião:** 18/08/2026
+**Próxima reunião:** a combinar (demo 18/08 feita; roteiro em `docs/superpowers/notas/2026-08-27-roteiro-reuniao.md`)
 
 Este documento é o índice do **o quê** e da **ordem**.  
 **Como executar** (skills, SDD vs execução direta, modelos, gates, prompts) está em:
@@ -15,7 +15,7 @@ Nenhuma fase de código começa antes de a anterior ter PRs mergeados e gates ap
 
 ---
 
-## 1. Estado real (2026-08-16)
+## 1. Estado real (2026-09-08)
 
 | Fato | Detalhe |
 |------|---------|
@@ -23,17 +23,23 @@ Nenhuma fase de código começa antes de a anterior ter PRs mergeados e gates ap
 | Fase 1 | Feita no código (rate limit, CI, Vitest, RLS, gate) — ops humanos: Deployment Protection / checks obrigatórios |
 | Fase 2 | Feita (dados cliente, avisos, ausências, mobile) |
 | Fase 3.0 | Mergeada (#28) — higiene do ciclo |
-| Fase 4.1 | PR aberta [#29](https://github.com/joritodev/Samps/pull/29) — colunas livres no quadro do cliente (opção A); **não bloqueia 3.1** |
+| Fase 3.1 | Mergeada (#31) — relatórios `/performance` |
+| Fase 3.6 | Mergeada (#41) — menções `@` com notificação |
+| Fase 4.1 | Mergeada (#29) — colunas livres no quadro do cliente |
+| Visual Samps | Mergeada (#36–#40) — fundação, shell, boards, gestão, portal |
+| Sunset `(app)` | Mergeada (#35) — rotas legacy removidas |
+| Criar demanda | Mergeada (#42–#43) — ciclo pronto para teste da empresa |
 | Fase 5 | Docs de decisão (IA / mobile / SaaS) |
 | Playbook | `2026-08-07-playbook-metodologia.md` |
 | Produção | https://samps-os.vercel.app |
+| Acessos teste | `docs/superpowers/notas/2026-09-04-acessos-temporarios-teste.md` |
 | Spec Fase 3 | `docs/superpowers/specs/2026-08-16-fase3-gestao-agencia-design.md` |
 
-**Próxima fatia a executar:** Fase **3.1** — relatórios em `/performance`  
-Plano detalhado: `docs/superpowers/plans/2026-08-16-fase3-1-relatorios-performance.md`  
-Motor: SDD · branch `feat/relatorios-performance`
+**Próxima fatia a executar:** Fase **3.2** — anexos nas demandas (Drive-first)  
+Plano de fase: `docs/superpowers/plans/2026-08-04-fase3-operacional-setembro.md` (fatia 3.2)  
+Antes de codar: brainstorming curto da opção de storage → `writing-plans` → SDD
 
-**Fila depois da 3.1:** 3.6 menções → 3.2 anexos (Drive-first) → 3.7 CSP → 3.3/3.4/3.5 (bloqueadas até input Samps) → restante Fase 4 (capacidade, agenda). Mergear #29 quando CI ok.
+**Fila depois da 3.2:** 3.7 CSP → 3.3/3.4/3.5 (bloqueadas até input Samps) → restante Fase 4 (capacidade, agenda).
 
 ---
 

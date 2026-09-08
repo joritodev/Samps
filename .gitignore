@@ -41,6 +41,11 @@ next-env.d.ts
 # git worktrees
 .worktrees/
 
+# agent skills (local Cursor / skills CLI)
+.agents/
+skills-lock.json
+
 # superpowers / scratch
 .superpowers/
+.pull-backup/
 _e.txt
