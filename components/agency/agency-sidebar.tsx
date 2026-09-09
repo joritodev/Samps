@@ -53,6 +53,8 @@ type NavItem = {
   icon: LucideIcon;
   /** Visível quando o usuário tem ao menos uma destas. Ausente = sempre. */
   anyOf?: PermissionCode[];
+  /** Restringe a tipos de usuário (além das permissões). */
+  userTypes?: AgencyUserProfile["userType"][];
 };
 
 const NAV_ITEMS: NavItem[] = [
@@ -60,7 +62,7 @@ const NAV_ITEMS: NavItem[] = [
     href: "/painel-gestao",
     label: "Dashboard",
     icon: LayoutDashboard,
-    anyOf: ["indicators.view"],
+    userTypes: ["ADMIN", "MANAGEMENT"],
   },
   {
     href: "/clientes",
@@ -117,9 +119,14 @@ const FOOTER_NAV: NavItem[] = [
   },
 ];
 
-function visibleTo(permissions: string[]) {
-  return (item: NavItem) =>
-    !item.anyOf || item.anyOf.some((code) => permissions.includes(code));
+function visibleTo(
+  permissions: string[],
+  userType: AgencyUserProfile["userType"]
+) {
+  return (item: NavItem) => {
+    if (item.userTypes && !item.userTypes.includes(userType)) return false;
+    return !item.anyOf || item.anyOf.some((code) => permissions.includes(code));
+  };
 }
 
 function isActive(pathname: string, href: string) {
@@ -160,7 +167,7 @@ function SidebarBody({
   const initials = userInitials(user.name);
   const theme = resolvedTheme === "dark" ? "dark" : "light";
 
-  const canSee = visibleTo(user.permissions);
+  const canSee = visibleTo(user.permissions, user.userType);
   const navItems = [
     ...NAV_ITEMS.filter(canSee)
       .flatMap((item) =>

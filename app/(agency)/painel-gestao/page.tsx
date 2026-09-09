@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import {
   AlertTriangle,
   Camera,
@@ -7,6 +8,8 @@ import {
   Users,
 } from "lucide-react";
 import { requireAuth } from "@/lib/permissions/check";
+import { canSeeManagementDashboard } from "@/lib/permissions/resolve";
+import { getDashboardPath } from "@/types/auth";
 import { getManagementOverview } from "@/lib/services/management.service";
 import { DemandCard } from "@/components/shared/demand-card";
 import { MetricCard } from "@/components/agency/metric-card";
@@ -31,6 +34,9 @@ function sectorHref(slug: string) {
 
 export default async function PainelGestaoPage() {
   const user = await requireAuth();
+  if (!canSeeManagementDashboard(user.userType)) {
+    redirect(getDashboardPath(user.userType));
+  }
   const overview = await getManagementOverview(user);
   const { kpis, sectorStats, priorityDemands } = overview;
 

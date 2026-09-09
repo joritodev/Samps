@@ -46,7 +46,7 @@ export const SETTINGS_SECTION_ACCESS: SettingsSectionAccess[] = [
   },
   {
     href: "/configuracoes/portal",
-    anyOf: ["settings.access", "portal.view"],
+    anyOf: ["settings.access"],
   },
   {
     href: "/configuracoes/avisos",

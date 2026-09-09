@@ -46,6 +46,22 @@ export function hasPermission(
   return permissions.includes(code);
 }
 
+export function hasAnyPermission(
+  permissions: string[],
+  codes: readonly (PermissionCode | string)[]
+): boolean {
+  return codes.some((code) => hasPermission(permissions, code));
+}
+
+/** Painel da gestão — só Admin e Gestão, não quem herdou `indicators.view`. */
+export function canSeeManagementDashboard(userType: string): boolean {
+  return userType === "ADMIN" || userType === "MANAGEMENT";
+}
+
+export function canSeeTeamDirectory(permissions: string[]): boolean {
+  return hasAnyPermission(permissions, ["users.edit", "users.create"]);
+}
+
 export function canAccessClient(
   permissions: string[],
   clientIds: string[],

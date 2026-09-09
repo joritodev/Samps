@@ -5,7 +5,7 @@ import {
   formatAbsenceRange,
   isAbsentOn,
 } from "@/lib/agency/absences";
-import { requireAuth } from "@/lib/permissions/check";
+import { requireAnyPermission } from "@/lib/permissions/check";
 import { hasPermission } from "@/lib/permissions/resolve";
 import {
   listAbsences,
@@ -20,7 +20,7 @@ const INVITABLE_TYPES = Object.values(UserType).filter(
 );
 
 export default async function EquipePage() {
-  const user = await requireAuth();
+  const user = await requireAnyPermission("users.edit", "users.create");
   const canInvite = hasPermission(user.permissions, "users.create");
   const canManageAbsences = hasPermission(user.permissions, "users.edit");
   const now = new Date();
