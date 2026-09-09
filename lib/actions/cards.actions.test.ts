@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const requireAuth = vi.fn();
 const addCardComment = vi.fn();
 const findUnique = vi.fn();
+const findBoardList = vi.fn();
+const updateDemandListAndOrder = vi.fn();
 const notifyCommentMentions = vi.fn();
 const revalidatePath = vi.fn();
 
@@ -30,13 +32,17 @@ vi.mock("@/lib/services/cards.service", () => ({
   getCardById: vi.fn(),
   registerPublicationAndComplete: vi.fn(),
   updateCardVisibility: vi.fn(),
-  updateDemandListAndOrder: vi.fn(),
+  updateDemandListAndOrder: (...args: unknown[]) =>
+    updateDemandListAndOrder(...args),
 }));
 
 vi.mock("@/lib/db", () => ({
   db: {
     demand: {
       findUnique: (...args: unknown[]) => findUnique(...args),
+    },
+    boardList: {
+      findFirst: (...args: unknown[]) => findBoardList(...args),
     },
   },
 }));
@@ -74,5 +80,36 @@ describe("addCommentAction", () => {
       demandId: "demand-1",
     });
     expect(revalidatePath).toHaveBeenCalledWith("/clientes/cli-fallback/quadro");
+  });
+});
+
+describe("moveCardAction", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    requireAuth.mockResolvedValue({ id: "u1" });
+    updateDemandListAndOrder.mockResolvedValue({});
+  });
+
+  it("recusa coluna que nao pertence ao cliente", async () => {
+    findBoardList.mockResolvedValue(null);
+    const { moveCardAction } = await import("./cards.actions");
+
+    const result = await moveCardAction("d1", "cli-1", "list-other", 0);
+
+    expect(result).toEqual({
+      error: "Coluna não encontrada para este cliente",
+    });
+    expect(updateDemandListAndOrder).not.toHaveBeenCalled();
+  });
+
+  it("persiste a coluna quando a lista e do cliente", async () => {
+    findBoardList.mockResolvedValue({ id: "list-1" });
+    const { moveCardAction } = await import("./cards.actions");
+
+    const result = await moveCardAction("d1", "cli-1", "list-1", 0);
+
+    expect(result).toEqual({ success: true });
+    expect(updateDemandListAndOrder).toHaveBeenCalledWith("d1", "list-1", 0);
+    expect(revalidatePath).toHaveBeenCalledWith("/clientes/cli-1/quadro");
   });
 });

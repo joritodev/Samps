@@ -104,9 +104,26 @@ export async function moveCardAction(
   sortOrder: number
 ) {
   await requireAuth();
-  await updateDemandListAndOrder(demandId, listId, sortOrder);
-  revalidatePath(`/clientes/${clientId}/quadro`);
-  return { success: true };
+  const list = await db.boardList.findFirst({
+    where: { id: listId, board: { clientId } },
+    select: { id: true },
+  });
+  if (!list) {
+    return { error: "Coluna não encontrada para este cliente" as const };
+  }
+
+  try {
+    await updateDemandListAndOrder(demandId, listId, sortOrder);
+    revalidatePath(`/clientes/${clientId}/quadro`);
+    return { success: true as const };
+  } catch (error) {
+    return {
+      error:
+        error instanceof Error
+          ? error.message
+          : "Não foi possível mover o cartão",
+    };
+  }
 }
 
 export async function updateVisibilityAction(

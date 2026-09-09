@@ -18,7 +18,9 @@ describe("DemandCard", () => {
   it("renders as a button when onClick is provided", () => {
     const onClick = vi.fn();
     render(<DemandCard demand={base} onClick={onClick} />);
-    expect(screen.getByRole("button", { name: /Campanha X/i })).toBeTruthy();
+    const button = screen.getByRole("button", { name: /Campanha X/i });
+    expect(button).toBeTruthy();
+    expect(button.getAttribute("draggable")).toBe("false");
   });
 
   it("does not render a button when onClick is omitted", () => {
