@@ -14,11 +14,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function FirstAccessForm({
-  userId,
   defaultName,
   email,
 }: {
-  userId: string;
   defaultName?: string;
   email?: string;
 }) {
@@ -41,7 +39,7 @@ export function FirstAccessForm({
     setLoading(true);
     setError("");
 
-    const result = await submitFirstAccess(userId, {
+    const result = await submitFirstAccess({
       name,
       password,
       phone: phone || undefined,

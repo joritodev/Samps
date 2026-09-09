@@ -16,6 +16,7 @@ vi.mock("@/lib/permissions/check", () => ({
 
 vi.mock("@/lib/permissions/resolve", () => ({
   hasPermission: vi.fn(),
+  canAccessClient: vi.fn(() => true),
 }));
 
 vi.mock("@/lib/revalidate-operational", () => ({

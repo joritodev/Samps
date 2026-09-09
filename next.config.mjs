@@ -49,6 +49,10 @@ const nextConfig = {
       { source: "/painel/video", destination: "/meu-painel/video", permanent: true },
       { source: "/painel/social-media", destination: "/meu-painel/social", permanent: true },
       { source: "/painel/trafego", destination: "/meu-painel/trafego", permanent: true },
+      // Rotas legacy do shell `(app)` — sunset #35
+      { source: "/usuarios", destination: "/equipe", permanent: true },
+      { source: "/relatorios", destination: "/performance", permanent: true },
+      { source: "/calendario", destination: "/agenda", permanent: true },
     ];
   },
 };

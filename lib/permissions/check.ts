@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import {
   canAccessClient,
+  hasAnyPermission,
   hasPermission,
   resolveUserClientIds,
   resolveUserPermissions,
@@ -34,6 +35,14 @@ export async function requireAuth() {
 export async function requirePermission(code: PermissionCode) {
   const user = await requireAuth();
   if (!hasPermission(user.permissions, code)) {
+    redirect(getDashboardPath(user.userType));
+  }
+  return user;
+}
+
+export async function requireAnyPermission(...codes: PermissionCode[]) {
+  const user = await requireAuth();
+  if (!hasAnyPermission(user.permissions, codes)) {
     redirect(getDashboardPath(user.userType));
   }
   return user;

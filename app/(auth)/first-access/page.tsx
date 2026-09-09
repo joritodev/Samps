@@ -13,7 +13,6 @@ export default async function FirstAccessPage() {
   return (
     <div className="mx-auto flex min-h-dvh items-center justify-center p-6">
       <FirstAccessForm
-        userId={user.id}
         defaultName={user.name}
         email={user.email}
       />
