@@ -117,11 +117,23 @@ Regras unitárias (`labels.test.ts`) verdes: briefing só planejamento; produzir
 
 ## Residual / não bloqueante
 
-- Demo 3.4: colaborador lê `/setores/*` de outros setores (incluindo KPIs da fila).
-- Upload binário ainda não existe (só link).
-- Filtros de `/demandas` “em breve”.
-- `npm audit` highs residuais no ecossistema Next 14 (aceito até major).
-- Confirmar no **deploy deste PR**: designer em `/equipe` e `/painel-gestao` cai no próprio painel; HTML sem e-mails da equipe.
+- Demo 3.4: colaborador lê `/setores/*` de outros setores. `getSectorBoardData` **não** recorta `clientIds` — tráfego (só Bella) viu Clínica Sorriso no quadro de design. Correção de escopo fica para fatia própria (muda o contrato da demo 3.4).
+- Líder de setor no Meu Painel (`leaderFullView`) ignora `view_assigned` e vê a fila inteira do setor (videomaker/Bella viu card da Sorriso).
+- Publicar / mover cartão / visibilidade ao cliente: várias actions ainda só `requireAuth` + regra de status (não `canReviewDemand`).
+- JWT `session.update` aceita `impersonatingClientId` do cliente; gestão com `clientIds[0]=Teste` entra em `/portal` sem clicar “Visualizar como cliente”.
+- `shoots.create` / `projects.create` / `demands.extra_create` no seed sem UI de criar.
+- CSP Report-Only; Attachment `clientId` null no RLS; timing bcrypt se e-mail não existe.
+- Upload binário ainda não existe (só link). Filtros de `/demandas` “em breve”.
+- **Efeito colateral na prod:** o QA de videomaker concluiu produção da demanda “Edição — depoimento paciente” (Sorriso) sem ser executor. O PR passa a exigir executor + `canAccessClient`.
+- Confirmar no **deploy deste PR**: designer em `/equipe` e `/painel-gestao` cai no próprio painel; portal do cliente lista entregas/calendário; first-access não aceita `userId` alheio.
+
+## Follow-up após os subagents (mesmo PR)
+
+- `portal.view` passa a contar em `canAccessClient` (subpáginas do portal do cliente não ficam vazias).
+- `submitFirstAccess` usa só a sessão (`requireAuth` + `mustResetPassword`).
+- `getCardDetailAction` recusa cartão fora do escopo de cliente.
+- `completeWorkSession` exige executor + acesso ao cliente.
+- `callbackUrl` rejeita `//` e `\`.
 
 ## Reprodução rápida (após deploy)
 

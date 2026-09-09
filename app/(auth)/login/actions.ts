@@ -25,6 +25,8 @@ export async function resolveLoginRedirect(
   if (
     typeof callbackUrl === "string" &&
     callbackUrl.startsWith("/") &&
+    !callbackUrl.startsWith("//") &&
+    !callbackUrl.includes("\\") &&
     !isAuthRoute(callbackUrl)
   ) {
     return callbackUrl;

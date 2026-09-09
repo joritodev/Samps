@@ -69,4 +69,9 @@ describe("canAccessClient", () => {
     );
     expect(canAccessClient([], ["c1"], "c1")).toBe(false);
   });
+
+  it("permite o cliente externo ver so a propria conta via portal.view", () => {
+    expect(canAccessClient(["portal.view"], ["c1"], "c1")).toBe(true);
+    expect(canAccessClient(["portal.view"], ["c1"], "c2")).toBe(false);
+  });
 });

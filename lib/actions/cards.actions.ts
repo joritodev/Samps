@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/permissions/check";
-import { hasPermission } from "@/lib/permissions/resolve";
+import { canAccessClient, hasPermission } from "@/lib/permissions/resolve";
 import { revalidateOperationalViews } from "@/lib/revalidate-operational";
 import {
   addCardComment,
@@ -19,7 +19,9 @@ import { notifyCommentMentions } from "@/lib/services/mentions.service";
 export async function getCardDetailAction(cardId: string) {
   const user = await requireAuth();
   const card = await getCardById(cardId);
-  if (!card) return { error: "Cartão não encontrado" as const };
+  if (!card || !canAccessClient(user.permissions, user.clientIds, card.clientId)) {
+    return { error: "Cartão não encontrado" as const };
+  }
 
   const { listDemandDelaysForDemand } = await import(
     "@/lib/services/delay.service"

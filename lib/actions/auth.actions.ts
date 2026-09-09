@@ -3,6 +3,7 @@
 import { randomBytes } from "crypto";
 import { db } from "@/lib/db";
 import { hashPassword } from "@/lib/auth/credentials";
+import { requireAuth } from "@/lib/permissions/check";
 import { completeFirstAccess } from "@/lib/services/users.service";
 import { appUrl, emailLayout, sendEmail } from "@/lib/mail/send";
 
@@ -63,12 +64,18 @@ export async function resetPassword(token: string, password: string) {
   return { success: true };
 }
 
-export async function submitFirstAccess(
-  userId: string,
-  data: { name: string; password: string; phone?: string; termsAccepted: boolean }
-) {
+export async function submitFirstAccess(data: {
+  name: string;
+  password: string;
+  phone?: string;
+  termsAccepted: boolean;
+}) {
+  const user = await requireAuth();
+  if (!user.mustResetPassword) {
+    return { error: "Primeiro acesso já concluído." };
+  }
   try {
-    await completeFirstAccess(userId, data);
+    await completeFirstAccess(user.id, data);
     return { success: true };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Erro ao completar cadastro" };

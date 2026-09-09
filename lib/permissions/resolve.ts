@@ -68,7 +68,10 @@ export function canAccessClient(
   clientId: string
 ): boolean {
   if (hasPermission(permissions, "clients.view_all")) return true;
-  if (hasPermission(permissions, "clients.view_assigned")) {
+  if (
+    hasPermission(permissions, "clients.view_assigned") ||
+    hasPermission(permissions, "portal.view")
+  ) {
     return clientIds.includes(clientId);
   }
   return false;

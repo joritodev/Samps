@@ -8,6 +8,7 @@ import {
 } from "@prisma/client";
 import { assertCanCompleteProduction } from "@/lib/agency/labels";
 import { db } from "@/lib/db";
+import { canAccessClient } from "@/lib/permissions/resolve";
 import { logAudit } from "@/lib/services/audit.service";
 import { getActiveAssignment } from "@/lib/services/assignment.service";
 import { createNotification } from "@/lib/services/notifications.service";
@@ -211,7 +212,15 @@ export async function completeWorkSession(
     },
   });
   if (!demand) throw new Error("Demanda não encontrada");
+  if (!canAccessClient(user.permissions, user.clientIds, demand.clientId)) {
+    throw new Error("Demanda não encontrada");
+  }
   assertCanCompleteProduction(demand.status);
+
+  const assignment = await getActiveAssignment(demandId);
+  if (!assignment || assignment.executorId !== user.id) {
+    throw new Error("Só o executor da demanda pode concluir a produção");
+  }
 
   const session = await db.workSession.findFirst({
     where: {
@@ -249,13 +258,10 @@ export async function completeWorkSession(
     });
   }
 
-  const assignment = await getActiveAssignment(demandId);
-  if (assignment) {
-    await db.demandAssignment.update({
-      where: { id: assignment.id },
-      data: { status: AssignmentStatus.IN_REVIEW },
-    });
-  }
+  await db.demandAssignment.update({
+    where: { id: assignment.id },
+    data: { status: AssignmentStatus.IN_REVIEW },
+  });
 
   const updated = await db.demand.update({
     where: { id: demandId },
