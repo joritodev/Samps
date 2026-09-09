@@ -1,10 +1,8 @@
 import {
   AssignmentMethod,
-  AssignmentStatus,
   BoardListType,
   ClientStatus,
   ContractStatus,
-  DemandOrigin,
   DemandStatus,
   DemandType,
   DistributionMethod,
@@ -20,10 +18,22 @@ import {
 } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import {
+  assignmentStatusForDemandStatus,
+  demandCycleViolations,
+} from "../lib/agency/demand-cycle";
+import {
   PERMISSION_CODES,
   PERMISSION_LABELS,
   type PermissionCode,
 } from "../lib/permissions/codes";
+import {
+  SEED_DEMANDS,
+  assertSeedDemandsFollowCycle,
+  listIdForDemandType,
+  operationalFieldsForSeedDemand,
+  stillInBriefing,
+  workSessionSecondsForTitle,
+} from "./seed-demands";
 
 const prisma = new PrismaClient();
 
@@ -279,11 +289,6 @@ async function main() {
   const video = sectorBySlug.get("video")!;
   const trafego = sectorBySlug.get("trafego")!;
 
-  const baixa = priorityByName.get("Baixa")!;
-  const media = priorityByName.get("Média")!;
-  const alta = priorityByName.get("Alta")!;
-  const urgente = priorityByName.get("Urgente")!;
-
   console.log("Criando usuários…");
   const passwordHash = await bcrypt.hash(DEFAULT_PASSWORD, 12);
 
@@ -482,42 +487,55 @@ async function main() {
       { userId: videomaker.id, clientId: bella.id, linkType: LinkType.USER_CLIENT },
       { userId: videoEditor.id, clientId: sorriso.id, linkType: LinkType.USER_CLIENT },
       { userId: colaborador.id, clientId: bella.id, linkType: LinkType.USER_CLIENT },
+      { userId: gestor.id, clientId: sorriso.id, linkType: LinkType.USER_CLIENT },
+      { userId: gestor.id, clientId: bella.id, linkType: LinkType.USER_CLIENT },
       // Cliente externo enxerga apenas a própria empresa.
       { userId: clienteExterno.id, clientId: bella.id, linkType: LinkType.USER_CLIENT },
     ],
   });
 
-  console.log("Criando quadro e portal do cliente externo…");
+  console.log("Criando quadros e portal do cliente externo…");
   const now = new Date();
-  const bellaBoard = await prisma.clientBoard.create({
-    data: {
-      clientId: bella.id,
-      name: `Quadro ${bella.name}`,
-      createdById: gestor.id,
-      designSectorId: design.id,
-      videoSectorId: video.id,
-      lists: {
-        create: [
-          { name: "Feeds", type: BoardListType.FEEDS, sortOrder: 1 },
-          { name: "Stories", type: BoardListType.STORIES, sortOrder: 2 },
-          { name: "Acompanhamento", type: BoardListType.FOLLOW_UP, sortOrder: 3 },
-          { name: "Extras", type: BoardListType.EXTRA, sortOrder: 4 },
-        ],
-      },
-      competences: {
-        create: {
-          month: now.getMonth() + 1,
-          year: now.getFullYear(),
+
+  async function createOperationalBoard(client: {
+    id: string;
+    name: string;
+  }) {
+    const board = await prisma.clientBoard.create({
+      data: {
+        clientId: client.id,
+        name: `Quadro ${client.name}`,
+        createdById: gestor.id,
+        designSectorId: design.id,
+        videoSectorId: video.id,
+        lists: {
+          create: [
+            { name: "Feeds", type: BoardListType.FEEDS, sortOrder: 1 },
+            { name: "Stories", type: BoardListType.STORIES, sortOrder: 2 },
+            { name: "Acompanhamento", type: BoardListType.FOLLOW_UP, sortOrder: 3 },
+            { name: "Extras", type: BoardListType.EXTRA, sortOrder: 4 },
+          ],
+        },
+        competences: {
+          create: {
+            month: now.getMonth() + 1,
+            year: now.getFullYear(),
+          },
         },
       },
-    },
-    include: { competences: true },
-  });
+      include: { competences: true, lists: true },
+    });
 
-  await prisma.clientBoard.update({
-    where: { id: bellaBoard.id },
-    data: { currentCompetenceId: bellaBoard.competences[0]?.id },
-  });
+    await prisma.clientBoard.update({
+      where: { id: board.id },
+      data: { currentCompetenceId: board.competences[0]?.id },
+    });
+
+    return board;
+  }
+
+  const bellaBoard = await createOperationalBoard(bella);
+  const sorrisoBoard = await createOperationalBoard(sorriso);
 
   await prisma.clientPortal.create({
     data: {
@@ -537,396 +555,151 @@ async function main() {
   });
 
   console.log("Criando demandas…");
+  assertSeedDemandsFollowCycle();
 
-  type SeedDemand = {
-    title: string;
-    description?: string;
-    type: DemandType;
-    origin?: DemandOrigin;
-    status: DemandStatus;
-    priorityId: string;
-    sectorId: string | null;
-    contentTypeId?: string | null;
-    clientId: string;
-    assigneeId?: string | null;
-    requesterId?: string | null;
-    materialUrl?: string | null;
-    publishedUrl?: string | null;
-    visibleToClient?: boolean;
-    deliveryDate?: Date | null;
-    publishDate?: Date | null;
-    createdAt: Date;
-    dueDate: Date | null;
-    updatedAt?: Date;
-    productionStartedAt?: Date | null;
-    productionCompletedAt?: Date | null;
-  };
+  function atOffset(days: number, hour = 10, minute = 0) {
+    if (days <= 0) return daysAgo(-days, hour, minute);
+    return daysFromNow(days, hour);
+  }
 
-  const estatico = contentTypeBySlug.get("estatico")!.id;
-  const carrossel = contentTypeBySlug.get("carrossel")!.id;
-  const stories = contentTypeBySlug.get("stories")!.id;
-  const reels = contentTypeBySlug.get("reels")!.id;
+  const userIdByKey = {
+    social: socialMedia.id,
+    gestor: gestor.id,
+    designer: designer.id,
+    videomaker: videomaker.id,
+    editor: videoEditor.id,
+    trafego: colaborador.id,
+  } as const;
+  const sectorIdByKey = {
+    design: design.id,
+    video: video.id,
+    trafego: trafego.id,
+  } as const;
+  const boardByClient = {
+    bella: bellaBoard,
+    sorriso: sorrisoBoard,
+  } as const;
+  const clientByKey = {
+    bella,
+    sorriso,
+  } as const;
 
-  const demands: SeedDemand[] = [
-    // ── Briefing em aberto — quadro da Social ──────────────────────────────
-    {
-      title: "Carrossel — cuidados pós-clareamento",
-      type: DemandType.FEED,
-      status: DemandStatus.PENDING_PLANNING,
-      priorityId: alta.id,
-      sectorId: null,
-      contentTypeId: carrossel,
-      clientId: sorriso.id,
-      requesterId: socialMedia.id,
-      createdAt: daysAgo(1),
-      dueDate: daysFromNow(5),
-    },
-    {
-      title: "Stories — agenda da semana",
-      type: DemandType.STORY,
-      status: DemandStatus.OPEN,
-      priorityId: media.id,
-      sectorId: social.id,
-      contentTypeId: stories,
-      clientId: sorriso.id,
-      requesterId: socialMedia.id,
-      createdAt: daysAgo(2),
-      dueDate: daysFromNow(2),
-    },
-    {
-      title: "Feed — promoção harmonização",
-      type: DemandType.FEED,
-      status: DemandStatus.PENDING_PLANNING,
-      priorityId: media.id,
-      sectorId: null,
-      contentTypeId: estatico,
-      clientId: bella.id,
-      requesterId: socialMedia.id,
-      createdAt: daysAgo(0, 9),
-      dueDate: daysFromNow(7),
-    },
+  let sortOrder = 0;
+  for (const demand of SEED_DEMANDS) {
+    const client = clientByKey[demand.clientKey];
+    const board = boardByClient[demand.clientKey];
+    const requesterId = userIdByKey[demand.requesterKey];
+    const assigneeId = demand.assigneeKey
+      ? userIdByKey[demand.assigneeKey]
+      : null;
+    const sectorId = demand.sectorKey ? sectorIdByKey[demand.sectorKey] : null;
+    const contentTypeId = demand.contentTypeSlug
+      ? contentTypeBySlug.get(demand.contentTypeSlug)?.id ?? null
+      : null;
+    if (demand.contentTypeSlug && !contentTypeId) {
+      throw new Error(
+        `Tipo de conteúdo não encontrado no seed: ${demand.contentTypeSlug}`
+      );
+    }
+    const priority = priorityByName.get(demand.priorityName);
+    if (!priority) {
+      throw new Error(`Prioridade não encontrada: ${demand.priorityName}`);
+    }
 
-    // ── Demandado / disponível — fila do Design ────────────────────────────
-    {
-      title: "Carrossel institucional Bella",
-      description: "Tom clean, rosa suave, 5 slides. CTA: agendar avaliação.",
-      type: DemandType.FEED,
-      origin: DemandOrigin.SOCIAL_PANEL,
-      status: DemandStatus.DEMANDED,
-      priorityId: alta.id,
-      sectorId: design.id,
-      contentTypeId: carrossel,
-      clientId: bella.id,
-      requesterId: socialMedia.id,
-      createdAt: daysAgo(3),
-      dueDate: daysFromNow(1),
-    },
-    {
-      title: "Estático — antes e depois ortodontia",
-      description: "Layout vertical 1080x1350. Sem texto excessivo.",
-      type: DemandType.FEED,
-      origin: DemandOrigin.SOCIAL_PANEL,
-      status: DemandStatus.AVAILABLE,
-      priorityId: media.id,
-      sectorId: design.id,
-      contentTypeId: estatico,
-      clientId: sorriso.id,
-      requesterId: socialMedia.id,
-      createdAt: daysAgo(4),
-      dueDate: daysFromNow(3),
-    },
-    {
-      title: "Thumbnails YouTube — série Q3",
-      description: "3 thumbs com tipografia forte.",
-      type: DemandType.DESIGN,
-      origin: DemandOrigin.MANAGEMENT,
-      status: DemandStatus.AVAILABLE,
-      priorityId: baixa.id,
-      sectorId: design.id,
-      clientId: bella.id,
-      requesterId: gestor.id,
-      createdAt: daysAgo(5),
-      dueDate: daysFromNow(10),
-    },
+    const ops = operationalFieldsForSeedDemand(demand, assigneeId);
+    const briefingLocked = !stillInBriefing(demand.status);
+    const createdAt = atOffset(demand.createdAtOffsetDays, 9);
+    const dueDate =
+      demand.dueDateOffsetDays == null
+        ? null
+        : atOffset(demand.dueDateOffsetDays, 18);
+    const productionStartedAt =
+      demand.productionStartedOffsetDays == null
+        ? null
+        : atOffset(demand.productionStartedOffsetDays, 11);
+    const productionCompletedAt =
+      demand.productionCompletedOffsetDays == null
+        ? null
+        : atOffset(demand.productionCompletedOffsetDays, 16);
+    const publishedAt =
+      demand.publishedOffsetDays == null
+        ? null
+        : atOffset(demand.publishedOffsetDays, 18);
+    const deliveryDate =
+      demand.deliveryOffsetDays == null
+        ? null
+        : atOffset(demand.deliveryOffsetDays, 12);
+    const publishDate =
+      demand.publishDateOffsetDays == null
+        ? null
+        : atOffset(demand.publishDateOffsetDays, 18);
 
-    // ── Em produção ────────────────────────────────────────────────────────
-    {
-      title: "Reels — rotina de higiene oral",
-      description: "Hook nos 3s, CTA no final. Arte + legendas.",
-      type: DemandType.REEL,
-      origin: DemandOrigin.SOCIAL_PANEL,
-      status: DemandStatus.IN_PRODUCTION,
-      priorityId: urgente.id,
-      sectorId: design.id,
-      contentTypeId: reels,
-      clientId: sorriso.id,
-      assigneeId: designer.id,
-      requesterId: socialMedia.id,
-      createdAt: daysAgo(6),
-      dueDate: daysAgo(1), // atrasada — alimenta o Painel de Gestão
-    },
-    {
-      title: "Banner campanha Black Friday estética",
-      description: "Formato feed + stories.",
-      type: DemandType.DESIGN,
-      origin: DemandOrigin.MANAGEMENT,
-      status: DemandStatus.IN_PRODUCTION,
-      priorityId: alta.id,
-      sectorId: design.id,
-      clientId: bella.id,
-      assigneeId: designer.id,
-      requesterId: gestor.id,
-      createdAt: daysAgo(4, 14),
-      dueDate: daysFromNow(0),
-    },
-    {
-      title: "Edição — depoimento paciente",
-      description: "Corte vertical 30–45s, legendas em PT.",
-      type: DemandType.VIDEO,
-      origin: DemandOrigin.VIDEO_BOARD,
-      status: DemandStatus.IN_PRODUCTION,
-      priorityId: media.id,
-      sectorId: video.id,
-      clientId: sorriso.id,
-      assigneeId: videoEditor.id,
-      requesterId: socialMedia.id,
-      createdAt: daysAgo(5, 11),
-      dueDate: daysFromNow(2),
-    },
+    const gaps = demandCycleViolations({
+      status: demand.status,
+      boardColumn: ops.boardColumn,
+      title: demand.title,
+      briefingLockedAt: briefingLocked ? createdAt : null,
+      description: demand.description,
+      format: demand.format,
+      orientation: demand.orientation,
+      durationSeconds: demand.durationSeconds,
+      demandType: demand.type,
+      contentTypeSlug: demand.contentTypeSlug,
+      sectorId,
+      assigneeId,
+      materialUrl: demand.materialUrl,
+      publishedUrl: demand.publishedUrl,
+      visibleToClient: demand.visibleToClient,
+    });
+    if (gaps.length) {
+      throw new Error(
+        `Seed demanda "${demand.title}" fora do ciclo: ${gaps.join("; ")}`
+      );
+    }
 
-    // ── Ajuste solicitado ──────────────────────────────────────────────────
-    {
-      title: "Estático — pacote de limpeza",
-      description: "Ajuste pedido: aumentar contraste do texto do CTA.",
-      type: DemandType.FEED,
-      origin: DemandOrigin.SOCIAL_PANEL,
-      status: DemandStatus.ADJUSTMENTS,
-      priorityId: alta.id,
-      sectorId: design.id,
-      contentTypeId: estatico,
-      clientId: sorriso.id,
-      assigneeId: designer.id,
-      requesterId: socialMedia.id,
-      materialUrl: "https://drive.google.com/demo/sorriso-limpeza",
-      createdAt: daysAgo(6, 13),
-      dueDate: daysFromNow(1),
-      updatedAt: daysAgo(0, 11),
-      productionStartedAt: daysAgo(0, 9),
-      productionCompletedAt: daysAgo(0, 11),
-    },
-
-    // ── Em revisão ─────────────────────────────────────────────────────────
-    {
-      title: "Carrossel — cultura organizacional",
-      description: "6 slides aprovados no briefing. Material no Drive.",
-      type: DemandType.FEED,
-      origin: DemandOrigin.SOCIAL_PANEL,
-      status: DemandStatus.IN_REVIEW,
-      priorityId: alta.id,
-      sectorId: design.id,
-      contentTypeId: carrossel,
-      clientId: sorriso.id,
-      assigneeId: designer.id,
-      requesterId: socialMedia.id,
-      materialUrl: "https://drive.google.com/demo/sorriso-cultura",
-      createdAt: daysAgo(7),
-      dueDate: daysAgo(3, 11),
-      updatedAt: daysAgo(4, 15),
-      productionStartedAt: daysAgo(4, 11),
-      productionCompletedAt: daysAgo(4, 15),
-    },
-    {
-      title: "Stories — bastidores da clínica",
-      description: "Sequência de 4 frames.",
-      type: DemandType.STORY,
-      origin: DemandOrigin.SOCIAL_PANEL,
-      status: DemandStatus.IN_REVIEW,
-      priorityId: media.id,
-      sectorId: social.id,
-      contentTypeId: stories,
-      clientId: bella.id,
-      assigneeId: socialMedia.id,
-      requesterId: socialMedia.id,
-      materialUrl: "https://drive.google.com/demo/bella-bastidores",
-      visibleToClient: true,
-      deliveryDate: daysFromNow(1),
-      publishDate: daysFromNow(3),
-      createdAt: daysAgo(3, 16),
-      dueDate: daysAgo(3, 18),
-      updatedAt: daysAgo(3, 12),
-      productionStartedAt: daysAgo(3, 11),
-      productionCompletedAt: daysAgo(3, 12),
-    },
-
-    // ── Aprovado — fila da Social publicar ─────────────────────────────────
-    {
-      title: "Feed — lançamento linha premium",
-      description: "Arte aprovada. Publicar terça 18h.",
-      type: DemandType.FEED,
-      origin: DemandOrigin.SOCIAL_PANEL,
-      status: DemandStatus.APPROVED,
-      priorityId: alta.id,
-      sectorId: social.id,
-      contentTypeId: estatico,
-      clientId: bella.id,
-      assigneeId: socialMedia.id,
-      requesterId: socialMedia.id,
-      materialUrl: "https://drive.google.com/demo/bella-premium",
-      visibleToClient: true,
-      deliveryDate: daysFromNow(2),
-      publishDate: daysFromNow(4),
-      createdAt: daysAgo(6, 9),
-      dueDate: daysAgo(5, 6),
-      updatedAt: daysAgo(5, 16),
-      productionStartedAt: daysAgo(5, 14),
-      productionCompletedAt: daysAgo(5, 16),
-    },
-    {
-      title: "Carrossel — mitos sobre clareamento",
-      description: "Pronto para postagem.",
-      type: DemandType.FEED,
-      origin: DemandOrigin.SOCIAL_PANEL,
-      status: DemandStatus.APPROVED,
-      priorityId: media.id,
-      sectorId: design.id,
-      contentTypeId: carrossel,
-      clientId: sorriso.id,
-      assigneeId: designer.id,
-      requesterId: socialMedia.id,
-      materialUrl: "https://drive.google.com/demo/sorriso-mitos",
-      visibleToClient: true,
-      createdAt: daysAgo(5, 8),
-      dueDate: daysAgo(2, 4),
-      updatedAt: daysAgo(2, 16),
-      productionStartedAt: daysAgo(2, 13),
-      productionCompletedAt: daysAgo(2, 16),
-    },
-
-    // ── Concluído / publicado — volume para os indicadores ─────────────────
-    {
-      title: "Stories — tip da semana",
-      type: DemandType.STORY,
-      status: DemandStatus.DONE,
-      priorityId: baixa.id,
-      sectorId: social.id,
-      contentTypeId: stories,
-      clientId: sorriso.id,
-      assigneeId: socialMedia.id,
-      materialUrl: "https://drive.google.com/demo/sorriso-tip",
-      visibleToClient: true,
-      createdAt: daysAgo(16),
-      dueDate: daysAgo(13),
-      updatedAt: daysAgo(14, 11),
-      productionStartedAt: daysAgo(14, 10),
-      productionCompletedAt: daysAgo(14, 11),
-    },
-    {
-      title: "Reels — bastidores Bella",
-      type: DemandType.REEL,
-      status: DemandStatus.PUBLISHED,
-      priorityId: media.id,
-      sectorId: video.id,
-      contentTypeId: reels,
-      clientId: bella.id,
-      assigneeId: videomaker.id,
-      materialUrl: "https://drive.google.com/demo/bella-reels",
-      publishedUrl: "https://instagram.com/p/demo-bella-reels",
-      visibleToClient: true,
-      deliveryDate: daysAgo(6),
-      publishDate: daysAgo(5),
-      createdAt: daysAgo(12),
-      dueDate: daysAgo(9, 11),
-      updatedAt: daysAgo(10, 17),
-      productionStartedAt: daysAgo(10, 13),
-      productionCompletedAt: daysAgo(10, 17),
-    },
-    {
-      title: "Feed — equipe Bella Clinic",
-      type: DemandType.FEED,
-      status: DemandStatus.PUBLISHED,
-      priorityId: media.id,
-      sectorId: design.id,
-      contentTypeId: estatico,
-      clientId: bella.id,
-      assigneeId: designer.id,
-      materialUrl: "https://drive.google.com/demo/bella-equipe",
-      publishedUrl: "https://instagram.com/p/demo-bella-equipe",
-      visibleToClient: true,
-      deliveryDate: daysAgo(7),
-      publishDate: daysAgo(6),
-      createdAt: daysAgo(10),
-      dueDate: daysAgo(6, 23),
-      updatedAt: daysAgo(7, 15),
-      productionStartedAt: daysAgo(7, 13),
-      productionCompletedAt: daysAgo(7, 15),
-    },
-    {
-      title: "Carrossel — FAQ odontológico",
-      type: DemandType.FEED,
-      status: DemandStatus.DONE,
-      priorityId: baixa.id,
-      sectorId: design.id,
-      contentTypeId: carrossel,
-      clientId: sorriso.id,
-      assigneeId: designer.id,
-      materialUrl: "https://drive.google.com/demo/sorriso-faq",
-      visibleToClient: true,
-      createdAt: daysAgo(14),
-      dueDate: daysAgo(13, 20),
-      updatedAt: daysAgo(12, 16),
-      productionStartedAt: daysAgo(12, 13),
-      productionCompletedAt: daysAgo(12, 16),
-    },
-    {
-      title: "Stories — promoção avaliação",
-      type: DemandType.STORY,
-      status: DemandStatus.PUBLISHED,
-      priorityId: alta.id,
-      sectorId: social.id,
-      contentTypeId: stories,
-      clientId: bella.id,
-      assigneeId: socialMedia.id,
-      materialUrl: "https://drive.google.com/demo/bella-promo",
-      publishedUrl: "https://instagram.com/stories/demo-promo",
-      visibleToClient: true,
-      deliveryDate: daysAgo(2),
-      publishDate: daysAgo(1),
-      createdAt: daysAgo(4, 7),
-      dueDate: daysAgo(0, 16),
-      updatedAt: daysAgo(0, 10),
-      productionStartedAt: daysAgo(0, 9),
-      productionCompletedAt: daysAgo(0, 10),
-    },
-    {
-      title: "Campanha Meta Ads — captação de leads",
-      description: "Criativos + copy para teste A/B.",
-      type: DemandType.OTHER,
-      origin: DemandOrigin.MANAGEMENT,
-      status: DemandStatus.AVAILABLE,
-      priorityId: alta.id,
-      sectorId: trafego.id,
-      clientId: bella.id,
-      requesterId: gestor.id,
-      createdAt: daysAgo(2, 15),
-      dueDate: daysFromNow(4),
-    },
-  ];
-
-  for (const demand of demands) {
-    const { createdAt, updatedAt, ...rest } = demand;
     await prisma.demand.create({
       data: {
-        ...rest,
-        // Só o quadro da Bella existe; é dele que o portal externo lê.
-        boardId: demand.clientId === bella.id ? bellaBoard.id : undefined,
-        competenceId:
-          demand.clientId === bella.id
-            ? bellaBoard.competences[0]?.id
-            : undefined,
+        title: demand.title,
+        description: demand.description,
+        type: demand.type,
+        origin: demand.origin,
+        status: demand.status,
+        format: demand.format,
+        priorityId: priority.id,
+        sectorId,
+        contentTypeId,
+        clientId: client.id,
+        assigneeId,
+        requesterId,
+        materialUrl: demand.materialUrl ?? null,
+        publishedUrl: demand.publishedUrl ?? null,
+        visibleToClient: demand.visibleToClient ?? false,
+        durationSeconds: demand.durationSeconds ?? null,
+        orientation: demand.orientation ?? null,
+        boardId: board.id,
+        competenceId: board.competences[0]?.id,
+        listId: listIdForDemandType(demand.type, board.lists),
+        boardColumn: ops.boardColumn,
+        internalStatus: ops.internalStatus,
+        externalStatus: briefingLocked
+          ? demand.status === DemandStatus.PUBLISHED
+            ? "Publicado"
+            : "Em preparação"
+          : null,
+        briefingLockedAt: briefingLocked ? createdAt : null,
+        briefingLockedById: briefingLocked ? requesterId : null,
+        dueDate,
         createdAt,
-        updatedAt: updatedAt ?? createdAt,
+        updatedAt: productionCompletedAt ?? productionStartedAt ?? createdAt,
+        productionStartedAt,
+        productionCompletedAt,
+        publishedAt,
+        deliveryDate,
+        publishDate,
+        sortOrder,
       },
     });
+    sortOrder += 1;
   }
 
   console.log("Criando sessões de trabalho…");
@@ -941,21 +714,8 @@ async function main() {
     },
   });
 
-  const sessionSecondsByTitle: Record<string, number> = {
-    "Carrossel — FAQ odontológico": 7920,
-    "Stories — tip da semana": 1500,
-    "Reels — bastidores Bella": 12600,
-    "Feed — equipe Bella Clinic": 3300,
-    "Feed — lançamento linha premium": 4800,
-    "Carrossel — cultura organizacional": 10080,
-    "Stories — bastidores da clínica": 1920,
-    "Carrossel — mitos sobre clareamento": 7560,
-    "Stories — promoção avaliação": 1680,
-    "Estático — pacote de limpeza": 4200,
-  };
-
   for (const demand of seededDemands) {
-    const seconds = sessionSecondsByTitle[demand.title];
+    const seconds = workSessionSecondsForTitle(demand.title);
     if (!seconds || !demand.assigneeId || !demand.productionCompletedAt) continue;
 
     const endedAt = demand.productionCompletedAt;
@@ -973,9 +733,11 @@ async function main() {
     });
   }
 
-  const limpeza = seededDemands.find((d) => d.title === "Estático — pacote de limpeza");
-  const mitos = seededDemands.find(
-    (d) => d.title === "Carrossel — mitos sobre clareamento",
+  const limpeza = seededDemands.find(
+    (d) => d.title === "Post estático limpeza de pele"
+  );
+  const makingOf = seededDemands.find(
+    (d) => d.title === "Vídeo making of da clínica"
   );
 
   if (limpeza?.assigneeId && limpeza.productionCompletedAt) {
@@ -992,11 +754,11 @@ async function main() {
     });
   }
 
-  if (mitos?.assigneeId) {
+  if (makingOf?.assigneeId) {
     await prisma.workSession.create({
       data: {
-        demandId: mitos.id,
-        userId: mitos.assigneeId,
+        demandId: makingOf.id,
+        userId: makingOf.assigneeId,
         stage: WorkSessionStage.ADJUSTMENT,
         status: WorkSessionStatus.COMPLETED,
         startedAt: daysAgo(1, 14),
@@ -1015,40 +777,16 @@ async function main() {
       sectorId: true,
       status: true,
       assigneeId: true,
+      requesterId: true,
     },
   });
 
   for (const d of sectorDemands) {
     if (!d.sectorId) continue;
 
-    let assignmentStatus: AssignmentStatus | null = null;
-
-    switch (d.status) {
-      case DemandStatus.DEMANDED:
-      case DemandStatus.AVAILABLE:
-        assignmentStatus = AssignmentStatus.AVAILABLE;
-        break;
-      case DemandStatus.IN_PRODUCTION:
-        assignmentStatus = d.assigneeId
-          ? AssignmentStatus.IN_PROGRESS
-          : AssignmentStatus.AVAILABLE;
-        break;
-      case DemandStatus.IN_REVIEW:
-      case DemandStatus.APPROVED:
-        assignmentStatus = AssignmentStatus.IN_REVIEW;
-        break;
-      case DemandStatus.ADJUSTMENTS:
-        assignmentStatus = AssignmentStatus.ADJUSTMENT;
-        break;
-      case DemandStatus.DONE:
-      case DemandStatus.PUBLISHED:
-      case DemandStatus.SCHEDULED:
-        assignmentStatus = AssignmentStatus.DONE;
-        break;
-      default:
-        break;
-    }
-
+    const assignmentStatus = assignmentStatusForDemandStatus(d.status, {
+      assigneeId: d.assigneeId,
+    });
     if (!assignmentStatus) continue;
 
     await prisma.demandAssignment.create({
@@ -1056,8 +794,11 @@ async function main() {
         demandId: d.id,
         sectorId: d.sectorId,
         executorId: d.assigneeId,
+        assignedById: d.requesterId ?? gestor.id,
         status: assignmentStatus,
-        method: d.assigneeId ? AssignmentMethod.MANAGEMENT : AssignmentMethod.MANAGEMENT,
+        method: d.assigneeId
+          ? AssignmentMethod.SELF
+          : AssignmentMethod.MANAGEMENT,
       },
     });
   }
@@ -1175,7 +916,7 @@ async function main() {
   console.log(`  Funções: ${ROLE_DEFINITIONS.length}`);
   console.log(`  Setores: ${SECTORS.length}`);
   console.log(`  Clientes: ${sorriso.name}, ${bella.name}`);
-  console.log(`  Demandas: ${demands.length}`);
+  console.log(`  Demandas: ${SEED_DEMANDS.length}`);
   console.log(`\n  Senha de todos os usuários: ${DEFAULT_PASSWORD}`);
   console.log("  Logins disponíveis:");
   for (const u of [
