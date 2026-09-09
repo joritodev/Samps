@@ -3,9 +3,10 @@
 import {
   DndContext,
   DragOverlay,
-  closestCorners,
   KeyboardSensor,
   PointerSensor,
+  closestCorners,
+  useDroppable,
   useSensor,
   useSensors,
   type DragEndEvent,
@@ -18,7 +19,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { MoreHorizontal, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { BoardColumnEmpty } from "@/components/board/board-column-empty";
 import { DemandCard } from "@/components/shared/demand-card";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,10 @@ import {
   renameBoardListAction,
 } from "@/lib/actions/board.actions";
 import { moveCardAction } from "@/lib/actions/cards.actions";
+import {
+  moveDemandToList,
+  resolveKanbanDropTarget,
+} from "@/lib/agency/board-dnd";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -51,8 +56,19 @@ function SortableDemandCard({
   demand: Demand;
   onSelect: (id: string) => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: demand.id });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: demand.id });
+  const skipClickAfterDrag = useRef(false);
+
+  useEffect(() => {
+    if (isDragging) skipClickAfterDrag.current = true;
+  }, [isDragging]);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -65,8 +81,36 @@ function SortableDemandCard({
         demand={demand}
         showOrigin
         className={cn(isDragging && "opacity-50")}
-        onClick={() => onSelect(demand.id)}
+        onClick={() => {
+          if (skipClickAfterDrag.current) {
+            skipClickAfterDrag.current = false;
+            return;
+          }
+          onSelect(demand.id);
+        }}
       />
+    </div>
+  );
+}
+
+function DroppableColumnBody({
+  id,
+  children,
+}: {
+  id: string;
+  children: ReactNode;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id });
+  return (
+    <div
+      ref={setNodeRef}
+      data-list-id={id}
+      className={cn(
+        "flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-2 pb-3",
+        isOver && "bg-primary/5"
+      )}
+    >
+      {children}
     </div>
   );
 }
@@ -88,6 +132,7 @@ export function BoardKanban({
 }) {
   const router = useRouter();
   const [columns, setColumns] = useState(initialColumns);
+  const [grouped, setGrouped] = useState(itemsByColumn);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [addingColumn, setAddingColumn] = useState(false);
   const [newColumnName, setNewColumnName] = useState("");
@@ -99,34 +144,41 @@ export function BoardKanban({
     setColumns(initialColumns);
   }, [initialColumns]);
 
+  useEffect(() => {
+    setGrouped(itemsByColumn);
+  }, [itemsByColumn]);
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor)
   );
 
-  const allItems = Object.values(itemsByColumn).flat();
+  const allItems = Object.values(grouped).flat();
   const activeItem = allItems.find((d) => d.id === activeId);
 
   function handleDragEnd(event: DragEndEvent) {
     setActiveId(null);
     const { active, over } = event;
-    if (!over) return;
-
     const demandId = String(active.id);
-    let targetListId = String(over.id);
-    const overDemand = allItems.find((d) => d.id === targetListId);
-    if (overDemand?.listId) {
-      targetListId = overDemand.listId as string;
-    }
-
     const columnIds = columns.map((c) => c.id);
-    if (!columnIds.includes(targetListId)) return;
+    const targetListId = resolveKanbanDropTarget(over, columnIds);
+    if (!targetListId) return;
 
     const current = allItems.find((d) => d.id === demandId);
-    if (!current || current.listId === targetListId) return;
+    if (!current) return;
+    if (current.listId && current.listId === targetListId) return;
+
+    const previous = grouped;
+    setGrouped(moveDemandToList(grouped, demandId, targetListId));
 
     startTransition(async () => {
-      await moveCardAction(demandId, clientId, targetListId, 0);
+      const result = await moveCardAction(demandId, clientId, targetListId, 0);
+      if (result && "error" in result && result.error) {
+        setGrouped(previous);
+        toast.error(result.error);
+        return;
+      }
+      router.refresh();
     });
   }
 
@@ -161,7 +213,7 @@ export function BoardKanban({
     >
       <div className="flex h-full min-h-0 gap-4 overflow-x-auto overflow-y-hidden p-6 snap-x snap-mandatory">
         {columns.map((col) => {
-          const cards = itemsByColumn[col.id] ?? [];
+          const cards = grouped[col.id] ?? [];
           return (
             <section
               key={col.id}
@@ -272,10 +324,7 @@ export function BoardKanban({
                 items={cards.map((d) => d.id)}
                 strategy={verticalListSortingStrategy}
               >
-                <div
-                  className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-2 pb-3"
-                  data-list-id={col.id}
-                >
+                <DroppableColumnBody id={col.id}>
                   {cards.length > 0 ? (
                     cards.map((demand) => (
                       <SortableDemandCard
@@ -287,7 +336,7 @@ export function BoardKanban({
                   ) : (
                     <BoardColumnEmpty />
                   )}
-                </div>
+                </DroppableColumnBody>
               </SortableContext>
             </section>
           );

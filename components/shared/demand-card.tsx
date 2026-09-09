@@ -119,7 +119,12 @@ export function DemandCard({
 
   if (onClick) {
     return (
-      <button type="button" onClick={onClick} className={cn("border bg-card text-card-foreground", cardClassName)}>
+      <button
+        type="button"
+        draggable={false}
+        onClick={onClick}
+        className={cn("border bg-card text-card-foreground", cardClassName)}
+      >
         {body}
       </button>
     );
