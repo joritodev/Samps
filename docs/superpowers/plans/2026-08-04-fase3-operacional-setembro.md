@@ -82,21 +82,26 @@
 
 ---
 
-## Fatia 3.4 — Visibilidade das demandas para todo o time
+## Fatia 3.4 — Visibilidade das demandas (redefinida em 15/09)
 
-**Pedido da reunião:** "remover a restrição" e abrir a visualização para todos, para o time enxergar o que está sendo produzido e encaixar urgências.
+**Pedido original da reunião:** "remover a restrição" e abrir visualização.
 
-**Atenção:** hoje existe recorte por setor e por cliente, e existe RLS. Abrir visibilidade **não** pode virar "todo mundo vê tudo, inclusive cliente externo".
+**Atualização 10–15/09 (áudios Samps):** a restrição correta é **hierarquia Trello**, não leitura cruzada livre:
 
-**Escopo:**
-- Confirmar com a Samps o que exatamente é a restrição incômoda (provável: setor só vê a fila dele)
-- Introduzir permissão explícita de leitura ampla interna (ex.: `demands.view_all_internal`), separada de escrita
-- Cliente externo continua restrito pelo RLS, sem exceção
-- Registrar a decisão em `docs/superpowers/notas/`
+- Colaborador → só as próprias demandas (Meu Painel / filtro em `/demandas`)
+- Líder → quadro do setor
+- Gestão/Admin → tudo
+- Demanda avulsa no quadro do cliente → individual do responsável
+- Checklist multi-responsável → checkpoints como demandas filhas
 
-**Aceite:** designer vê a fila de vídeo em modo leitura; cliente externo continua vendo só o dele; `npm run check:rls` `OK`.
+**Spec / plano canônicos:**
 
-**Gate obrigatório:** Security Review.
+- `docs/superpowers/specs/2026-09-15-demandas-visibilidade-avulsa-checklist-design.md`
+- `docs/superpowers/plans/2026-09-15-demandas-visibilidade-avulsa-checklist.md`
+
+A demo 3.4 de “colaborador lê outros setores” fica **revogada** na Fatia A desta onda.
+
+**Gate:** Bugbot nas fatias A/B; Security na C (schema).
 
 ---
 
