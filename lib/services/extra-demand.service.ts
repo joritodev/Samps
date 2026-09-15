@@ -69,10 +69,27 @@ export async function createExtraDemand(
     throw new Error("Responsável inválido para o setor selecionado");
   }
 
-  const extraList =
+  let extraList =
     board?.lists.find((l) => l.type === BoardListType.EXTRA) ??
     board?.lists.find((l) => /extra/i.test(l.name)) ??
     null;
+
+  // Garante coluna Extras: sem listId o kanban joga EXTRA em FOLLOW_UP.
+  if (board && !extraList) {
+    const maxOrder = board.lists.reduce(
+      (m, l) => Math.max(m, l.sortOrder ?? 0),
+      0
+    );
+    extraList = await db.boardList.create({
+      data: {
+        boardId: board.id,
+        name: "Demandas extras",
+        type: BoardListType.EXTRA,
+        sortOrder: maxOrder + 1,
+        active: true,
+      },
+    });
+  }
 
   const competenceId = board?.currentCompetenceId ?? null;
   const boardId = board?.id ?? null;
