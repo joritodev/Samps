@@ -2,7 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/permissions/check";
+import { canAccessClient } from "@/lib/permissions/resolve";
 import { revalidateOperationalViews } from "@/lib/revalidate-operational";
 import {
   addChecklistItem,
@@ -104,8 +106,23 @@ export async function completeChecklistItemAction(input: {
 }
 
 export async function listChecklistItemsAction(parentId: string) {
-  await requireAuth();
+  const user = await requireAuth();
+  if (!parentId) {
+    return { error: "Demanda inválida." };
+  }
+
   try {
+    const parent = await db.demand.findUnique({
+      where: { id: parentId },
+      select: { clientId: true, isChecklistItem: true },
+    });
+    if (!parent || parent.isChecklistItem) {
+      return { error: "Demanda não encontrada." };
+    }
+    if (!canAccessClient(user.permissions, user.clientIds, parent.clientId)) {
+      return { error: "Sem permissão para este cliente." };
+    }
+
     const items = await listChecklistItems(parentId);
     const progress = await getChecklistProgress(parentId);
     return { success: true as const, items, progress };
