@@ -31,10 +31,12 @@ export async function getCardDetailAction(cardId: string) {
     user.permissions,
     "demands.change_deadline"
   );
+  const canEditChecklist = hasPermission(user.permissions, "demands.edit");
 
   return {
     card,
     canChangeDeadline,
+    canEditChecklist,
     delays: delays.map((d) => ({
       id: d.id,
       originalDueDate: d.originalDueDate.toISOString(),

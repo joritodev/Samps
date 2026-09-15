@@ -26,6 +26,8 @@ export default async function ClienteQuadroPage({
   const user = await requireClientAccess(params.id);
   const canManageLists = hasPermission(user.permissions, "boards.manage_lists");
   const canCreateExtra = canCreateExtraDemand(user.permissions);
+  const canEditChecklist = hasPermission(user.permissions, "demands.edit");
+  const loadSectorUsers = canCreateExtra || canEditChecklist;
 
   const board = await getActiveBoardByClientId(params.id);
   if (!board) {
@@ -71,7 +73,7 @@ export default async function ClienteQuadroPage({
           select: { id: true, name: true },
         })
       : Promise.resolve([]),
-    canCreateExtra
+    loadSectorUsers
       ? db.user.findMany({
           where: {
             status: UserStatus.ACTIVE,

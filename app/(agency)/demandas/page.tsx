@@ -97,7 +97,10 @@ export default async function DemandasPage() {
 
   try {
     const visibility = buildDemandVisibilityWhere(user, { ledSectorIds });
-    const where: Prisma.DemandWhereInput = { ...visibility };
+    const where: Prisma.DemandWhereInput = {
+      ...visibility,
+      isChecklistItem: false,
+    };
 
     const rows = await db.demand.findMany({
       where,

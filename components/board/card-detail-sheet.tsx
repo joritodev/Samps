@@ -30,6 +30,10 @@ import {
   DemandDelayHistory,
   type DemandDelayRow,
 } from "@/components/shared/demand-delay-history";
+import {
+  DemandChecklist,
+  type ChecklistAssigneeOption,
+} from "@/components/board/demand-checklist";
 import { toast } from "sonner";
 import {
   canCompleteProduction,
@@ -58,6 +62,16 @@ type CardDetail = {
   briefingLockedAt?: Date | null;
   visibleToClient: boolean;
   isContractual: boolean;
+  isChecklistItem?: boolean;
+  parentDemandId?: string | null;
+  parentDemand?: { id: string; title: string } | null;
+  childDemands?: {
+    id: string;
+    title: string;
+    status: string;
+    checklistOrder?: number | null;
+    assignee?: { id?: string; name: string } | null;
+  }[];
   slidesCount?: number | null;
   screensCount?: number | null;
   durationSeconds?: number | null;
@@ -88,6 +102,8 @@ export function CardDetailSheet({
   open,
   onOpenChange,
   canChangeDeadline = false,
+  canEditChecklist = false,
+  checklistAssignees = [],
   delays = [],
 }: {
   clientId: string;
@@ -95,6 +111,8 @@ export function CardDetailSheet({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   canChangeDeadline?: boolean;
+  canEditChecklist?: boolean;
+  checklistAssignees?: ChecklistAssigneeOption[];
   delays?: DemandDelayRow[];
 }) {
   const [pending, startTransition] = useTransition();
@@ -154,6 +172,11 @@ export function CardDetailSheet({
                 <Badge variant="outline">{demandStatusLabel(card.status)}</Badge>
                 {card.cardCode && <Badge variant="secondary">{card.cardCode}</Badge>}
                 {card.isContractual && <Badge variant="secondary">Contratual</Badge>}
+                {card.isChecklistItem && card.parentDemand?.title ? (
+                  <Badge variant="secondary">
+                    Parte de: {card.parentDemand.title}
+                  </Badge>
+                ) : null}
               </div>
             </SheetHeader>
 
@@ -161,6 +184,9 @@ export function CardDetailSheet({
               <TabsList className="flex flex-wrap h-auto gap-1">
                 <TabsTrigger value="identification">Identificação</TabsTrigger>
                 <TabsTrigger value="planning">Planejamento</TabsTrigger>
+                {!card.isChecklistItem ? (
+                  <TabsTrigger value="checklist">Checklist</TabsTrigger>
+                ) : null}
                 <TabsTrigger value="delays">Atrasos</TabsTrigger>
                 <TabsTrigger value="briefing">Briefing</TabsTrigger>
                 <TabsTrigger value="production">Produção</TabsTrigger>
@@ -198,6 +224,18 @@ export function CardDetailSheet({
                   <p className="text-sm">Prazo interno: {format(new Date(card.dueDate), "dd/MM/yyyy", { locale: ptBR })}</p>
                 )}
               </TabsContent>
+
+              {!card.isChecklistItem ? (
+                <TabsContent value="checklist" className="space-y-3">
+                  <DemandChecklist
+                    parentId={card.id}
+                    clientId={clientId}
+                    items={card.childDemands ?? []}
+                    assignees={checklistAssignees}
+                    canEdit={canEditChecklist}
+                  />
+                </TabsContent>
+              ) : null}
 
               <TabsContent value="delays" className="space-y-4">
                 <DemandDelayHistory delays={delays} />

@@ -419,6 +419,7 @@ export async function groupBoardDemandsByList(
     where: {
       boardId,
       competenceId,
+      isChecklistItem: false,
       ...(filters?.listId ? { listId: filters.listId } : {}),
       ...(filters?.status
         ? { status: filters.status as DemandStatus }
