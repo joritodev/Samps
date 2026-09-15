@@ -10,6 +10,7 @@ import {
   Filter,
   Kanban,
   MoreHorizontal,
+  Plus,
   Settings,
   UserRound,
 } from "lucide-react";
@@ -72,6 +73,8 @@ export function BoardHeader({
   insightsOpen,
   onInsightsOpenChange,
   activeFilterCount,
+  canCreateExtra = false,
+  onCreateExtra,
 }: {
   clientId: string;
   boardId: string;
@@ -88,6 +91,8 @@ export function BoardHeader({
   insightsOpen: boolean;
   onInsightsOpenChange: (open: boolean) => void;
   activeFilterCount: number;
+  canCreateExtra?: boolean;
+  onCreateExtra?: () => void;
 }) {
   const [pending, startTransition] = useTransition();
   const currentIndex = competences.findIndex(
@@ -244,6 +249,17 @@ export function BoardHeader({
             <BarChart3 className="h-3.5 w-3.5" />
             Indicadores
           </Button>
+
+          {canCreateExtra && onCreateExtra ? (
+            <Button
+              size="sm"
+              className="h-8"
+              onClick={onCreateExtra}
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Demanda avulsa
+            </Button>
+          ) : null}
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
