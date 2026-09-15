@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import { DemandBoard } from "@/components/agency/demand-board";
 import { boardDemandSelect, toBoardDemand } from "@/lib/agency/board-mapper";
 import { clientScopeFilter, requireAuth } from "@/lib/permissions/check";
+import { buildDemandVisibilityWhere } from "@/lib/permissions/demand-visibility";
+import { listLedSectorIds } from "@/lib/permissions/led-sectors";
 import { hasPermission } from "@/lib/permissions/resolve";
 import type { BoardColumn, BoardDemand } from "@/types/board-ui";
 
@@ -62,11 +64,12 @@ function groupIntoStatusColumns(demands: BoardDemand[]): BoardColumn[] {
 
 export default async function DemandasPage() {
   const user = await requireAuth();
-  const seesEveryone = user.permissions.includes("clients.view_all");
   const canCreate = hasPermission(user.permissions, "demands.create");
   const scope = clientScopeFilter(user);
+  const isGestao =
+    user.userType === "ADMIN" || user.userType === "MANAGEMENT";
 
-  const [sectors, priorities, clients] = await Promise.all([
+  const [sectors, priorities, clients, ledSectorIds] = await Promise.all([
     db.sector.findMany({
       where: { isActive: true },
       orderBy: { name: "asc" },
@@ -87,22 +90,14 @@ export default async function DemandasPage() {
           select: { id: true, name: true },
         })
       : Promise.resolve([]),
+    listLedSectorIds(user.id),
   ]);
 
   let demands: BoardDemand[] = [];
 
   try {
-    const where: Prisma.DemandWhereInput = seesEveryone
-      ? {}
-      : // Quem não enxerga a operação inteira vê o que executa mais o que
-        // pertence às contas em que está alocado.
-        {
-          OR: [
-            { assigneeId: user.id },
-            { requesterId: user.id },
-            ...(scope ? [{ clientId: scope }] : []),
-          ],
-        };
+    const visibility = buildDemandVisibilityWhere(user, { ledSectorIds });
+    const where: Prisma.DemandWhereInput = { ...visibility };
 
     const rows = await db.demand.findMany({
       where,
@@ -117,12 +112,16 @@ export default async function DemandasPage() {
 
   const columns = groupIntoStatusColumns(demands);
 
+  const subtitle = isGestao
+    ? "Visão global da operação"
+    : ledSectorIds.length > 0
+      ? "Quadro do seu setor e suas demandas"
+      : "Suas demandas";
+
   return (
     <DemandBoard
       title="Quadro Geral de Demandas"
-      subtitle={
-        seesEveryone ? "Visão global da operação" : "Minhas tarefas e contas"
-      }
+      subtitle={subtitle}
       columns={columns}
       taxonomy={{ sectors, priorities }}
       clients={clients}
