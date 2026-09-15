@@ -11,11 +11,15 @@ export function buildDemandVisibilityWhere(
 
   const led = opts?.ledSectorIds?.filter(Boolean) ?? [];
   if (led.length > 0) {
+    // Inclui demandas ainda sem sectorId (ex.: social em planejamento)
+    // quando assignee/requester pertencem ao setor liderado.
     return {
       OR: [
         { sectorId: { in: led } },
         { assigneeId: user.id },
         { requesterId: user.id },
+        { assignee: { sectorId: { in: led } } },
+        { requester: { sectorId: { in: led } } },
       ],
     };
   }

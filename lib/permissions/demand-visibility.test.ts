@@ -45,7 +45,7 @@ describe("buildDemandVisibilityWhere", () => {
     });
   });
 
-  it("líder vê setor liderado ∪ próprias", () => {
+  it("líder vê setor liderado ∪ próprias ∪ pessoas do setor", () => {
     const where = buildDemandVisibilityWhere(
       user({
         id: "m",
@@ -59,6 +59,8 @@ describe("buildDemandVisibilityWhere", () => {
         { sectorId: { in: ["sec-design"] } },
         { assigneeId: "m" },
         { requesterId: "m" },
+        { assignee: { sectorId: { in: ["sec-design"] } } },
+        { requester: { sectorId: { in: ["sec-design"] } } },
       ],
     });
   });
