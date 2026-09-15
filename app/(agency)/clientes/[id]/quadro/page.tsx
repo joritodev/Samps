@@ -107,13 +107,11 @@ export default async function ClienteQuadroPage({
       canManageLists={canManageLists}
       canCreateExtra={canCreateExtra}
       sectors={sectors}
-      sectorUsers={sectorUsers
-        .filter((u): u is typeof u & { sectorId: string } => Boolean(u.sectorId))
-        .map((u) => ({
-          id: u.id,
-          name: u.name,
-          sectorId: u.sectorId,
-        }))}
+      sectorUsers={sectorUsers.flatMap((u) =>
+        u.sectorId
+          ? [{ id: u.id, name: u.name, sectorId: u.sectorId }]
+          : []
+      )}
       grouped={Object.fromEntries(
         Object.entries(grouped).map(([listId, demands]) => [
           listId,
