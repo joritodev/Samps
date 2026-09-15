@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/permissions/check";
 import { hasPermission } from "@/lib/permissions/resolve";
 import { canReviewDemand } from "@/lib/agency/labels";
 import {
+  getSectorBySlug,
   getSectorBoardData,
   listSectorUsers,
   type SectorSlug,
@@ -38,13 +39,40 @@ export default async function SectorBoardPage({
   params: { slug: string };
 }) {
   const user = await requireAuth();
-  const collaborator = isSectorCollaborator(user.userType);
+  const isMgmt = user.userType === "ADMIN" || user.userType === "MANAGEMENT";
   const ownSlug = getSectorSlugForUserType(user.userType);
-  /** Demo 3.4: colaborador pode olhar outras filas só em leitura. */
-  const readOnly = collaborator;
+  const collaborator = isSectorCollaborator(user.userType);
 
-  if (params.slug === "social") {
+  const isSocial = params.slug === "social";
+  const isOperational = OPERATIONAL_SLUGS.has(params.slug as SectorSlug);
+
+  if (!isSocial && !isOperational) {
+    notFound();
+  }
+
+  // Resolve sector for leader check (DB has slug "social"; type is operational-only)
+  const sectorRow = await getSectorBySlug(
+    (isSocial ? "social" : params.slug) as SectorSlug
+  );
+  const isLeader = sectorRow?.leaderId === user.id;
+
+  if (!isMgmt && !isLeader) {
+    if (collaborator) {
+      redirect(
+        ownSlug ? `/meu-painel/${ownSlug}` : getDashboardPath(user.userType)
+      );
+    }
+    redirect(getDashboardPath(user.userType));
+  }
+
+  // After gate: only mgmt or leader of THIS sector reach the board
+  const readOnly = false;
+
+  if (isSocial) {
     const data = await getSocialBoardData(user, { individual: false });
+    const canAssign =
+      !readOnly &&
+      (hasPermission(user.permissions, "demands.assign") || isLeader);
     return (
       <div className="flex h-full min-h-0 flex-col overflow-hidden p-4 sm:p-6">
         <SectorBoardView
@@ -56,16 +84,9 @@ export default async function SectorBoardPage({
           kpis={data.kpis}
           calendarDemands={data.calendarDemands as never}
           currentUserId={user.id}
-          canAssign={!readOnly}
+          canAssign={canAssign}
           canReview={!readOnly && canReviewDemand(user.userType)}
           readOnly={readOnly}
-          readOnlyHint={
-            readOnly
-              ? ownSlug === "social"
-                ? "Modo leitura no quadro geral. Use Meu painel para operar."
-                : "Modo leitura (demo): você vê a fila da Social sem alterar."
-              : undefined
-          }
           sectorUsers={[]}
         />
       </div>
@@ -73,16 +94,6 @@ export default async function SectorBoardPage({
   }
 
   const slug = params.slug as SectorSlug;
-
-  if (!OPERATIONAL_SLUGS.has(slug)) {
-    notFound();
-  }
-
-  // Colaborador sem painel (não deve ocorrer) — redireciona
-  if (collaborator && !ownSlug) {
-    redirect(getDashboardPath(user.userType));
-  }
-
   const data = await getSectorBoardData(slug);
   const sectorUsers = await listSectorUsers(data.sector.id);
   const canAssign =
@@ -108,13 +119,6 @@ export default async function SectorBoardPage({
         canReview={!readOnly && canReviewDemand(user.userType)}
         canChangeDeadline={canChangeDeadline}
         readOnly={readOnly}
-        readOnlyHint={
-          readOnly
-            ? ownSlug === slug
-              ? "Modo leitura no quadro geral. Use Meu painel para operar."
-              : `Modo leitura (demo): fila de ${copy.title.replace("Quadro Geral d", "").replace("o ", "").replace("e ", "")} só para acompanhar.`
-            : undefined
-        }
         sectorUsers={sectorUsers}
       />
     </div>
