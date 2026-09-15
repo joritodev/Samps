@@ -379,7 +379,7 @@ export async function archiveBoard(boardId: string, userId: string) {
 
 export async function getBoardKpis(boardId: string, competenceId: string) {
   const demands = await db.demand.findMany({
-    where: { boardId, competenceId },
+    where: { boardId, competenceId, isChecklistItem: false },
   });
 
   const feeds = demands.filter((d) => d.type === DemandType.FEED || d.type === DemandType.REEL || d.type === DemandType.DESIGN);
@@ -419,6 +419,7 @@ export async function groupBoardDemandsByList(
     where: {
       boardId,
       competenceId,
+      isChecklistItem: false,
       ...(filters?.listId ? { listId: filters.listId } : {}),
       ...(filters?.status
         ? { status: filters.status as DemandStatus }
