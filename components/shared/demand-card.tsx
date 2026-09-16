@@ -19,6 +19,8 @@ type DemandCardData = {
   priority?: { name: string; color: string } | null;
   sector?: { name: string; color?: string | null } | null;
   origin?: string;
+  isChecklistItem?: boolean;
+  parentDemand?: { title: string } | null;
   timerPreview?: {
     status: string;
     startedAt: Date;
@@ -90,6 +92,11 @@ export function DemandCard({
         {originLabel && (
           <p className="text-xs text-muted-foreground">{originLabel}</p>
         )}
+        {demand.isChecklistItem && demand.parentDemand?.title ? (
+          <Badge variant="secondary" className="mt-1 text-xs font-normal">
+            Parte de: {demand.parentDemand.title}
+          </Badge>
+        ) : null}
       </CardHeader>
       <CardContent className="space-y-2 text-xs text-muted-foreground">
         <div className="flex flex-wrap gap-1">

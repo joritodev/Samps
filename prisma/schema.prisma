@@ -682,6 +682,10 @@ model Demand {
   createdAt             DateTime        @default(now())
   updatedAt             DateTime        @updatedAt
 
+  parentDemandId   String?
+  checklistOrder   Int?
+  isChecklistItem  Boolean  @default(false)
+
   client          Client           @relation(fields: [clientId], references: [id], onDelete: Cascade)
   board           ClientBoard?     @relation(fields: [boardId], references: [id])
   list            BoardList?       @relation(fields: [listId], references: [id])
@@ -694,6 +698,8 @@ model Demand {
   priority        PriorityLevel?   @relation(fields: [priorityId], references: [id])
   contentType     ContentType?     @relation(fields: [contentTypeId], references: [id])
   project         Project?         @relation(fields: [projectId], references: [id])
+  parentDemand    Demand?          @relation("DemandChecklist", fields: [parentDemandId], references: [id], onDelete: Cascade)
+  childDemands    Demand[]         @relation("DemandChecklist")
   comments        Comment[]
   attachments     Attachment[]
   assignments     DemandAssignment[]
@@ -710,6 +716,7 @@ model Demand {
   @@index([status])
   @@index([boardColumn])
   @@index([dueDate])
+  @@index([parentDemandId])
 }
 
 model DemandDelay {

@@ -8,9 +8,14 @@ import { BoardFilters } from "@/components/board/board-filters";
 import { BoardKanban } from "@/components/board/board-kanban";
 import { BoardCalendar } from "@/components/board/board-calendar";
 import { CardDetailSheet } from "@/components/board/card-detail-sheet";
+import {
+  ExtraDemandSheet,
+  type ExtraDemandAssigneeOption,
+} from "@/components/board/extra-demand-sheet";
 import { Button } from "@/components/ui/button";
 import { getCardDetailAction } from "@/lib/actions/cards.actions";
 import type { DemandDelayRow } from "@/components/shared/demand-delay-history";
+import type { TaxonomyOption } from "@/types/board-ui";
 import { toast } from "sonner";
 
 type List = { id: string; name: string; type: string };
@@ -63,6 +68,8 @@ function BoardToolbar({
   onInsightsOpenChange,
   lists,
   kpis,
+  canCreateExtra,
+  onCreateExtra,
 }: {
   clientId: string;
   boardId: string;
@@ -87,6 +94,8 @@ function BoardToolbar({
     overdue: number;
     unassigned: number;
   };
+  canCreateExtra: boolean;
+  onCreateExtra: () => void;
 }) {
   const activeFilterCount = useActiveFilterCount();
 
@@ -108,6 +117,8 @@ function BoardToolbar({
         insightsOpen={insightsOpen}
         onInsightsOpenChange={onInsightsOpenChange}
         activeFilterCount={activeFilterCount}
+        canCreateExtra={canCreateExtra}
+        onCreateExtra={onCreateExtra}
       />
 
       {insightsOpen ? <BoardInsights kpis={kpis} /> : null}
@@ -135,6 +146,9 @@ export function BoardView({
   calendarDemands,
   kpis,
   canManageLists = false,
+  canCreateExtra = false,
+  sectors = [],
+  sectorUsers = [],
 }: {
   clientId: string;
   boardId: string;
@@ -150,6 +164,9 @@ export function BoardView({
   grouped: Record<string, Demand[]>;
   calendarDemands: Demand[];
   canManageLists?: boolean;
+  canCreateExtra?: boolean;
+  sectors?: TaxonomyOption[];
+  sectorUsers?: ExtraDemandAssigneeOption[];
   kpis: {
     feedsContracted: number;
     feedsDemanded: number;
@@ -164,7 +181,9 @@ export function BoardView({
   const [insightsOpen, setInsightsOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState<CardDetail | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [extraSheetOpen, setExtraSheetOpen] = useState(false);
   const [canChangeDeadline, setCanChangeDeadline] = useState(false);
+  const [canEditChecklist, setCanEditChecklist] = useState(false);
   const [cardDelays, setCardDelays] = useState<DemandDelayRow[]>([]);
   const [, startTransition] = useTransition();
 
@@ -182,6 +201,7 @@ export function BoardView({
       if ("card" in result && result.card) {
         setSelectedCard(result.card as CardDetail);
         setCanChangeDeadline(result.canChangeDeadline ?? false);
+        setCanEditChecklist(result.canEditChecklist ?? false);
         setCardDelays(result.delays ?? []);
       }
     });
@@ -213,6 +233,8 @@ export function BoardView({
           onInsightsOpenChange={setInsightsOpen}
           lists={lists}
           kpis={kpis}
+          canCreateExtra={canCreateExtra}
+          onCreateExtra={() => setExtraSheetOpen(true)}
         />
       </Suspense>
 
@@ -246,8 +268,20 @@ export function BoardView({
           if (!o) setSelectedCard(null);
         }}
         canChangeDeadline={canChangeDeadline}
+        canEditChecklist={canEditChecklist}
+        checklistAssignees={sectorUsers}
         delays={cardDelays}
       />
+
+      {canCreateExtra ? (
+        <ExtraDemandSheet
+          open={extraSheetOpen}
+          onOpenChange={setExtraSheetOpen}
+          clientId={clientId}
+          sectors={sectors}
+          sectorUsers={sectorUsers}
+        />
+      ) : null}
     </div>
   );
 }

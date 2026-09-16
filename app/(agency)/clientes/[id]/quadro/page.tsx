@@ -1,11 +1,14 @@
 import { NoBoardView, BoardView } from "@/components/board/board-view";
+import { db } from "@/lib/db";
 import {
   getActiveBoardByClientId,
   getBoardKpis,
   groupBoardDemandsByList,
 } from "@/lib/services/board.service";
 import { requireClientAccess } from "@/lib/permissions/check";
+import { canCreateExtraDemand } from "@/lib/permissions/can-create-extra-demand";
 import { hasPermission } from "@/lib/permissions/resolve";
+import { UserStatus, UserType } from "@prisma/client";
 
 export default async function ClienteQuadroPage({
   params,
@@ -22,6 +25,9 @@ export default async function ClienteQuadroPage({
 }) {
   const user = await requireClientAccess(params.id);
   const canManageLists = hasPermission(user.permissions, "boards.manage_lists");
+  const canCreateExtra = canCreateExtraDemand(user.permissions);
+  const canEditChecklist = hasPermission(user.permissions, "demands.edit");
+  const loadSectorUsers = canCreateExtra || canEditChecklist;
 
   const board = await getActiveBoardByClientId(params.id);
   if (!board) {
@@ -47,7 +53,7 @@ export default async function ClienteQuadroPage({
     );
   }
 
-  const [{ lists, grouped }, kpis] = await Promise.all([
+  const [{ lists, grouped }, kpis, sectors, sectorUsers] = await Promise.all([
     groupBoardDemandsByList(board.id, competenceId, {
       search: searchParams.busca,
       listId: searchParams.lista,
@@ -60,6 +66,24 @@ export default async function ClienteQuadroPage({
             : undefined,
     }),
     getBoardKpis(board.id, competenceId),
+    canCreateExtra
+      ? db.sector.findMany({
+          where: { isActive: true },
+          orderBy: { name: "asc" },
+          select: { id: true, name: true },
+        })
+      : Promise.resolve([]),
+    loadSectorUsers
+      ? db.user.findMany({
+          where: {
+            status: UserStatus.ACTIVE,
+            sectorId: { not: null },
+            userType: { not: UserType.EXTERNAL_CLIENT },
+          },
+          orderBy: { name: "asc" },
+          select: { id: true, name: true, sectorId: true },
+        })
+      : Promise.resolve([]),
   ]);
 
   const calendarDemands = Object.values(grouped).flat();
@@ -83,6 +107,13 @@ export default async function ClienteQuadroPage({
       currentCompetenceId={competenceId}
       lists={lists.map((l) => ({ id: l.id, name: l.name, type: l.type }))}
       canManageLists={canManageLists}
+      canCreateExtra={canCreateExtra}
+      sectors={sectors}
+      sectorUsers={sectorUsers.flatMap((u) =>
+        u.sectorId
+          ? [{ id: u.id, name: u.name, sectorId: u.sectorId }]
+          : []
+      )}
       grouped={Object.fromEntries(
         Object.entries(grouped).map(([listId, demands]) => [
           listId,
