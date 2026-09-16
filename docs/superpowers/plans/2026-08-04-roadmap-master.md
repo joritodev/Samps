@@ -1,6 +1,6 @@
 # Samps OS — Roadmap Master (ago → set 2026)
 
-**Data:** 2026-08-04 (estado de execução atualizado em 2026-09-08)
+**Data:** 2026-08-04 (estado de execução atualizado em 2026-09-15)
 **Origem:** reunião Samps Digital 28/07/2026 + backlog técnico pendente
 **Meta do cliente:** time testando em agosto, sistema operacional em setembro
 **Próxima reunião:** a combinar (demo 18/08 feita; roteiro em `docs/superpowers/notas/2026-08-27-roteiro-reuniao.md`)
@@ -35,11 +35,14 @@ Nenhuma fase de código começa antes de a anterior ter PRs mergeados e gates ap
 | Acessos teste | `docs/superpowers/notas/2026-09-04-acessos-temporarios-teste.md` |
 | Spec Fase 3 | `docs/superpowers/specs/2026-08-16-fase3-gestao-agencia-design.md` |
 
-**Próxima fatia a executar:** Fase **3.2** — anexos nas demandas (Drive-first)  
-Plano de fase: `docs/superpowers/plans/2026-08-04-fase3-operacional-setembro.md` (fatia 3.2)  
-Antes de codar: brainstorming curto da opção de storage → `writing-plans` → SDD
+**Próxima fatia a executar (prioridade Samps até sex 19/09):**  
+**Demandas — Fatia A** — visibilidade hierárquica (individual / setor / gestão)  
+- Spec: `docs/superpowers/specs/2026-09-15-demandas-visibilidade-avulsa-checklist-design.md`  
+- Plano: `docs/superpowers/plans/2026-09-15-demandas-visibilidade-avulsa-checklist.md`  
+- Ordem: **A** visibilidade → **B** demanda avulsa → **C** checklist multi-responsável  
 
-**Fila depois da 3.2:** 3.7 CSP → 3.3/3.4/3.5 (bloqueadas até input Samps) → restante Fase 4 (capacidade, agenda).
+**Fila depois desta onda (ou em paralelo se sobrar tempo):** Fase **3.2** anexos (Drive-first) → 3.7 CSP → 3.3/3.5 → Fase 4.  
+Nota: a antiga “3.4 visibilidade aberta” foi **redefinida** pelos áudios de 10–15/09 (hierarquia Trello, não leitura cruzada).
 
 ---
 
