@@ -271,6 +271,7 @@ export function BoardView({
         canEditChecklist={canEditChecklist}
         checklistAssignees={sectorUsers}
         delays={cardDelays}
+        onOpenDemand={openCard}
       />
 
       {canCreateExtra ? (

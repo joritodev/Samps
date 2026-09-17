@@ -18,6 +18,16 @@ const addSchema = z.object({
   parentId: z.string().min(1),
   clientId: z.string().min(1),
   title: z.string().trim().min(1, "Título é obrigatório.").max(160),
+  description: z.string().trim().min(1, "Descrição é obrigatória.").max(4000),
+  format: z.string().trim().max(80).optional(),
+  dueDate: z
+    .string()
+    .trim()
+    .optional()
+    .transform((v) => (v ? new Date(`${v}T12:00:00.000Z`) : undefined))
+    .refine((d) => d === undefined || !Number.isNaN(d.getTime()), {
+      message: "Prazo inválido.",
+    }),
   assigneeId: z.string().optional(),
   sectorId: z.string().optional(),
 });
@@ -26,6 +36,9 @@ export async function addChecklistItemAction(input: {
   parentId: string;
   clientId: string;
   title: string;
+  description: string;
+  format?: string;
+  dueDate?: string;
   assigneeId?: string;
   sectorId?: string;
 }) {
@@ -38,6 +51,9 @@ export async function addChecklistItemAction(input: {
   try {
     const child = await addChecklistItem(user, parsed.data.parentId, {
       title: parsed.data.title,
+      description: parsed.data.description,
+      format: parsed.data.format || undefined,
+      dueDate: parsed.data.dueDate,
       assigneeId: parsed.data.assigneeId || undefined,
       sectorId: parsed.data.sectorId || undefined,
     });

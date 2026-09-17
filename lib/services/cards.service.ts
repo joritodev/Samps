@@ -38,8 +38,11 @@ export async function getCardById(id: string) {
         select: {
           id: true,
           title: true,
+          description: true,
+          format: true,
           status: true,
           checklistOrder: true,
+          dueDate: true,
           assignee: { select: { id: true, name: true, avatarUrl: true } },
         },
       },

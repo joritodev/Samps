@@ -1,18 +1,25 @@
 import {
-  AssignmentMethod,
+  AssignmentStatus,
   DemandOrigin,
   DemandStatus,
   DemandType,
   UserStatus,
+  WorkSessionStatus,
 } from "@prisma/client";
 import { computeChecklistProgress } from "@/lib/agency/checklist-progress";
 import { db } from "@/lib/db";
 import { canAccessClient, hasPermission } from "@/lib/permissions/resolve";
-import { assignDemand } from "@/lib/services/assignment.service";
+import { resolveDelayOnTerminalStatus } from "@/lib/services/deadline.service";
+import { distributeDemandToSector } from "@/lib/services/distribution.service";
+import { recalculateSectorPriorities } from "@/lib/services/priority.service";
 import type { SessionUser } from "@/types/auth";
 
 export type AddChecklistItemInput = {
   title: string;
+  description?: string;
+  format?: string;
+  dueDate?: Date;
+  type?: DemandType;
   assigneeId?: string;
   sectorId?: string;
 };
@@ -85,26 +92,36 @@ export async function addChecklistItem(
   });
   const checklistOrder = (maxOrder._max.checklistOrder ?? 0) + 1;
 
+  const description = input.description?.trim() || undefined;
+  const format = input.format?.trim() || undefined;
+  const demanded = Boolean(input.assigneeId || sectorId);
+
   const child = await db.demand.create({
     data: {
       title,
-      type: DemandType.OTHER,
+      description,
+      format,
+      type: input.type ?? parent.type ?? DemandType.OTHER,
       origin:
         parent.origin === DemandOrigin.EXTRA
           ? DemandOrigin.EXTRA
           : DemandOrigin.CLIENT_BOARD,
-      status: DemandStatus.OPEN,
-      internalStatus: input.assigneeId
-        ? "Atribuída"
+      status: demanded ? DemandStatus.DEMANDED : DemandStatus.OPEN,
+      internalStatus: demanded
+        ? "Disponível no setor"
         : "Item de checklist",
-      boardColumn: "todo",
+      boardColumn: demanded ? "available" : "todo",
       isContractual: false,
       visibleToClient: false,
       isChecklistItem: true,
       checklistOrder,
+      dueDate: input.dueDate,
       client: { connect: { id: parent.clientId } },
       parentDemand: { connect: { id: parent.id } },
       requester: { connect: { id: user.id } },
+      ...(input.assigneeId
+        ? { assignee: { connect: { id: input.assigneeId } } }
+        : {}),
       ...(parent.boardId
         ? { board: { connect: { id: parent.boardId } } }
         : {}),
@@ -115,13 +132,14 @@ export async function addChecklistItem(
     },
   });
 
-  if (input.assigneeId) {
-    await assignDemand(
-      child.id,
-      input.assigneeId,
-      user,
-      AssignmentMethod.MANAGEMENT
-    );
+  if (sectorId && demanded) {
+    await distributeDemandToSector({
+      demandId: child.id,
+      sectorId,
+      actorId: user.id,
+      title,
+      clientId: parent.clientId,
+    });
   }
 
   return db.demand.findUniqueOrThrow({
@@ -142,6 +160,7 @@ export async function assignChecklistItem(
     where: { id: childId },
     select: {
       id: true,
+      title: true,
       clientId: true,
       isChecklistItem: true,
       sectorId: true,
@@ -175,19 +194,22 @@ export async function assignChecklistItem(
     throw new Error("Responsável inválido ou sem setor");
   }
 
-  if (child.sectorId !== assignee.sectorId) {
-    await db.demand.update({
-      where: { id: childId },
-      data: { sector: { connect: { id: assignee.sectorId } } },
-    });
-  }
+  const sectorId = assignee.sectorId;
+  await db.demand.update({
+    where: { id: childId },
+    data: {
+      sector: { connect: { id: sectorId } },
+      assignee: { connect: { id: assignee.id } },
+    },
+  });
 
-  await assignDemand(
-    childId,
-    assigneeId,
-    user,
-    AssignmentMethod.MANAGEMENT
-  );
+  await distributeDemandToSector({
+    demandId: childId,
+    sectorId,
+    actorId: user.id,
+    title: child.title,
+    clientId: child.clientId,
+  });
 
   return db.demand.findUniqueOrThrow({
     where: { id: childId },
@@ -210,6 +232,8 @@ export async function completeChecklistItem(
       assigneeId: true,
       isChecklistItem: true,
       status: true,
+      sectorId: true,
+      sector: { select: { leaderId: true } },
     },
   });
 
@@ -222,7 +246,8 @@ export async function completeChecklistItem(
 
   const canEdit = hasPermission(user.permissions, "demands.edit");
   const isAssignee = child.assigneeId === user.id;
-  if (!canEdit && !isAssignee) {
+  const isLeader = child.sector?.leaderId === user.id;
+  if (!canEdit && !isAssignee && !isLeader) {
     throw new Error("Sem permissão para concluir este item");
   }
 
@@ -234,18 +259,57 @@ export async function completeChecklistItem(
     return child;
   }
 
-  return db.demand.update({
+  const assignment = await db.demandAssignment.findFirst({
+    where: {
+      demandId: childId,
+      status: {
+        in: [
+          AssignmentStatus.AVAILABLE,
+          AssignmentStatus.ASSIGNED,
+          AssignmentStatus.IN_PROGRESS,
+          AssignmentStatus.IN_REVIEW,
+          AssignmentStatus.ADJUSTMENT,
+        ],
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  if (assignment) {
+    await db.demandAssignment.update({
+      where: { id: assignment.id },
+      data: { status: AssignmentStatus.DONE },
+    });
+  }
+
+  await db.workSession.updateMany({
+    where: {
+      demandId: childId,
+      status: { in: [WorkSessionStatus.ACTIVE, WorkSessionStatus.PAUSED] },
+    },
+    data: { status: WorkSessionStatus.COMPLETED, endedAt: new Date() },
+  });
+
+  const updated = await db.demand.update({
     where: { id: childId },
     data: {
       status: DemandStatus.DONE,
       internalStatus: "Concluída",
       boardColumn: "done",
+      productionCompletedAt: new Date(),
     },
     include: {
       assignee: { select: { id: true, name: true, avatarUrl: true } },
       sector: { select: { id: true, name: true } },
     },
   });
+
+  await resolveDelayOnTerminalStatus(childId, "DONE");
+  if (child.sectorId) {
+    await recalculateSectorPriorities(child.sectorId);
+  }
+
+  return updated;
 }
 
 export async function listChecklistItems(parentId: string) {

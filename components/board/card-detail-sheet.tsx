@@ -34,6 +34,7 @@ import {
   DemandChecklist,
   type ChecklistAssigneeOption,
 } from "@/components/board/demand-checklist";
+import { completeChecklistItemAction } from "@/app/actions/checklist";
 import { toast } from "sonner";
 import {
   canCompleteProduction,
@@ -68,8 +69,11 @@ type CardDetail = {
   childDemands?: {
     id: string;
     title: string;
+    description?: string | null;
+    format?: string | null;
     status: string;
     checklistOrder?: number | null;
+    dueDate?: Date | string | null;
     assignee?: { id?: string; name: string } | null;
   }[];
   slidesCount?: number | null;
@@ -105,6 +109,7 @@ export function CardDetailSheet({
   canEditChecklist = false,
   checklistAssignees = [],
   delays = [],
+  onOpenDemand,
 }: {
   clientId: string;
   card: CardDetail | null;
@@ -114,6 +119,7 @@ export function CardDetailSheet({
   canEditChecklist?: boolean;
   checklistAssignees?: ChecklistAssigneeOption[];
   delays?: DemandDelayRow[];
+  onOpenDemand?: (id: string) => void;
 }) {
   const [pending, startTransition] = useTransition();
   const [title, setTitle] = useState("");
@@ -139,6 +145,14 @@ export function CardDetailSheet({
   const canProduce = card ? canCompleteProduction(card.status) : false;
   const canAdjust = card ? canRequestAdjustment(card.status) : false;
   const canPublish = card ? canRegisterPublication(card.status) : false;
+  const checklistDone =
+    card?.status === "DONE" ||
+    card?.status === "PUBLISHED" ||
+    card?.status === "DELIVERED";
+  const canCompleteChecklistChild =
+    !!card?.isChecklistItem &&
+    canEditChecklist &&
+    !checklistDone;
   const fmt = (card?.format ?? "").toLowerCase();
 
   useEffect(() => {
@@ -179,6 +193,29 @@ export function CardDetailSheet({
                 ) : null}
               </div>
             </SheetHeader>
+
+            {canCompleteChecklistChild ? (
+              <Button
+                className="mt-3"
+                variant="secondary"
+                disabled={pending}
+                onClick={() => {
+                  startTransition(async () => {
+                    const r = await completeChecklistItemAction({
+                      childId: card.id,
+                      clientId,
+                    });
+                    if (r.error) toast.error(r.error);
+                    else {
+                      toast.success("Demanda do checklist concluída.");
+                      onOpenChange(false);
+                    }
+                  });
+                }}
+              >
+                Concluir demanda
+              </Button>
+            ) : null}
 
             <Tabs defaultValue="identification" className="mt-4">
               <TabsList className="flex flex-wrap h-auto gap-1">
@@ -233,6 +270,8 @@ export function CardDetailSheet({
                     items={card.childDemands ?? []}
                     assignees={checklistAssignees}
                     canEdit={canEditChecklist}
+                    defaultDueDate={card.dueDate}
+                    onOpenItem={onOpenDemand}
                   />
                 </TabsContent>
               ) : null}
