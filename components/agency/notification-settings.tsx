@@ -67,6 +67,50 @@ export function NotificationSettings({
             </div>
           ))}
 
+          <div className="space-y-3 pt-2">
+            <div>
+              <h2 className="text-sm font-semibold text-foreground">
+                Alertas na tela
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Pop-ups e som desta sessão, sem e-mail nem push.
+              </p>
+            </div>
+            {(
+              [
+                {
+                  key: "toastAnnouncements" as const,
+                  label: "Pop-up de avisos gerais",
+                },
+                {
+                  key: "soundAnnouncements" as const,
+                  label: "Som de avisos gerais",
+                },
+                {
+                  key: "toastNotifications" as const,
+                  label: "Pop-up de notificações",
+                },
+                {
+                  key: "soundNotifications" as const,
+                  label: "Som de notificações",
+                },
+              ] as const
+            ).map((item) => (
+              <div
+                key={item.key}
+                className="flex items-center justify-between gap-4 rounded-xl border border-border px-4 py-3"
+              >
+                <Label className="text-sm font-medium">{item.label}</Label>
+                <Switch
+                  checked={prefs[item.key]}
+                  onCheckedChange={(v) =>
+                    setPrefs((p) => ({ ...p, [item.key]: v }))
+                  }
+                />
+              </div>
+            ))}
+          </div>
+
           <Button disabled={pending} onClick={save}>
             Salvar preferências
           </Button>
