@@ -209,11 +209,9 @@ function SidebarBody({
         </p>
       </div>
 
-      <div className="px-3 pt-4">
-        <div className="flex items-center gap-2">
-          <div className="min-w-0 flex-1">
-            <GlobalSearch types={searchTypes} />
-          </div>
+      <div className="space-y-2 px-3 pt-4">
+        <GlobalSearch types={searchTypes} compact />
+        <div className="flex items-center justify-end gap-0.5">
           <MuralPopover announcements={announcements} birthdays={birthdays} />
           <SessionMuteButton />
           <NotificationBell />
