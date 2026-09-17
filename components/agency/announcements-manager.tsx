@@ -140,9 +140,9 @@ export function AnnouncementsManager({
         <div>
           <h2 className="text-base font-semibold text-foreground">Novo aviso</h2>
           <p className="text-sm text-muted-foreground">
-            Aparece no mural da área interna enquanto estiver ativo. Deixe
-            início vazio para publicar agora; se preencher um horário futuro, só
-            aparece a partir dele.
+            Avisos gerais aparecem no megafone da área interna enquanto
+            estiverem ativos. Deixe o início vazio para publicar agora; se
+            preencher um horário futuro, só aparece a partir dele.
           </p>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -181,18 +181,36 @@ export function AnnouncementsManager({
                 </SelectItem>
               </SelectContent>
             </Select>
+            <p
+              className={
+                kind === AnnouncementKind.URGENT
+                  ? "rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-950 dark:border-amber-400/40 dark:bg-amber-400/10 dark:text-amber-100"
+                  : kind === AnnouncementKind.CELEBRATION
+                    ? "rounded-md border border-fuchsia-200 bg-fuchsia-50 px-3 py-2 text-xs text-fuchsia-950 dark:border-fuchsia-400/30 dark:bg-fuchsia-400/10 dark:text-fuchsia-100"
+                    : "rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground"
+              }
+            >
+              {kind === AnnouncementKind.URGENT
+                ? "Preview: destaque no mural; não é um erro do sistema."
+                : kind === AnnouncementKind.CELEBRATION
+                  ? "Preview: aviso de celebração no mural e no pop-up."
+                  : "Preview: informativo no megafone e no pop-up. Urgente usa destaque no mural; não é um erro do sistema."}
+            </p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="aviso-starts">Início (opcional)</Label>
+            <Label htmlFor="aviso-starts">Publicar agora ou agendar</Label>
             <Input
               id="aviso-starts"
               type="datetime-local"
               value={startsAt}
               onChange={(e) => setStartsAt(e.target.value)}
             />
+            <p className="text-xs text-muted-foreground">
+              Vazio = publicar agora. Preenchido = agendar.
+            </p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="aviso-ends">Fim (opcional)</Label>
+            <Label htmlFor="aviso-ends">Some do mural depois desta data</Label>
             <Input
               id="aviso-ends"
               type="datetime-local"

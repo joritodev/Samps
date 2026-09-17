@@ -69,6 +69,10 @@ export async function updateNotificationPrefsAction(input: {
   ADJUSTMENT: boolean;
   PUBLICATION: boolean;
   OTHER: boolean;
+  toastAnnouncements: boolean;
+  soundAnnouncements: boolean;
+  toastNotifications: boolean;
+  soundNotifications: boolean;
 }) {
   const user = await requireAuth();
   try {

@@ -17,10 +17,11 @@ export default async function ConfiguracoesAvisosPage() {
           ← Configurações
         </Link>
         <h1 className="mt-2 text-xl font-semibold tracking-tight text-foreground">
-          Avisos do mural
+          Avisos gerais
         </h1>
         <p className="mt-0.5 text-sm text-muted-foreground">
-          Comunicados internos para a equipe na área logada
+          Comunicados para a equipe. Aparecem no megafone e, se a pessoa já
+          estiver logada, num pop-up.
         </p>
       </header>
       <AnnouncementsManager

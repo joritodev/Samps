@@ -41,7 +41,14 @@ export const NOTIFICATION_PREF_GROUPS: {
   },
 ];
 
-export type NotificationPrefs = Record<NotificationPrefGroup, boolean>;
+export type DeliveryPrefKey =
+  | "toastAnnouncements"
+  | "soundAnnouncements"
+  | "toastNotifications"
+  | "soundNotifications";
+
+export type NotificationPrefs = Record<NotificationPrefGroup, boolean> &
+  Record<DeliveryPrefKey, boolean>;
 
 export const DEFAULT_NOTIFICATION_PREFS: NotificationPrefs = {
   DEADLINE: true,
@@ -49,6 +56,10 @@ export const DEFAULT_NOTIFICATION_PREFS: NotificationPrefs = {
   ADJUSTMENT: true,
   PUBLICATION: true,
   OTHER: true,
+  toastAnnouncements: true,
+  soundAnnouncements: false,
+  toastNotifications: true,
+  soundNotifications: false,
 };
 
 function groupForType(type: NotificationType): NotificationPrefGroup {
@@ -83,6 +94,10 @@ export function parseNotificationPrefs(
     ADJUSTMENT: obj.ADJUSTMENT !== false,
     PUBLICATION: obj.PUBLICATION !== false,
     OTHER: obj.OTHER !== false,
+    toastAnnouncements: obj.toastAnnouncements !== false,
+    soundAnnouncements: obj.soundAnnouncements === true,
+    toastNotifications: obj.toastNotifications !== false,
+    soundNotifications: obj.soundNotifications === true,
   };
 }
 
