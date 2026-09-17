@@ -31,6 +31,21 @@ export async function getCardById(id: string) {
       contentType: true,
       sector: true,
       contractService: true,
+      parentDemand: { select: { id: true, title: true } },
+      childDemands: {
+        where: { isChecklistItem: true },
+        orderBy: { checklistOrder: "asc" },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          format: true,
+          status: true,
+          checklistOrder: true,
+          dueDate: true,
+          assignee: { select: { id: true, name: true, avatarUrl: true } },
+        },
+      },
       comments: {
         include: { user: { select: { id: true, name: true, avatarUrl: true } } },
         orderBy: { createdAt: "desc" },

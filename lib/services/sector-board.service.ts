@@ -34,6 +34,7 @@ const demandInclude = {
   requester: { select: { id: true, name: true } },
   priority: { select: { id: true, name: true, color: true, weight: true } },
   sector: { select: { id: true, name: true, color: true, slug: true } },
+  parentDemand: { select: { id: true, title: true } },
   assignments: {
     orderBy: { createdAt: "desc" as const },
     take: 1,

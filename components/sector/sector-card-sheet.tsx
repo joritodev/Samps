@@ -26,6 +26,7 @@ import {
 import { requestAdjustmentAction } from "@/lib/actions/adjustment.actions";
 import { registerPublicationAction } from "@/lib/actions/cards.actions";
 import { aprovarDemanda } from "@/app/actions/review";
+import { completeChecklistItemAction } from "@/app/actions/checklist";
 import { listDemandDelaysAction } from "@/lib/actions/deadline.actions";
 import { DeadlineChangeForm } from "@/components/shared/deadline-change-form";
 import {
@@ -52,6 +53,8 @@ export type SectorCardDetail = {
   demandDeadline?: Date | null;
   dueDate?: Date | null;
   publishDate?: Date | null;
+  isChecklistItem?: boolean;
+  parentDemand?: { title: string } | null;
   client?: { name: string };
   assignee?: { id: string; name: string } | null;
   assignments?: {
@@ -116,11 +119,24 @@ export function SectorCardSheet({
 
   const assignment = card.assignments?.[0];
   const session = card.workSessions?.[0];
-  const isExecutor =
-    assignment?.executorId === currentUserId || card.assignee?.id === currentUserId;
   const isAvailable =
     !assignment?.executorId &&
     (assignment?.status === "AVAILABLE" || !assignment);
+  const isExecutor =
+    !isAvailable &&
+    (assignment?.executorId === currentUserId ||
+      card.assignee?.id === currentUserId);
+  const checklistDone =
+    card.status === "DONE" ||
+    card.status === "PUBLISHED" ||
+    card.status === "DELIVERED";
+  const canCompleteChecklistItem =
+    !!card.isChecklistItem &&
+    !checklistDone &&
+    !readOnly &&
+    (canAssign ||
+      isExecutor ||
+      (isAvailable && card.assignee?.id === currentUserId));
   const isSocialReview = card.status === "IN_REVIEW";
   const isAwaitingPublication =
     card.status === "APPROVED" || card.status === "SCHEDULED";
@@ -155,6 +171,11 @@ export function SectorCardSheet({
           <div className="flex flex-wrap gap-1">
             <Badge variant="outline">{card.status}</Badge>
             {card.format && <Badge variant="secondary">{card.format}</Badge>}
+            {card.isChecklistItem && card.parentDemand?.title ? (
+              <Badge variant="secondary">
+                Parte de: {card.parentDemand.title}
+              </Badge>
+            ) : null}
           </div>
         </SheetHeader>
 
@@ -163,7 +184,7 @@ export function SectorCardSheet({
             <strong>Cliente:</strong> {card.client?.name}
           </p>
           <p>
-            <strong>Executor:</strong>{" "}
+            <strong>{isAvailable ? "Demandada para" : "Executor"}:</strong>{" "}
             {assignment?.executor?.name ?? card.assignee?.name ?? "—"}
           </p>
 
@@ -192,6 +213,25 @@ export function SectorCardSheet({
               Assumir demanda
             </Button>
           )}
+
+          {canCompleteChecklistItem ? (
+            <Button
+              variant="secondary"
+              disabled={pending}
+              onClick={() =>
+                run(
+                  () =>
+                    completeChecklistItemAction({
+                      childId: card.id,
+                      clientId: card.clientId,
+                    }),
+                  "Demanda do checklist concluída"
+                )
+              }
+            >
+              Concluir demanda
+            </Button>
+          ) : null}
 
           {showProductionActions && canAssign && (
             <div className="space-y-2 rounded-lg border p-3">

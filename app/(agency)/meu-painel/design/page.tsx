@@ -31,7 +31,11 @@ export default async function DesignPanelPage() {
     <div className="flex h-full min-h-0 flex-col overflow-hidden p-4 sm:p-6">
       <SectorBoardView
         title="Meu painel — Design"
-        description="Fila do setor e demandas atribuídas a você"
+        description={
+          leaderFullView
+            ? "Fila completa do setor"
+            : "Suas demandas e fila disponível do setor"
+        }
         columns={data.columns}
         grouped={data.grouped as never}
         top5={data.top5 as never}

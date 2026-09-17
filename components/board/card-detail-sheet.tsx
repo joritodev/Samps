@@ -30,6 +30,11 @@ import {
   DemandDelayHistory,
   type DemandDelayRow,
 } from "@/components/shared/demand-delay-history";
+import {
+  DemandChecklist,
+  type ChecklistAssigneeOption,
+} from "@/components/board/demand-checklist";
+import { completeChecklistItemAction } from "@/app/actions/checklist";
 import { toast } from "sonner";
 import {
   canCompleteProduction,
@@ -58,6 +63,19 @@ type CardDetail = {
   briefingLockedAt?: Date | null;
   visibleToClient: boolean;
   isContractual: boolean;
+  isChecklistItem?: boolean;
+  parentDemandId?: string | null;
+  parentDemand?: { id: string; title: string } | null;
+  childDemands?: {
+    id: string;
+    title: string;
+    description?: string | null;
+    format?: string | null;
+    status: string;
+    checklistOrder?: number | null;
+    dueDate?: Date | string | null;
+    assignee?: { id?: string; name: string } | null;
+  }[];
   slidesCount?: number | null;
   screensCount?: number | null;
   durationSeconds?: number | null;
@@ -88,14 +106,20 @@ export function CardDetailSheet({
   open,
   onOpenChange,
   canChangeDeadline = false,
+  canEditChecklist = false,
+  checklistAssignees = [],
   delays = [],
+  onOpenDemand,
 }: {
   clientId: string;
   card: CardDetail | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   canChangeDeadline?: boolean;
+  canEditChecklist?: boolean;
+  checklistAssignees?: ChecklistAssigneeOption[];
   delays?: DemandDelayRow[];
+  onOpenDemand?: (id: string) => void;
 }) {
   const [pending, startTransition] = useTransition();
   const [title, setTitle] = useState("");
@@ -121,6 +145,14 @@ export function CardDetailSheet({
   const canProduce = card ? canCompleteProduction(card.status) : false;
   const canAdjust = card ? canRequestAdjustment(card.status) : false;
   const canPublish = card ? canRegisterPublication(card.status) : false;
+  const checklistDone =
+    card?.status === "DONE" ||
+    card?.status === "PUBLISHED" ||
+    card?.status === "DELIVERED";
+  const canCompleteChecklistChild =
+    !!card?.isChecklistItem &&
+    canEditChecklist &&
+    !checklistDone;
   const fmt = (card?.format ?? "").toLowerCase();
 
   useEffect(() => {
@@ -154,13 +186,44 @@ export function CardDetailSheet({
                 <Badge variant="outline">{demandStatusLabel(card.status)}</Badge>
                 {card.cardCode && <Badge variant="secondary">{card.cardCode}</Badge>}
                 {card.isContractual && <Badge variant="secondary">Contratual</Badge>}
+                {card.isChecklistItem && card.parentDemand?.title ? (
+                  <Badge variant="secondary">
+                    Parte de: {card.parentDemand.title}
+                  </Badge>
+                ) : null}
               </div>
             </SheetHeader>
+
+            {canCompleteChecklistChild ? (
+              <Button
+                className="mt-3"
+                variant="secondary"
+                disabled={pending}
+                onClick={() => {
+                  startTransition(async () => {
+                    const r = await completeChecklistItemAction({
+                      childId: card.id,
+                      clientId,
+                    });
+                    if (r.error) toast.error(r.error);
+                    else {
+                      toast.success("Demanda do checklist concluída.");
+                      onOpenChange(false);
+                    }
+                  });
+                }}
+              >
+                Concluir demanda
+              </Button>
+            ) : null}
 
             <Tabs defaultValue="identification" className="mt-4">
               <TabsList className="flex flex-wrap h-auto gap-1">
                 <TabsTrigger value="identification">Identificação</TabsTrigger>
                 <TabsTrigger value="planning">Planejamento</TabsTrigger>
+                {!card.isChecklistItem ? (
+                  <TabsTrigger value="checklist">Checklist</TabsTrigger>
+                ) : null}
                 <TabsTrigger value="delays">Atrasos</TabsTrigger>
                 <TabsTrigger value="briefing">Briefing</TabsTrigger>
                 <TabsTrigger value="production">Produção</TabsTrigger>
@@ -198,6 +261,20 @@ export function CardDetailSheet({
                   <p className="text-sm">Prazo interno: {format(new Date(card.dueDate), "dd/MM/yyyy", { locale: ptBR })}</p>
                 )}
               </TabsContent>
+
+              {!card.isChecklistItem ? (
+                <TabsContent value="checklist" className="space-y-3">
+                  <DemandChecklist
+                    parentId={card.id}
+                    clientId={clientId}
+                    items={card.childDemands ?? []}
+                    assignees={checklistAssignees}
+                    canEdit={canEditChecklist}
+                    defaultDueDate={card.dueDate}
+                    onOpenItem={onOpenDemand}
+                  />
+                </TabsContent>
+              ) : null}
 
               <TabsContent value="delays" className="space-y-4">
                 <DemandDelayHistory delays={delays} />
