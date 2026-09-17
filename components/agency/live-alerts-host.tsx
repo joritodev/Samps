@@ -276,6 +276,7 @@ export function SessionMuteButton() {
       type="button"
       variant="ghost"
       size="icon"
+      className="size-9 shrink-0"
       onClick={toggle}
       aria-pressed={muted}
       aria-label={muted ? "Ativar som dos avisos" : "Silenciar avisos"}

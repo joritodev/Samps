@@ -115,16 +115,16 @@ export function MuralPopover({
         <Button
           variant="ghost"
           size="icon"
-          className="relative"
+          className="relative size-9 shrink-0"
           aria-label={
             count > 0 ? `Mural, ${count} avisos` : "Mural de avisos"
           }
         >
           <Megaphone className="h-5 w-5" aria-hidden />
           {ready && count > 0 ? (
-            <Badge className="absolute -right-1 -top-1 h-5 min-w-5 border-0 bg-primary px-1 text-[10px] text-primary-foreground">
+            <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-none text-primary-foreground">
               {count > 9 ? "9+" : count}
-            </Badge>
+            </span>
           ) : null}
         </Button>
       </PopoverTrigger>

@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { getUnreadNotificationCountAction } from "@/lib/actions/notifications.actions";
 
 export function NotificationBell() {
@@ -23,7 +22,7 @@ export function NotificationBell() {
   }, []);
 
   return (
-    <Button variant="ghost" size="icon" asChild className="relative">
+    <Button variant="ghost" size="icon" asChild className="relative size-9 shrink-0">
       <Link
         href="/notificacoes"
         aria-label={
@@ -34,9 +33,9 @@ export function NotificationBell() {
       >
         <Bell className="h-5 w-5" aria-hidden />
         {count > 0 && (
-          <Badge className="absolute -right-1 -top-1 h-5 min-w-5 border-0 bg-destructive px-1 text-[10px] text-destructive-foreground">
+          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-none text-destructive-foreground">
             {count > 9 ? "9+" : count}
-          </Badge>
+          </span>
         )}
       </Link>
     </Button>
