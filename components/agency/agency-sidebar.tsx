@@ -210,12 +210,12 @@ function SidebarBody({
       </div>
 
       <div className="space-y-2 px-3 pt-4">
-        <GlobalSearch types={searchTypes} compact />
         <div className="flex h-9 items-center justify-center gap-1">
           <MuralPopover announcements={announcements} birthdays={birthdays} />
           <SessionMuteButton />
           <NotificationBell />
         </div>
+        <GlobalSearch types={searchTypes} compact />
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 py-4">
