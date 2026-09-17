@@ -26,6 +26,9 @@ import type { AgencyUserProfile } from "@/lib/agency/current-user";
 import { SampsLogo } from "@/components/brand/samps-logo";
 import { GlobalSearch } from "@/components/layout/global-search";
 import { NotificationBell } from "@/components/layout/notification-bell";
+import { MuralPopover } from "@/components/agency/mural-popover";
+import { SessionMuteButton } from "@/components/agency/live-alerts-host";
+import type { BannerAnnouncement, BannerBirthday } from "@/components/agency/announcement-banner";
 import type { SearchType } from "@/lib/agency/search-types";
 import type { PermissionCode } from "@/lib/permissions/codes";
 import { userInitials } from "@/lib/utils";
@@ -148,11 +151,15 @@ function isActive(pathname: string, href: string) {
 type AgencySidebarProps = {
   user: AgencyUserProfile;
   searchTypes: SearchType[];
+  announcements?: BannerAnnouncement[];
+  birthdays?: BannerBirthday[];
 };
 
 function SidebarBody({
   user,
   searchTypes,
+  announcements = [],
+  birthdays = [],
   onNavigate,
 }: AgencySidebarProps & { onNavigate?: () => void }) {
   const pathname = usePathname();
@@ -207,6 +214,8 @@ function SidebarBody({
           <div className="min-w-0 flex-1">
             <GlobalSearch types={searchTypes} />
           </div>
+          <MuralPopover announcements={announcements} birthdays={birthdays} />
+          <SessionMuteButton />
           <NotificationBell />
         </div>
       </div>
@@ -341,7 +350,12 @@ function SidebarBody({
   );
 }
 
-export function AgencySidebar({ user, searchTypes }: AgencySidebarProps) {
+export function AgencySidebar({
+  user,
+  searchTypes,
+  announcements = [],
+  birthdays = [],
+}: AgencySidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -352,7 +366,12 @@ export function AgencySidebar({ user, searchTypes }: AgencySidebarProps) {
   return (
     <>
       <aside className="hidden h-full w-64 shrink-0 lg:flex">
-        <SidebarBody user={user} searchTypes={searchTypes} />
+        <SidebarBody
+          user={user}
+          searchTypes={searchTypes}
+          announcements={announcements}
+          birthdays={birthdays}
+        />
       </aside>
 
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
@@ -371,6 +390,8 @@ export function AgencySidebar({ user, searchTypes }: AgencySidebarProps) {
           <SidebarBody
             user={user}
             searchTypes={searchTypes}
+            announcements={announcements}
+            birthdays={birthdays}
             onNavigate={() => setMobileOpen(false)}
           />
         </SheetContent>
@@ -378,3 +399,4 @@ export function AgencySidebar({ user, searchTypes }: AgencySidebarProps) {
     </>
   );
 }
+
