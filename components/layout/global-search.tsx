@@ -38,7 +38,14 @@ function readStoredTypes(allowed: SearchType[]): SearchType[] {
   }
 }
 
-export function GlobalSearch({ types: allowed }: { types: SearchType[] }) {
+export function GlobalSearch({
+  types: allowed,
+  compact = false,
+}: {
+  types: SearchType[];
+  /** Esconde o atalho ⌘K — útil na sidebar estreita. */
+  compact?: boolean;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -123,14 +130,18 @@ export function GlobalSearch({ types: allowed }: { types: SearchType[] }) {
     <>
       <Button
         variant="outline"
-        className="h-9 w-full justify-start border-border bg-secondary/60 px-3 text-muted-foreground"
+        className="h-9 w-full min-w-0 justify-start overflow-hidden border-border bg-secondary/60 px-3 text-muted-foreground"
         onClick={() => setOpen(true)}
       >
-        <Search className="mr-2 h-4 w-4" />
-        <span className="flex-1 text-left text-sm">Pesquisar</span>
-        <kbd className="rounded border border-border bg-background px-1.5 text-[10px] font-medium">
-          ⌘K
-        </kbd>
+        <Search className="mr-2 h-4 w-4 shrink-0" />
+        <span className="min-w-0 flex-1 truncate text-left text-sm">
+          Pesquisar
+        </span>
+        {!compact ? (
+          <kbd className="shrink-0 rounded border border-border bg-background px-1.5 text-[10px] font-medium">
+            ⌘K
+          </kbd>
+        ) : null}
       </Button>
 
       <CommandDialog open={open} onOpenChange={setOpen} shouldFilter={false}>
