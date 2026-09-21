@@ -76,6 +76,21 @@ type CardDetail = {
     dueDate?: Date | string | null;
     assignee?: { id?: string; name: string } | null;
   }[];
+  checklists?: {
+    id: string;
+    title: string;
+    sortOrder: number;
+    items: {
+      id: string;
+      title: string;
+      isDone: boolean;
+      sortOrder: number;
+      dueDate?: Date | string | null;
+      assigneeId?: string | null;
+      assignee?: { id: string; name: string } | null;
+      linkedDemandId?: string | null;
+    }[];
+  }[];
   slidesCount?: number | null;
   screensCount?: number | null;
   durationSeconds?: number | null;
@@ -270,13 +285,12 @@ export function CardDetailSheet({
               {!card.isChecklistItem ? (
                 <TabsContent value="checklist" className="space-y-3">
                   <DemandChecklist
-                    parentId={card.id}
+                    demandId={card.id}
                     clientId={clientId}
-                    items={card.childDemands ?? []}
+                    checklists={card.checklists ?? []}
                     assignees={checklistAssignees}
                     canEdit={canEditChecklist}
-                    defaultDueDate={card.dueDate}
-                    onOpenItem={onOpenDemand}
+                    onOpenLinkedDemand={onOpenDemand}
                   />
                 </TabsContent>
               ) : null}

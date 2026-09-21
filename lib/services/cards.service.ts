@@ -46,6 +46,18 @@ export async function getCardById(id: string) {
           assignee: { select: { id: true, name: true, avatarUrl: true } },
         },
       },
+      checklists: {
+        orderBy: { sortOrder: "asc" },
+        include: {
+          items: {
+            orderBy: { sortOrder: "asc" },
+            include: {
+              assignee: true,
+              linkedDemand: { select: { id: true, status: true } },
+            },
+          },
+        },
+      },
       comments: {
         include: { user: { select: { id: true, name: true, avatarUrl: true } } },
         orderBy: { createdAt: "desc" },

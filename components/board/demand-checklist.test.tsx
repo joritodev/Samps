@@ -10,9 +10,14 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/app/actions/checklist", () => ({
   addChecklistItemAction: vi.fn(),
   assignChecklistItemAction: vi.fn(),
-  completeChecklistItemAction: vi.fn(),
   createChecklistAction: vi.fn(),
+  deleteChecklistAction: vi.fn(),
+  deleteChecklistItemAction: vi.fn(),
+  renameChecklistAction: vi.fn(),
   setChecklistItemDueDateAction: vi.fn(),
+  toggleChecklistItemDoneAction: vi.fn(),
+  unassignChecklistItemAction: vi.fn(),
+  updateChecklistItemTitleAction: vi.fn(),
 }));
 
 afterEach(() => {
@@ -20,51 +25,74 @@ afterEach(() => {
 });
 
 describe("DemandChecklist", () => {
-  it("cria item com os mesmos campos de uma demanda (descrição, formato, prazo)", () => {
+  it("mostra checkbox + Adicionar um item e não mostra Descrição", () => {
     render(
       <DemandChecklist
-        parentId="parent-1"
-        clientId="cli-1"
-        items={[]}
-        canEdit
-        assignees={[{ id: "traf-1", name: "Rafael Alves", sectorId: "sec-traf" }]}
-      />
-    );
-
-    expect(screen.getByLabelText("Título")).toBeTruthy();
-    expect(screen.getByLabelText("Descrição")).toBeTruthy();
-    expect(screen.getByLabelText("Formato")).toBeTruthy();
-    expect(screen.getByLabelText("Prazo")).toBeTruthy();
-    expect(
-      screen.getByText(/Disponíveis no Meu painel do setor/i)
-    ).toBeTruthy();
-  });
-
-  it("mostra descrição, prazo e concluir no item demandado", () => {
-    render(
-      <DemandChecklist
-        parentId="parent-1"
+        demandId="parent-1"
         clientId="cli-1"
         canEdit
-        items={[
+        checklists={[
           {
-            id: "child-1",
-            title: "Criar conjunto de anúncios",
-            description: "Variações Meta Ads 1:1 e 9:16",
-            format: "Feed",
-            status: "DEMANDED",
-            dueDate: "2026-09-20",
-            assignee: { id: "traf-1", name: "Rafael Alves" },
+            id: "cl-1",
+            title: "Checklist",
+            sortOrder: 0,
+            items: [
+              {
+                id: "item-1",
+                title: "Item leve",
+                isDone: false,
+                sortOrder: 0,
+              },
+            ],
           },
         ]}
-        onOpenItem={() => undefined}
+        assignees={[
+          { id: "traf-1", name: "Rafael Alves", sectorId: "sec-traf" },
+        ]}
       />
     );
 
-    expect(screen.getByText("Criar conjunto de anúncios")).toBeTruthy();
-    expect(screen.getByText("Variações Meta Ads 1:1 e 9:16")).toBeTruthy();
-    expect(screen.getByText(/Prazo:/)).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Concluir" })).toBeTruthy();
+    expect(screen.getByRole("checkbox")).toBeTruthy();
+    expect(screen.getByPlaceholderText("Adicionar um item")).toBeTruthy();
+    expect(screen.queryByLabelText("Descrição")).toBeNull();
+    expect(screen.getByRole("button", { name: /Adicionar checklist/i })).toBeTruthy();
+  });
+
+  it("mostra Abrir quando há linkedDemandId e não mostra Concluir", () => {
+    render(
+      <DemandChecklist
+        demandId="parent-1"
+        clientId="cli-1"
+        canEdit
+        checklists={[
+          {
+            id: "cl-1",
+            title: "Checklist",
+            sortOrder: 0,
+            items: [
+              {
+                id: "item-1",
+                title: "Criar conjunto de anúncios",
+                isDone: false,
+                sortOrder: 0,
+                dueDate: "2026-09-20",
+                assignee: { id: "traf-1", name: "Rafael Alves" },
+                linkedDemandId: "child-1",
+              },
+            ],
+          },
+        ]}
+        assignees={[
+          { id: "traf-1", name: "Rafael Alves", sectorId: "sec-traf" },
+        ]}
+        onOpenLinkedDemand={() => undefined}
+      />
+    );
+
+    expect(screen.getByDisplayValue("Criar conjunto de anúncios")).toBeTruthy();
+    expect(screen.getByRole("checkbox")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Abrir" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Concluir" })).toBeNull();
+    expect(screen.queryByLabelText("Descrição")).toBeNull();
   });
 });

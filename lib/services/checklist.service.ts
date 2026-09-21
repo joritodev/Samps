@@ -543,6 +543,7 @@ export async function listChecklistsForDemand(demandId: string) {
         orderBy: { sortOrder: "asc" },
         include: {
           assignee: { select: { id: true, name: true, avatarUrl: true } },
+          linkedDemand: { select: { id: true, status: true } },
         },
       },
     },
