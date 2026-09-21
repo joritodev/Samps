@@ -138,6 +138,8 @@ Quadro do cliente
 
 ## 6. Checklist multi-responsável
 
+> **Nota (2026-09-21):** UI e ciclo de vida desta seção foram **substituídos** por `docs/superpowers/specs/2026-09-21-checklist-trello-paridade-design.md` (N listas nomeadas, item leve sem `Demand` até assign, CRUD via `Checklist`/`ChecklistItem`). Mantém-se: filhos como veículo do Meu Painel, chip “Parte de”, `demands.edit`, pai não auto-conclui.
+
 ### Conceito
 
 Uma **demanda pai** (obrigatória ou avulsa) pode ter **N demandas filhas** (= checkpoints).

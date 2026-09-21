@@ -380,15 +380,15 @@ git commit -m "feat(checklist): UI tipo Trello no sheet da demanda"
 - Update: `docs/superpowers/plans/2026-08-04-roadmap-master.md` — apontar spec/plano novos na fila checklist
 - Update breve nota na spec 15/09 §6: “UI substituída por 2026-09-21-…”
 
-- [ ] **Step 1: Grep e remover dead code** (`listChecklistItems` antigo baseado só em childDemands se não usado)
+- [x] **Step 1: Grep e remover dead code** (`listChecklistItems` antigo baseado só em childDemands se não usado)
 
-- [ ] **Step 2: `npx vitest run` relevante + `npx tsc --noEmit`**
+- [x] **Step 2: `npx vitest run` relevante + `npx tsc --noEmit`**
 
-- [ ] **Step 3: Smoke manual** (aceite da spec §9)
+- [ ] **Step 3: Smoke manual** (aceite da spec §9) — controller / humano
 
-- [ ] **Step 4: Security Review + Bugbot** (schema + assign)
+- [ ] **Step 4: Security Review + Bugbot** (schema + assign) — controller
 
-- [ ] **Step 5: PR**
+- [ ] **Step 5: PR** — controller
 
 Título: `feat(checklist): paridade Trello com itens leves e N listas`  
 Body: link spec; checklist de teste = aceite §9.

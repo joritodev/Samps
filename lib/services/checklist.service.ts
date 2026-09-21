@@ -9,7 +9,6 @@ import {
   type Checklist,
   type ChecklistItem,
 } from "@prisma/client";
-import { computeChecklistProgress } from "@/lib/agency/checklist-progress";
 import { db } from "@/lib/db";
 import { canAccessClient, hasPermission } from "@/lib/permissions/resolve";
 import { assignDemand } from "@/lib/services/assignment.service";
@@ -550,35 +549,10 @@ export async function listChecklistsForDemand(demandId: string) {
   });
 }
 
-/** Compat até Task 4: conclui demanda-filha legada / linked. */
+/** Conclui demanda-filha legada / linked (sheet do filho). */
 export async function completeChecklistItem(
   user: SessionUser,
   childId: string
 ) {
   return completeLinkedDemand(user, childId);
-}
-
-/** Compat até Task 4: lista filhos Demand (UI antiga). */
-export async function listChecklistItems(parentId: string) {
-  return db.demand.findMany({
-    where: { parentDemandId: parentId, isChecklistItem: true },
-    orderBy: { checklistOrder: "asc" },
-    include: {
-      assignee: { select: { id: true, name: true, avatarUrl: true } },
-      sector: { select: { id: true, name: true } },
-    },
-  });
-}
-
-/** Compat até Task 4: progresso a partir dos filhos Demand. */
-export async function getChecklistProgress(parentId: string) {
-  const children = await db.demand.findMany({
-    where: { parentDemandId: parentId, isChecklistItem: true },
-    select: { status: true },
-  });
-  return computeChecklistProgress(
-    children.map((c) => ({
-      isDone: TERMINAL_STATUSES.includes(c.status),
-    }))
-  );
 }

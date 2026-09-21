@@ -66,16 +66,6 @@ type CardDetail = {
   isChecklistItem?: boolean;
   parentDemandId?: string | null;
   parentDemand?: { id: string; title: string } | null;
-  childDemands?: {
-    id: string;
-    title: string;
-    description?: string | null;
-    format?: string | null;
-    status: string;
-    checklistOrder?: number | null;
-    dueDate?: Date | string | null;
-    assignee?: { id?: string; name: string } | null;
-  }[];
   checklists?: {
     id: string;
     title: string;

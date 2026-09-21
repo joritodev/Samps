@@ -35,13 +35,14 @@ Nenhuma fase de código começa antes de a anterior ter PRs mergeados e gates ap
 | Acessos teste | `docs/superpowers/notas/2026-09-04-acessos-temporarios-teste.md` |
 | Spec Fase 3 | `docs/superpowers/specs/2026-08-16-fase3-gestao-agencia-design.md` |
 
-**Próxima fatia a executar (prioridade Samps até sex 19/09):**  
-**Demandas — Fatia A** — visibilidade hierárquica (individual / setor / gestão)  
-- Spec: `docs/superpowers/specs/2026-09-15-demandas-visibilidade-avulsa-checklist-design.md`  
-- Plano: `docs/superpowers/plans/2026-09-15-demandas-visibilidade-avulsa-checklist.md`  
-- Ordem: **A** visibilidade → **B** demanda avulsa → **C** checklist multi-responsável  
+**Próxima fatia a executar:**  
+**Checklist tipo Trello** (paridade: N listas, item leve, assign → filha)  
+- Spec: `docs/superpowers/specs/2026-09-21-checklist-trello-paridade-design.md`  
+- Plano: `docs/superpowers/plans/2026-09-21-checklist-trello-paridade.md`  
+- Branch: `feat/checklist-trello-paridade`  
 
-**Fila depois desta onda (ou em paralelo se sobrar tempo):** Fase **3.2** anexos (Drive-first) → 3.7 CSP → 3.3/3.5 → Fase 4.  
+**Fila depois desta fatia:** Fase **3.2** anexos (Drive-first) → 3.7 CSP → 3.3/3.5 → Fase 4.  
+Nota: onda 15/09 (A visibilidade → B avulsa → C checklist) permanece como contexto; a UI/ciclo do checklist da Fatia C foi **substituída** pela spec 21/09 (itens leves + N listas).  
 Nota: a antiga “3.4 visibilidade aberta” foi **redefinida** pelos áudios de 10–15/09 (hierarquia Trello, não leitura cruzada).
 
 ---
