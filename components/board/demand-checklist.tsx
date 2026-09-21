@@ -83,7 +83,15 @@ export function DemandChecklist({
   }, [defaultDueDate, parentId]);
 
   const progress = useMemo(
-    () => computeChecklistProgress(items),
+    () =>
+      computeChecklistProgress(
+        items.map((item) => ({
+          isDone:
+            item.status === "DONE" ||
+            item.status === "PUBLISHED" ||
+            item.status === "DELIVERED",
+        }))
+      ),
     [items]
   );
 

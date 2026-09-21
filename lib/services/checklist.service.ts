@@ -328,5 +328,12 @@ export async function getChecklistProgress(parentId: string) {
     where: { parentDemandId: parentId, isChecklistItem: true },
     select: { status: true },
   });
-  return computeChecklistProgress(children);
+  return computeChecklistProgress(
+    children.map((c) => ({
+      isDone:
+        c.status === "DONE" ||
+        c.status === "PUBLISHED" ||
+        c.status === "DELIVERED",
+    }))
+  );
 }
