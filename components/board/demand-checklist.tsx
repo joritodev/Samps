@@ -2,7 +2,27 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { MoreHorizontal } from "lucide-react";
+import {
+  DndContext,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
+  GripVertical,
+  MoreHorizontal,
+  SendHorizontal,
+  UserRoundPlus,
+} from "lucide-react";
 import { toast } from "sonner";
 import {
   addChecklistItemAction,
@@ -11,11 +31,13 @@ import {
   deleteChecklistAction,
   deleteChecklistItemAction,
   renameChecklistAction,
+  reorderChecklistItemsAction,
   setChecklistItemDueDateAction,
   toggleChecklistItemDoneAction,
   unassignChecklistItemAction,
   updateChecklistItemTitleAction,
 } from "@/app/actions/checklist";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -27,12 +49,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { computeChecklistProgress } from "@/lib/agency/checklist-progress";
 import { cn } from "@/lib/utils";
 
@@ -40,6 +60,7 @@ export type ChecklistAssigneeOption = {
   id: string;
   name: string;
   sectorId: string;
+  avatarUrl?: string | null;
 };
 
 export type ChecklistItemView = {
@@ -49,7 +70,7 @@ export type ChecklistItemView = {
   sortOrder: number;
   dueDate?: Date | string | null;
   assigneeId?: string | null;
-  assignee?: { id: string; name: string } | null;
+  assignee?: { id: string; name: string; avatarUrl?: string | null } | null;
   linkedDemandId?: string | null;
 };
 
@@ -79,6 +100,357 @@ function initials(name: string) {
 function nextChecklistTitle(existing: ChecklistView[]) {
   if (existing.length === 0) return "Checklist";
   return `Checklist ${existing.length + 1}`;
+}
+
+function AssigneePicker({
+  item,
+  assignees,
+  disabled,
+  onAssign,
+}: {
+  item: ChecklistItemView;
+  assignees: ChecklistAssigneeOption[];
+  disabled?: boolean;
+  onAssign: (assigneeId: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const assignee =
+    item.assignee ??
+    (item.assigneeId
+      ? assignees.find((a) => a.id === item.assigneeId) ?? null
+      : null);
+  const hasAssignee = Boolean(assignee);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        {hasAssignee && assignee ? (
+          <button
+            type="button"
+            disabled={disabled}
+            className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label="Atribuir responsável"
+            title={assignee.name}
+          >
+            <Avatar className="h-7 w-7">
+              {assignee.avatarUrl ? (
+                <AvatarImage src={assignee.avatarUrl} alt="" />
+              ) : null}
+              <AvatarFallback className="text-[10px] font-medium">
+                {initials(assignee.name)}
+              </AvatarFallback>
+            </Avatar>
+          </button>
+        ) : (
+          <button
+            type="button"
+            disabled={disabled}
+            className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-border text-muted-foreground hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+            aria-label="Atribuir responsável"
+          >
+            <UserRoundPlus className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-56 p-1">
+        {assignees.map((user) => (
+          <button
+            key={user.id}
+            type="button"
+            className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-muted"
+            onClick={() => {
+              onAssign(user.id);
+              setOpen(false);
+            }}
+          >
+            <Avatar className="h-6 w-6">
+              {user.avatarUrl ? (
+                <AvatarImage src={user.avatarUrl} alt="" />
+              ) : null}
+              <AvatarFallback className="text-[10px]">
+                {initials(user.name)}
+              </AvatarFallback>
+            </Avatar>
+            <span className="truncate">{user.name}</span>
+          </button>
+        ))}
+        {hasAssignee ? (
+          <button
+            type="button"
+            className="flex w-full items-center rounded-sm px-2 py-1.5 text-left text-sm text-muted-foreground hover:bg-muted"
+            onClick={() => {
+              onAssign("");
+              setOpen(false);
+            }}
+          >
+            Remover responsável
+          </button>
+        ) : null}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function SortableChecklistItem({
+  item,
+  canEdit,
+  pending,
+  assignees,
+  onToggle,
+  onTitleBlur,
+  onDueDate,
+  onAssign,
+  onDelete,
+  onOpenLinkedDemand,
+}: {
+  item: ChecklistItemView;
+  canEdit: boolean;
+  pending: boolean;
+  assignees: ChecklistAssigneeOption[];
+  onToggle: () => void;
+  onTitleBlur: (title: string) => void;
+  onDueDate: (dueDate: string) => void;
+  onAssign: (assigneeId: string) => void;
+  onDelete: () => void;
+  onOpenLinkedDemand?: (id: string) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id, disabled: !canEdit });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <li
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "group flex items-start gap-2 rounded-md px-1 py-1.5 hover:bg-muted/40",
+        isDragging && "opacity-50"
+      )}
+    >
+      {canEdit ? (
+        <button
+          type="button"
+          className="mt-1 inline-flex h-6 w-5 shrink-0 cursor-grab items-center justify-center text-muted-foreground active:cursor-grabbing"
+          aria-label={`Reordenar ${item.title}`}
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
+      ) : null}
+      <Checkbox
+        checked={item.isDone}
+        disabled={!canEdit || pending}
+        className="mt-1"
+        onCheckedChange={() => (canEdit ? onToggle() : undefined)}
+        aria-label={`Concluir ${item.title}`}
+      />
+      <div className="min-w-0 flex-1 space-y-1">
+        {canEdit ? (
+          <Input
+            defaultValue={item.title}
+            key={`${item.id}-${item.title}`}
+            disabled={pending}
+            className={cn(
+              "h-8 min-w-0 flex-1 border-transparent bg-transparent px-1 text-sm shadow-none focus-visible:border-border focus-visible:bg-background",
+              item.isDone && "text-muted-foreground line-through"
+            )}
+            onBlur={(e) => onTitleBlur(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                (e.target as HTMLInputElement).blur();
+              }
+            }}
+          />
+        ) : (
+          <p
+            className={cn(
+              "text-sm",
+              item.isDone
+                ? "text-muted-foreground line-through"
+                : "text-foreground"
+            )}
+          >
+            {item.title}
+          </p>
+        )}
+        <div className="flex flex-wrap items-center gap-2">
+          {canEdit ? (
+            <AssigneePicker
+              item={item}
+              assignees={assignees}
+              disabled={pending || assignees.length === 0}
+              onAssign={onAssign}
+            />
+          ) : item.assignee || item.assigneeId ? (
+            <Avatar className="h-7 w-7" title={item.assignee?.name}>
+              {item.assignee?.avatarUrl ? (
+                <AvatarImage src={item.assignee.avatarUrl} alt="" />
+              ) : null}
+              <AvatarFallback className="text-[10px] font-medium">
+                {initials(
+                  item.assignee?.name ??
+                    assignees.find((a) => a.id === item.assigneeId)?.name ??
+                    "?"
+                )}
+              </AvatarFallback>
+            </Avatar>
+          ) : null}
+          {canEdit ? (
+            <Input
+              type="date"
+              value={toDateInputValue(item.dueDate)}
+              disabled={pending}
+              className="h-7 w-[9.5rem] text-xs"
+              onChange={(e) => onDueDate(e.target.value)}
+              aria-label={`Prazo de ${item.title}`}
+            />
+          ) : item.dueDate ? (
+            <span className="text-xs text-muted-foreground">
+              {toDateInputValue(item.dueDate)}
+            </span>
+          ) : null}
+          {item.linkedDemandId && onOpenLinkedDemand ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="h-7 px-2 text-xs"
+              disabled={pending}
+              onClick={() => onOpenLinkedDemand(item.linkedDemandId!)}
+            >
+              Abrir
+            </Button>
+          ) : null}
+        </div>
+      </div>
+      {canEdit ? (
+        <DropdownMenu modal={false}>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8 shrink-0 opacity-0 group-hover:opacity-100 data-[state=open]:opacity-100"
+              disabled={pending}
+              aria-label={`Menu do item ${item.title}`}
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-40">
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onClick={onDelete}
+            >
+              Apagar item
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : null}
+    </li>
+  );
+}
+
+function ChecklistItemsList({
+  checklist,
+  visibleItems,
+  canEdit,
+  pending,
+  assignees,
+  onReorder,
+  onToggle,
+  onTitleBlur,
+  onDueDate,
+  onAssign,
+  onDelete,
+  onOpenLinkedDemand,
+}: {
+  checklist: ChecklistView;
+  visibleItems: ChecklistItemView[];
+  canEdit: boolean;
+  pending: boolean;
+  assignees: ChecklistAssigneeOption[];
+  onReorder: (orderedItemIds: string[]) => void;
+  onToggle: (item: ChecklistItemView) => void;
+  onTitleBlur: (item: ChecklistItemView, title: string) => void;
+  onDueDate: (itemId: string, dueDate: string) => void;
+  onAssign: (itemId: string, assigneeId: string) => void;
+  onDelete: (itemId: string) => void;
+  onOpenLinkedDemand?: (id: string) => void;
+}) {
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
+  );
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const ids = visibleItems.map((item) => item.id);
+    const oldIndex = ids.indexOf(String(active.id));
+    const newIndex = ids.indexOf(String(over.id));
+    if (oldIndex < 0 || newIndex < 0) return;
+
+    const reorderedVisible = arrayMove(visibleItems, oldIndex, newIndex);
+    const visibleIdSet = new Set(reorderedVisible.map((item) => item.id));
+    let vIdx = 0;
+    const orderedItemIds = checklist.items.map((item) => {
+      if (visibleIdSet.has(item.id)) {
+        return reorderedVisible[vIdx++]!.id;
+      }
+      return item.id;
+    });
+    onReorder(orderedItemIds);
+  }
+
+  const list = (
+    <ul className="space-y-1">
+      {visibleItems.map((item) => (
+        <SortableChecklistItem
+          key={item.id}
+          item={item}
+          canEdit={canEdit}
+          pending={pending}
+          assignees={assignees}
+          onToggle={() => onToggle(item)}
+          onTitleBlur={(title) => onTitleBlur(item, title)}
+          onDueDate={(dueDate) => onDueDate(item.id, dueDate)}
+          onAssign={(assigneeId) => onAssign(item.id, assigneeId)}
+          onDelete={() => onDelete(item.id)}
+          onOpenLinkedDemand={onOpenLinkedDemand}
+        />
+      ))}
+    </ul>
+  );
+
+  if (!canEdit) return list;
+
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext
+        items={visibleItems.map((item) => item.id)}
+        strategy={verticalListSortingStrategy}
+      >
+        {list}
+      </SortableContext>
+    </DndContext>
+  );
 }
 
 export function DemandChecklist({
@@ -368,12 +740,15 @@ export function DemandChecklist({
         );
         return;
       }
-      const name =
-        sortedAssignees.find((a) => a.id === assigneeId)?.name ?? "";
+      const user = sortedAssignees.find((a) => a.id === assigneeId);
       patchItem(checklistId, itemId, {
         assigneeId: result.item.assigneeId,
         assignee: result.item.assigneeId
-          ? { id: result.item.assigneeId, name }
+          ? {
+              id: result.item.assigneeId,
+              name: user?.name ?? "",
+              avatarUrl: user?.avatarUrl,
+            }
           : null,
         linkedDemandId: result.item.linkedDemandId,
       });
@@ -398,6 +773,45 @@ export function DemandChecklist({
             : { ...cl, items: cl.items.filter((i) => i.id !== itemId) }
         )
       );
+    });
+  }
+
+  function handleReorder(checklistId: string, orderedItemIds: string[]) {
+    const byId = new Map(
+      (checklists.find((c) => c.id === checklistId)?.items ?? []).map((item) => [
+        item.id,
+        item,
+      ])
+    );
+    const nextItems = orderedItemIds
+      .map((id, index) => {
+        const item = byId.get(id);
+        return item ? { ...item, sortOrder: index } : null;
+      })
+      .filter((item): item is ChecklistItemView => item !== null);
+
+    setChecklists((prev) =>
+      prev.map((cl) =>
+        cl.id === checklistId ? { ...cl, items: nextItems } : cl
+      )
+    );
+
+    startTransition(async () => {
+      const result = await reorderChecklistItemsAction({
+        checklistId,
+        clientId,
+        orderedItemIds,
+      });
+      if (!("success" in result) || !result.success) {
+        toast.error(
+          "error" in result
+            ? result.error
+            : "Não foi possível reordenar os itens."
+        );
+        setChecklists(initialChecklists);
+        return;
+      }
+      router.refresh();
     });
   }
 
@@ -489,194 +903,61 @@ export function DemandChecklist({
               />
             </div>
 
-            <ul className="space-y-1">
-              {visibleItems.map((item) => {
-                const assigneeName =
-                  item.assignee?.name ??
-                  sortedAssignees.find((a) => a.id === item.assigneeId)
-                    ?.name ??
-                  null;
-                return (
-                  <li
-                    key={item.id}
-                    className="group flex items-start gap-2 rounded-md px-1 py-1.5 hover:bg-muted/40"
-                  >
-                    <Checkbox
-                      checked={item.isDone}
-                      disabled={!canEdit || pending}
-                      className="mt-1"
-                      onCheckedChange={() =>
-                        canEdit ? handleToggle(checklist.id, item) : undefined
-                      }
-                      aria-label={`Concluir ${item.title}`}
-                    />
-                    <div className="min-w-0 flex-1 space-y-1">
-                      {canEdit ? (
-                        <Input
-                          defaultValue={item.title}
-                          key={`${item.id}-${item.title}`}
-                          disabled={pending}
-                          className={cn(
-                            "h-8 min-w-0 flex-1 border-transparent bg-transparent px-1 text-sm shadow-none focus-visible:border-border focus-visible:bg-background",
-                            item.isDone &&
-                              "text-muted-foreground line-through"
-                          )}
-                          onBlur={(e) =>
-                            handleItemTitleBlur(
-                              checklist.id,
-                              item,
-                              e.target.value
-                            )
-                          }
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              (e.target as HTMLInputElement).blur();
-                            }
-                          }}
-                        />
-                      ) : (
-                        <p
-                          className={cn(
-                            "text-sm",
-                            item.isDone
-                              ? "text-muted-foreground line-through"
-                              : "text-foreground"
-                          )}
-                        >
-                          {item.title}
-                        </p>
-                      )}
-                      <div className="flex flex-wrap items-center gap-2">
-                        {assigneeName ? (
-                          <span
-                            className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-muted text-[10px] font-medium text-foreground"
-                            title={assigneeName}
-                          >
-                            {initials(assigneeName)}
-                          </span>
-                        ) : null}
-                        {canEdit ? (
-                          <Input
-                            type="date"
-                            value={toDateInputValue(item.dueDate)}
-                            disabled={pending}
-                            className="h-7 w-[9.5rem] text-xs"
-                            onChange={(e) =>
-                              handleDueDate(
-                                checklist.id,
-                                item.id,
-                                e.target.value
-                              )
-                            }
-                            aria-label={`Prazo de ${item.title}`}
-                          />
-                        ) : item.dueDate ? (
-                          <span className="text-xs text-muted-foreground">
-                            {toDateInputValue(item.dueDate)}
-                          </span>
-                        ) : null}
-                        {item.linkedDemandId && onOpenLinkedDemand ? (
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 px-2 text-xs"
-                            disabled={pending}
-                            onClick={() =>
-                              onOpenLinkedDemand(item.linkedDemandId!)
-                            }
-                          >
-                            Abrir
-                          </Button>
-                        ) : null}
-                      </div>
-                    </div>
-                    {canEdit ? (
-                      <DropdownMenu modal={false}>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            type="button"
-                            size="icon"
-                            variant="ghost"
-                            className="h-8 w-8 shrink-0 opacity-0 group-hover:opacity-100 data-[state=open]:opacity-100"
-                            disabled={pending}
-                            aria-label={`Menu do item ${item.title}`}
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-56">
-                          <div className="px-2 py-1.5">
-                            <p className="mb-1 text-xs text-muted-foreground">
-                              Responsável
-                            </p>
-                            <Select
-                              value={
-                                item.assigneeId ||
-                                item.assignee?.id ||
-                                "__none__"
-                              }
-                              onValueChange={(v) =>
-                                handleAssign(
-                                  checklist.id,
-                                  item.id,
-                                  v === "__none__" ? "" : v
-                                )
-                              }
-                              disabled={pending || sortedAssignees.length === 0}
-                            >
-                              <SelectTrigger className="h-8">
-                                <SelectValue placeholder="Sem responsável" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="__none__">
-                                  Sem responsável
-                                </SelectItem>
-                                {sortedAssignees.map((user) => (
-                                  <SelectItem key={user.id} value={user.id}>
-                                    {user.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="text-destructive focus:text-destructive"
-                            onClick={() =>
-                              handleDeleteItem(checklist.id, item.id)
-                            }
-                          >
-                            Apagar item
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    ) : null}
-                  </li>
-                );
-              })}
-            </ul>
+            <ChecklistItemsList
+              checklist={checklist}
+              visibleItems={visibleItems}
+              canEdit={canEdit}
+              pending={pending}
+              assignees={sortedAssignees}
+              onReorder={(orderedItemIds) =>
+                handleReorder(checklist.id, orderedItemIds)
+              }
+              onToggle={(item) => handleToggle(checklist.id, item)}
+              onTitleBlur={(item, title) =>
+                handleItemTitleBlur(checklist.id, item, title)
+              }
+              onDueDate={(itemId, dueDate) =>
+                handleDueDate(checklist.id, itemId, dueDate)
+              }
+              onAssign={(itemId, assigneeId) =>
+                handleAssign(checklist.id, itemId, assigneeId)
+              }
+              onDelete={(itemId) => handleDeleteItem(checklist.id, itemId)}
+              onOpenLinkedDemand={onOpenLinkedDemand}
+            />
 
             {canEdit ? (
-              <Input
-                value={newItemTitles[checklist.id] ?? ""}
-                disabled={pending}
-                placeholder="Adicionar um item"
-                className="h-8"
-                onChange={(e) =>
-                  setNewItemTitles((prev) => ({
-                    ...prev,
-                    [checklist.id]: e.target.value,
-                  }))
-                }
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleAddItem(checklist.id);
+              <div className="flex items-center gap-1">
+                <Input
+                  value={newItemTitles[checklist.id] ?? ""}
+                  disabled={pending}
+                  placeholder="Adicionar um item"
+                  className="h-8"
+                  onChange={(e) =>
+                    setNewItemTitles((prev) => ({
+                      ...prev,
+                      [checklist.id]: e.target.value,
+                    }))
                   }
-                }}
-              />
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddItem(checklist.id);
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 shrink-0"
+                  disabled={pending}
+                  aria-label="Adicionar item"
+                  onClick={() => handleAddItem(checklist.id)}
+                >
+                  <SendHorizontal className="h-4 w-4" />
+                </Button>
+              </div>
             ) : null}
           </section>
         );

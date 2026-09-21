@@ -11,6 +11,7 @@ import {
   deleteChecklist,
   deleteChecklistItem,
   renameChecklist,
+  reorderChecklistItems,
   setChecklistItemDueDate,
   toggleChecklistItemDone,
   unassignChecklistItem,
@@ -306,6 +307,36 @@ export async function deleteChecklistItemAction(input: {
     return { success: true as const };
   } catch (error) {
     return actionError(error, "Não foi possível apagar o item.");
+  }
+}
+
+const reorderSchema = z.object({
+  checklistId: z.string().min(1),
+  clientId: z.string().min(1),
+  orderedItemIds: z.array(z.string().min(1)).min(1),
+});
+
+export async function reorderChecklistItemsAction(input: {
+  checklistId: string;
+  clientId: string;
+  orderedItemIds: string[];
+}) {
+  const user = await requireAuth();
+  const parsed = reorderSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+  }
+
+  try {
+    await reorderChecklistItems(
+      user,
+      parsed.data.checklistId,
+      parsed.data.orderedItemIds
+    );
+    revalidateOperationalViews(parsed.data.clientId);
+    return { success: true as const };
+  } catch (error) {
+    return actionError(error, "Não foi possível reordenar os itens.");
   }
 }
 

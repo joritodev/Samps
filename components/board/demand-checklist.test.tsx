@@ -14,6 +14,7 @@ vi.mock("@/app/actions/checklist", () => ({
   deleteChecklistAction: vi.fn(),
   deleteChecklistItemAction: vi.fn(),
   renameChecklistAction: vi.fn(),
+  reorderChecklistItemsAction: vi.fn(),
   setChecklistItemDueDateAction: vi.fn(),
   toggleChecklistItemDoneAction: vi.fn(),
   unassignChecklistItemAction: vi.fn(),
@@ -54,6 +55,10 @@ describe("DemandChecklist", () => {
 
     expect(screen.getByRole("checkbox")).toBeTruthy();
     expect(screen.getByPlaceholderText("Adicionar um item")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Adicionar item" })).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Atribuir responsável" })
+    ).toBeTruthy();
     expect(screen.queryByLabelText("Descrição")).toBeNull();
     expect(screen.getByRole("button", { name: /Adicionar checklist/i })).toBeTruthy();
   });

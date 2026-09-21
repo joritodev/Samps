@@ -38,7 +38,7 @@ export async function getCardById(id: string) {
           items: {
             orderBy: { sortOrder: "asc" },
             include: {
-              assignee: true,
+              assignee: { select: { id: true, name: true, avatarUrl: true } },
               linkedDemand: { select: { id: true, status: true } },
             },
           },

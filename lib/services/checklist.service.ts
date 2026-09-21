@@ -628,6 +628,40 @@ export async function listChecklistsForDemand(demandId: string) {
   });
 }
 
+export async function reorderChecklistItems(
+  user: SessionUser,
+  checklistId: string,
+  orderedItemIds: string[]
+): Promise<void> {
+  const checklist = await db.checklist.findUnique({
+    where: { id: checklistId },
+    select: {
+      id: true,
+      demandId: true,
+      items: { select: { id: true } },
+    },
+  });
+  if (!checklist) throw new Error("Checklist não encontrado");
+  await assertCanEditParent(user, checklist.demandId);
+
+  const existing = new Set(checklist.items.map((item) => item.id));
+  if (
+    orderedItemIds.length !== existing.size ||
+    !orderedItemIds.every((id) => existing.has(id))
+  ) {
+    throw new Error("Ordem inválida");
+  }
+
+  await db.$transaction(
+    orderedItemIds.map((id, index) =>
+      db.checklistItem.update({
+        where: { id },
+        data: { sortOrder: index },
+      })
+    )
+  );
+}
+
 /** Conclui demanda-filha legada / linked (sheet do filho). */
 export async function completeChecklistItem(
   user: SessionUser,

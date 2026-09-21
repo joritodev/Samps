@@ -81,7 +81,7 @@ export default async function ClienteQuadroPage({
             userType: { not: UserType.EXTERNAL_CLIENT },
           },
           orderBy: { name: "asc" },
-          select: { id: true, name: true, sectorId: true },
+          select: { id: true, name: true, sectorId: true, avatarUrl: true },
         })
       : Promise.resolve([]),
   ]);
@@ -111,7 +111,14 @@ export default async function ClienteQuadroPage({
       sectors={sectors}
       sectorUsers={sectorUsers.flatMap((u) =>
         u.sectorId
-          ? [{ id: u.id, name: u.name, sectorId: u.sectorId }]
+          ? [
+              {
+                id: u.id,
+                name: u.name,
+                sectorId: u.sectorId,
+                avatarUrl: u.avatarUrl,
+              },
+            ]
           : []
       )}
       grouped={Object.fromEntries(
