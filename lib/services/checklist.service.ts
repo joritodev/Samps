@@ -1,30 +1,37 @@
 import {
+  AssignmentMethod,
   AssignmentStatus,
   DemandOrigin,
   DemandStatus,
   DemandType,
   UserStatus,
   WorkSessionStatus,
+  type Checklist,
+  type ChecklistItem,
 } from "@prisma/client";
 import { computeChecklistProgress } from "@/lib/agency/checklist-progress";
 import { db } from "@/lib/db";
 import { canAccessClient, hasPermission } from "@/lib/permissions/resolve";
+import { assignDemand } from "@/lib/services/assignment.service";
 import { resolveDelayOnTerminalStatus } from "@/lib/services/deadline.service";
-import { distributeDemandToSector } from "@/lib/services/distribution.service";
 import { recalculateSectorPriorities } from "@/lib/services/priority.service";
 import type { SessionUser } from "@/types/auth";
 
-export type AddChecklistItemInput = {
-  title: string;
-  description?: string;
-  format?: string;
-  dueDate?: Date;
-  type?: DemandType;
-  assigneeId?: string;
-  sectorId?: string;
+type ParentDemandSelect = {
+  id: string;
+  clientId: string;
+  boardId: string | null;
+  competenceId: string | null;
+  type: DemandType;
+  origin: DemandOrigin;
+  isChecklistItem: boolean;
+  status: DemandStatus;
 };
 
-async function assertCanEditParent(user: SessionUser, parentId: string) {
+async function assertCanEditParent(
+  user: SessionUser,
+  parentId: string
+): Promise<ParentDemandSelect> {
   if (!hasPermission(user.permissions, "demands.edit")) {
     throw new Error("Sem permissão para editar demandas");
   }
@@ -54,176 +61,63 @@ async function assertCanEditParent(user: SessionUser, parentId: string) {
   return parent;
 }
 
-export async function addChecklistItem(
-  user: SessionUser,
-  parentId: string,
-  input: AddChecklistItemInput
-) {
-  const parent = await assertCanEditParent(user, parentId);
-
-  const title = input.title.trim();
-  if (!title) throw new Error("Título é obrigatório");
-
-  let sectorId = input.sectorId;
-  if (input.assigneeId) {
-    const assignee = await db.user.findFirst({
-      where: {
-        id: input.assigneeId,
-        status: UserStatus.ACTIVE,
-        ...(sectorId ? { sectorId } : { sectorId: { not: null } }),
+async function loadChecklistForEdit(user: SessionUser, checklistId: string) {
+  const checklist = await db.checklist.findUnique({
+    where: { id: checklistId },
+    include: {
+      demand: {
+        select: {
+          id: true,
+          clientId: true,
+          boardId: true,
+          competenceId: true,
+          type: true,
+          origin: true,
+          isChecklistItem: true,
+          status: true,
+        },
       },
-      select: { id: true, sectorId: true },
-    });
-    if (!assignee?.sectorId) {
-      throw new Error("Responsável inválido ou sem setor");
-    }
-    sectorId = assignee.sectorId;
-  } else if (sectorId) {
-    const sector = await db.sector.findFirst({
-      where: { id: sectorId, isActive: true },
-      select: { id: true },
-    });
-    if (!sector) throw new Error("Setor inválido");
-  }
-
-  const maxOrder = await db.demand.aggregate({
-    where: { parentDemandId: parentId, isChecklistItem: true },
-    _max: { checklistOrder: true },
-  });
-  const checklistOrder = (maxOrder._max.checklistOrder ?? 0) + 1;
-
-  const description = input.description?.trim() || undefined;
-  const format = input.format?.trim() || undefined;
-  const demanded = Boolean(input.assigneeId || sectorId);
-
-  const child = await db.demand.create({
-    data: {
-      title,
-      description,
-      format,
-      type: input.type ?? parent.type ?? DemandType.OTHER,
-      origin:
-        parent.origin === DemandOrigin.EXTRA
-          ? DemandOrigin.EXTRA
-          : DemandOrigin.CLIENT_BOARD,
-      status: demanded ? DemandStatus.DEMANDED : DemandStatus.OPEN,
-      internalStatus: demanded
-        ? "Disponível no setor"
-        : "Item de checklist",
-      boardColumn: demanded ? "available" : "todo",
-      isContractual: false,
-      visibleToClient: false,
-      isChecklistItem: true,
-      checklistOrder,
-      dueDate: input.dueDate,
-      client: { connect: { id: parent.clientId } },
-      parentDemand: { connect: { id: parent.id } },
-      requester: { connect: { id: user.id } },
-      ...(input.assigneeId
-        ? { assignee: { connect: { id: input.assigneeId } } }
-        : {}),
-      ...(parent.boardId
-        ? { board: { connect: { id: parent.boardId } } }
-        : {}),
-      ...(parent.competenceId
-        ? { competence: { connect: { id: parent.competenceId } } }
-        : {}),
-      ...(sectorId ? { sector: { connect: { id: sectorId } } } : {}),
     },
   });
-
-  if (sectorId && demanded) {
-    await distributeDemandToSector({
-      demandId: child.id,
-      sectorId,
-      actorId: user.id,
-      title,
-      clientId: parent.clientId,
-    });
-  }
-
-  return db.demand.findUniqueOrThrow({
-    where: { id: child.id },
-    include: {
-      assignee: { select: { id: true, name: true, avatarUrl: true } },
-      sector: { select: { id: true, name: true } },
-    },
-  });
+  if (!checklist) throw new Error("Checklist não encontrado");
+  await assertCanEditParent(user, checklist.demandId);
+  return checklist;
 }
 
-export async function assignChecklistItem(
-  user: SessionUser,
-  childId: string,
-  assigneeId: string
-) {
-  const child = await db.demand.findUnique({
-    where: { id: childId },
-    select: {
-      id: true,
-      title: true,
-      clientId: true,
-      isChecklistItem: true,
-      sectorId: true,
-      sector: { select: { leaderId: true } },
-    },
-  });
-
-  if (!child || !child.isChecklistItem) {
-    throw new Error("Item de checklist não encontrado");
-  }
-  if (!canAccessClient(user.permissions, user.clientIds, child.clientId)) {
-    throw new Error("Sem permissão para este cliente");
-  }
-
-  const isLeader = child.sector?.leaderId === user.id;
-  const canAssign =
-    hasPermission(user.permissions, "demands.assign") || isLeader;
-  if (!canAssign) {
-    throw new Error("Sem permissão para atribuir item de checklist");
-  }
-
-  const assignee = await db.user.findFirst({
-    where: {
-      id: assigneeId,
-      status: UserStatus.ACTIVE,
-      sectorId: { not: null },
-    },
-    select: { id: true, sectorId: true },
-  });
-  if (!assignee?.sectorId) {
-    throw new Error("Responsável inválido ou sem setor");
-  }
-
-  const sectorId = assignee.sectorId;
-  await db.demand.update({
-    where: { id: childId },
-    data: {
-      sector: { connect: { id: sectorId } },
-      assignee: { connect: { id: assignee.id } },
-    },
-  });
-
-  await distributeDemandToSector({
-    demandId: childId,
-    sectorId,
-    actorId: user.id,
-    title: child.title,
-    clientId: child.clientId,
-  });
-
-  return db.demand.findUniqueOrThrow({
-    where: { id: childId },
+async function loadItemForEdit(user: SessionUser, itemId: string) {
+  const item = await db.checklistItem.findUnique({
+    where: { id: itemId },
     include: {
-      assignee: { select: { id: true, name: true, avatarUrl: true } },
-      sector: { select: { id: true, name: true } },
+      checklist: {
+        include: {
+          demand: {
+            select: {
+              id: true,
+              clientId: true,
+              boardId: true,
+              competenceId: true,
+              type: true,
+              origin: true,
+              isChecklistItem: true,
+              status: true,
+            },
+          },
+        },
+      },
     },
   });
+  if (!item) throw new Error("Item de checklist não encontrado");
+  await assertCanEditParent(user, item.checklist.demandId);
+  return item;
 }
 
-export async function completeChecklistItem(
-  user: SessionUser,
-  childId: string
-) {
+const TERMINAL_STATUSES: DemandStatus[] = [
+  DemandStatus.DONE,
+  DemandStatus.PUBLISHED,
+  DemandStatus.DELIVERED,
+];
+
+async function completeLinkedDemand(user: SessionUser, childId: string) {
   const child = await db.demand.findUnique({
     where: { id: childId },
     select: {
@@ -251,11 +145,7 @@ export async function completeChecklistItem(
     throw new Error("Sem permissão para concluir este item");
   }
 
-  if (
-    child.status === DemandStatus.DONE ||
-    child.status === DemandStatus.PUBLISHED ||
-    child.status === DemandStatus.DELIVERED
-  ) {
+  if (TERMINAL_STATUSES.includes(child.status)) {
     return child;
   }
 
@@ -312,6 +202,344 @@ export async function completeChecklistItem(
   return updated;
 }
 
+async function reopenLinkedDemand(childId: string) {
+  const child = await db.demand.findUnique({
+    where: { id: childId },
+    select: {
+      id: true,
+      assigneeId: true,
+      status: true,
+      sectorId: true,
+    },
+  });
+  if (!child) return;
+
+  if (!TERMINAL_STATUSES.includes(child.status)) {
+    return;
+  }
+
+  // DemandStatus has no ASSIGNED — operational reopen: DEMANDED if assignee, else AVAILABLE
+  const nextStatus = child.assigneeId
+    ? DemandStatus.DEMANDED
+    : DemandStatus.AVAILABLE;
+
+  await db.demand.update({
+    where: { id: childId },
+    data: {
+      status: nextStatus,
+      boardColumn: child.assigneeId ? "assigned" : "available",
+      internalStatus: child.assigneeId ? "Atribuída" : "Disponível no setor",
+      productionCompletedAt: null,
+    },
+  });
+
+  const assignment = await db.demandAssignment.findFirst({
+    where: { demandId: childId },
+    orderBy: { createdAt: "desc" },
+  });
+
+  if (assignment) {
+    await db.demandAssignment.update({
+      where: { id: assignment.id },
+      data: {
+        status: child.assigneeId
+          ? AssignmentStatus.ASSIGNED
+          : AssignmentStatus.AVAILABLE,
+      },
+    });
+  }
+
+  if (child.sectorId) {
+    await recalculateSectorPriorities(child.sectorId);
+  }
+}
+
+async function assertNoActiveProductionSession(demandId: string) {
+  const session = await db.workSession.findFirst({
+    where: {
+      demandId,
+      status: { in: [WorkSessionStatus.ACTIVE, WorkSessionStatus.PAUSED] },
+    },
+    select: { id: true },
+  });
+  if (session) {
+    throw new Error(
+      "Não é possível apagar: há sessão de produção ativa ou pausada na demanda ligada"
+    );
+  }
+}
+
+async function deleteLinkedDemandIfSafe(linkedDemandId: string | null) {
+  if (!linkedDemandId) return;
+  await assertNoActiveProductionSession(linkedDemandId);
+  await db.demand.delete({ where: { id: linkedDemandId } });
+}
+
+export async function createChecklist(
+  user: SessionUser,
+  demandId: string,
+  title = "Checklist"
+): Promise<Checklist> {
+  await assertCanEditParent(user, demandId);
+
+  const trimmed = title.trim() || "Checklist";
+  const maxOrder = await db.checklist.aggregate({
+    where: { demandId },
+    _max: { sortOrder: true },
+  });
+  const sortOrder = (maxOrder._max.sortOrder ?? -1) + 1;
+
+  return db.checklist.create({
+    data: {
+      demandId,
+      title: trimmed,
+      sortOrder,
+    },
+  });
+}
+
+export async function renameChecklist(
+  user: SessionUser,
+  checklistId: string,
+  title: string
+): Promise<Checklist> {
+  await loadChecklistForEdit(user, checklistId);
+  const trimmed = title.trim();
+  if (!trimmed) throw new Error("Título é obrigatório");
+
+  return db.checklist.update({
+    where: { id: checklistId },
+    data: { title: trimmed },
+  });
+}
+
+export async function deleteChecklist(
+  user: SessionUser,
+  checklistId: string
+): Promise<void> {
+  const checklist = await loadChecklistForEdit(user, checklistId);
+  const items = await db.checklistItem.findMany({
+    where: { checklistId: checklist.id },
+    select: { id: true, linkedDemandId: true },
+  });
+
+  for (const item of items) {
+    await deleteLinkedDemandIfSafe(item.linkedDemandId);
+  }
+
+  await db.checklist.delete({ where: { id: checklistId } });
+}
+
+export async function addChecklistItem(
+  user: SessionUser,
+  checklistId: string,
+  title: string
+): Promise<ChecklistItem> {
+  await loadChecklistForEdit(user, checklistId);
+
+  const trimmed = title.trim();
+  if (!trimmed) throw new Error("Título é obrigatório");
+
+  const maxOrder = await db.checklistItem.aggregate({
+    where: { checklistId },
+    _max: { sortOrder: true },
+  });
+  const sortOrder = (maxOrder._max.sortOrder ?? 0) + 1;
+
+  return db.checklistItem.create({
+    data: {
+      checklistId,
+      title: trimmed,
+      sortOrder,
+    },
+  });
+}
+
+export async function updateChecklistItemTitle(
+  user: SessionUser,
+  itemId: string,
+  title: string
+): Promise<ChecklistItem> {
+  await loadItemForEdit(user, itemId);
+  const trimmed = title.trim();
+  if (!trimmed) throw new Error("Título é obrigatório");
+
+  return db.checklistItem.update({
+    where: { id: itemId },
+    data: { title: trimmed },
+  });
+}
+
+export async function setChecklistItemDueDate(
+  user: SessionUser,
+  itemId: string,
+  dueDate: Date | null
+): Promise<ChecklistItem> {
+  await loadItemForEdit(user, itemId);
+
+  return db.checklistItem.update({
+    where: { id: itemId },
+    data: { dueDate },
+  });
+}
+
+export async function assignChecklistItem(
+  user: SessionUser,
+  itemId: string,
+  assigneeId: string
+): Promise<ChecklistItem> {
+  const item = await loadItemForEdit(user, itemId);
+  const parent = item.checklist.demand;
+
+  const assignee = await db.user.findFirst({
+    where: {
+      id: assigneeId,
+      status: UserStatus.ACTIVE,
+      sectorId: { not: null },
+    },
+    select: { id: true, sectorId: true },
+  });
+  if (!assignee?.sectorId) {
+    throw new Error("Responsável inválido ou sem setor");
+  }
+
+  let linkedDemandId = item.linkedDemandId;
+
+  if (!linkedDemandId) {
+    const child = await db.demand.create({
+      data: {
+        title: item.title,
+        description: item.title,
+        type: parent.type ?? DemandType.OTHER,
+        origin:
+          parent.origin === DemandOrigin.EXTRA
+            ? DemandOrigin.EXTRA
+            : DemandOrigin.CLIENT_BOARD,
+        status: DemandStatus.DEMANDED,
+        internalStatus: "Atribuída",
+        boardColumn: "assigned",
+        isContractual: false,
+        visibleToClient: false,
+        isChecklistItem: true,
+        client: { connect: { id: parent.clientId } },
+        parentDemand: { connect: { id: parent.id } },
+        requester: { connect: { id: user.id } },
+        assignee: { connect: { id: assignee.id } },
+        sector: { connect: { id: assignee.sectorId } },
+        ...(parent.boardId
+          ? { board: { connect: { id: parent.boardId } } }
+          : {}),
+        ...(parent.competenceId
+          ? { competence: { connect: { id: parent.competenceId } } }
+          : {}),
+      },
+    });
+    linkedDemandId = child.id;
+
+    await assignDemand(
+      child.id,
+      assignee.id,
+      user,
+      AssignmentMethod.MANAGEMENT
+    );
+  } else {
+    await db.demand.update({
+      where: { id: linkedDemandId },
+      data: {
+        sector: { connect: { id: assignee.sectorId } },
+        assignee: { connect: { id: assignee.id } },
+      },
+    });
+    await assignDemand(
+      linkedDemandId,
+      assignee.id,
+      user,
+      AssignmentMethod.MANAGEMENT
+    );
+  }
+
+  return db.checklistItem.update({
+    where: { id: itemId },
+    data: {
+      linkedDemandId,
+      assigneeId: assignee.id,
+    },
+  });
+}
+
+export async function unassignChecklistItem(
+  user: SessionUser,
+  itemId: string
+): Promise<ChecklistItem> {
+  const item = await loadItemForEdit(user, itemId);
+
+  if (item.linkedDemandId) {
+    await db.demand.update({
+      where: { id: item.linkedDemandId },
+      data: { assigneeId: null },
+    });
+  }
+
+  return db.checklistItem.update({
+    where: { id: itemId },
+    data: { assigneeId: null },
+  });
+}
+
+export async function toggleChecklistItemDone(
+  user: SessionUser,
+  itemId: string,
+  isDone: boolean
+): Promise<ChecklistItem> {
+  const item = await loadItemForEdit(user, itemId);
+
+  if (item.linkedDemandId) {
+    if (isDone) {
+      await completeLinkedDemand(user, item.linkedDemandId);
+    } else {
+      await reopenLinkedDemand(item.linkedDemandId);
+    }
+  }
+
+  return db.checklistItem.update({
+    where: { id: itemId },
+    data: { isDone },
+  });
+}
+
+export async function deleteChecklistItem(
+  user: SessionUser,
+  itemId: string
+): Promise<void> {
+  const item = await loadItemForEdit(user, itemId);
+  await deleteLinkedDemandIfSafe(item.linkedDemandId);
+  await db.checklistItem.delete({ where: { id: itemId } });
+}
+
+export async function listChecklistsForDemand(demandId: string) {
+  return db.checklist.findMany({
+    where: { demandId },
+    orderBy: { sortOrder: "asc" },
+    include: {
+      items: {
+        orderBy: { sortOrder: "asc" },
+        include: {
+          assignee: { select: { id: true, name: true, avatarUrl: true } },
+        },
+      },
+    },
+  });
+}
+
+/** Compat até Task 4: conclui demanda-filha legada / linked. */
+export async function completeChecklistItem(
+  user: SessionUser,
+  childId: string
+) {
+  return completeLinkedDemand(user, childId);
+}
+
+/** Compat até Task 4: lista filhos Demand (UI antiga). */
 export async function listChecklistItems(parentId: string) {
   return db.demand.findMany({
     where: { parentDemandId: parentId, isChecklistItem: true },
@@ -323,6 +551,7 @@ export async function listChecklistItems(parentId: string) {
   });
 }
 
+/** Compat até Task 4: progresso a partir dos filhos Demand. */
 export async function getChecklistProgress(parentId: string) {
   const children = await db.demand.findMany({
     where: { parentDemandId: parentId, isChecklistItem: true },
@@ -330,10 +559,7 @@ export async function getChecklistProgress(parentId: string) {
   });
   return computeChecklistProgress(
     children.map((c) => ({
-      isDone:
-        c.status === "DONE" ||
-        c.status === "PUBLISHED" ||
-        c.status === "DELIVERED",
+      isDone: TERMINAL_STATUSES.includes(c.status),
     }))
   );
 }

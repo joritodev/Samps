@@ -18,7 +18,7 @@ const addSchema = z.object({
   parentId: z.string().min(1),
   clientId: z.string().min(1),
   title: z.string().trim().min(1, "Título é obrigatório.").max(160),
-  description: z.string().trim().min(1, "Descrição é obrigatória.").max(4000),
+  description: z.string().trim().max(4000).optional(),
   format: z.string().trim().max(80).optional(),
   dueDate: z
     .string()
@@ -32,6 +32,11 @@ const addSchema = z.object({
   sectorId: z.string().optional(),
 });
 
+/**
+ * Compat UI antiga até Task 4.
+ * `parentId` no form antigo = demand pai; service novo espera `checklistId`.
+ * Sem checklistId real, retorna erro pedindo Task 4 — evita create Demand pesado.
+ */
 export async function addChecklistItemAction(input: {
   parentId: string;
   clientId: string;
@@ -49,17 +54,43 @@ export async function addChecklistItemAction(input: {
   }
 
   try {
-    const child = await addChecklistItem(user, parsed.data.parentId, {
-      title: parsed.data.title,
-      description: parsed.data.description,
-      format: parsed.data.format || undefined,
-      dueDate: parsed.data.dueDate,
-      assigneeId: parsed.data.assigneeId || undefined,
-      sectorId: parsed.data.sectorId || undefined,
+    // Task 4 rewrites this action to accept checklistId.
+    // Temporary: treat parentId as checklistId only if a Checklist with that id exists.
+    const asChecklist = await db.checklist.findUnique({
+      where: { id: parsed.data.parentId },
+      select: { id: true },
     });
+    if (!asChecklist) {
+      return {
+        error:
+          "Checklist Trello: use a nova action (Task 4). Lista ainda não migrada neste formulário.",
+      };
+    }
+
+    let item = await addChecklistItem(
+      user,
+      parsed.data.parentId,
+      parsed.data.title
+    );
+    if (parsed.data.assigneeId) {
+      item = await assignChecklistItem(user, item.id, parsed.data.assigneeId);
+    }
     revalidateOperationalViews(parsed.data.clientId);
     revalidatePath(`/clientes/${parsed.data.clientId}/quadro`);
-    return { success: true as const, child };
+    // Shape legado para UI até Task 4 (não reescrever demand-checklist).
+    return {
+      success: true as const,
+      child: {
+        id: item.id,
+        title: item.title,
+        description: null as string | null,
+        format: null as string | null,
+        status: item.isDone ? "DONE" : "OPEN",
+        checklistOrder: item.sortOrder,
+        dueDate: item.dueDate,
+        assignee: null as { id?: string; name: string } | null,
+      },
+    };
   } catch (error) {
     return {
       error:
@@ -81,13 +112,28 @@ export async function assignChecklistItemAction(input: {
   }
 
   try {
-    const child = await assignChecklistItem(
+    // Task 4: childId → itemId. Aceita ChecklistItem id.
+    const item = await assignChecklistItem(
       user,
       input.childId,
       input.assigneeId
     );
     revalidateOperationalViews(input.clientId);
-    return { success: true as const, child };
+    return {
+      success: true as const,
+      child: {
+        id: item.id,
+        title: item.title,
+        description: null as string | null,
+        format: null as string | null,
+        status: item.isDone ? "DONE" : "OPEN",
+        checklistOrder: item.sortOrder,
+        dueDate: item.dueDate,
+        assignee: item.assigneeId
+          ? { id: item.assigneeId, name: "" }
+          : null,
+      },
+    };
   } catch (error) {
     return {
       error:

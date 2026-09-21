@@ -1,14 +1,33 @@
-import { AssignmentStatus, DemandStatus, DemandType, UserType } from "@prisma/client";
+import {
+  AssignmentStatus,
+  DemandStatus,
+  DemandType,
+  UserType,
+  WorkSessionStatus,
+} from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const findDemand = vi.fn();
 const findUser = vi.fn();
-const aggregateDemand = vi.fn();
 const createDemand = vi.fn();
 const updateDemand = vi.fn();
+const deleteDemand = vi.fn();
 const findAssignment = vi.fn();
 const updateAssignment = vi.fn();
 const updateManySessions = vi.fn();
+const findWorkSession = vi.fn();
+const createChecklist = vi.fn();
+const updateChecklist = vi.fn();
+const deleteChecklist = vi.fn();
+const aggregateChecklist = vi.fn();
+const findManyChecklists = vi.fn();
+const findChecklist = vi.fn();
+const createChecklistItem = vi.fn();
+const updateChecklistItem = vi.fn();
+const deleteChecklistItemRow = vi.fn();
+const findChecklistItem = vi.fn();
+const aggregateChecklistItem = vi.fn();
+const findManyChecklistItems = vi.fn();
 const assignDemand = vi.fn();
 const distributeDemandToSector = vi.fn();
 const resolveDelayOnTerminalStatus = vi.fn();
@@ -19,9 +38,9 @@ vi.mock("@/lib/db", () => ({
     demand: {
       findUnique: (...args: unknown[]) => findDemand(...args),
       findUniqueOrThrow: (...args: unknown[]) => findDemand(...args),
-      aggregate: (...args: unknown[]) => aggregateDemand(...args),
       create: (...args: unknown[]) => createDemand(...args),
       update: (...args: unknown[]) => updateDemand(...args),
+      delete: (...args: unknown[]) => deleteDemand(...args),
     },
     user: {
       findFirst: (...args: unknown[]) => findUser(...args),
@@ -31,7 +50,24 @@ vi.mock("@/lib/db", () => ({
       update: (...args: unknown[]) => updateAssignment(...args),
     },
     workSession: {
+      findFirst: (...args: unknown[]) => findWorkSession(...args),
       updateMany: (...args: unknown[]) => updateManySessions(...args),
+    },
+    checklist: {
+      create: (...args: unknown[]) => createChecklist(...args),
+      update: (...args: unknown[]) => updateChecklist(...args),
+      delete: (...args: unknown[]) => deleteChecklist(...args),
+      findUnique: (...args: unknown[]) => findChecklist(...args),
+      findMany: (...args: unknown[]) => findManyChecklists(...args),
+      aggregate: (...args: unknown[]) => aggregateChecklist(...args),
+    },
+    checklistItem: {
+      create: (...args: unknown[]) => createChecklistItem(...args),
+      update: (...args: unknown[]) => updateChecklistItem(...args),
+      delete: (...args: unknown[]) => deleteChecklistItemRow(...args),
+      findUnique: (...args: unknown[]) => findChecklistItem(...args),
+      findMany: (...args: unknown[]) => findManyChecklistItems(...args),
+      aggregate: (...args: unknown[]) => aggregateChecklistItem(...args),
     },
   },
 }));
@@ -73,71 +109,192 @@ const actor = {
   clientIds: ["cli-1"],
 };
 
-describe("addChecklistItem", () => {
+const parentDemand = {
+  id: "parent-1",
+  clientId: "cli-1",
+  boardId: "board-1",
+  competenceId: "comp-1",
+  type: DemandType.FEED,
+  origin: "CLIENT_BOARD",
+  isChecklistItem: false,
+  status: DemandStatus.PUBLISHED,
+};
+
+describe("addChecklistItem (leve)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    findDemand.mockResolvedValue({
-      id: "parent-1",
-      clientId: "cli-1",
-      boardId: "board-1",
-      competenceId: "comp-1",
-      type: DemandType.FEED,
-      origin: "CLIENT_BOARD",
-      isChecklistItem: false,
-      status: DemandStatus.PUBLISHED,
+    findChecklist.mockResolvedValue({
+      id: "cl-1",
+      demandId: "parent-1",
+      title: "Checklist",
+      demand: parentDemand,
     });
-    findUser.mockResolvedValue({ id: "traf-1", sectorId: "sec-traf" });
-    aggregateDemand.mockResolvedValue({ _max: { checklistOrder: 0 } });
-    createDemand.mockResolvedValue({ id: "child-1" });
-    findDemand
-      .mockResolvedValueOnce({
-        id: "parent-1",
-        clientId: "cli-1",
-        boardId: "board-1",
-        competenceId: "comp-1",
-        type: DemandType.FEED,
-        origin: "CLIENT_BOARD",
-        isChecklistItem: false,
-        status: DemandStatus.PUBLISHED,
-      })
-      .mockResolvedValue({
-        id: "child-1",
-        title: "Criar conjunto de anúncios",
-        assignee: { id: "traf-1", name: "Rafael Alves" },
-        sector: { id: "sec-traf", name: "Tráfego" },
-      });
+    findDemand.mockResolvedValue(parentDemand);
+    aggregateChecklistItem.mockResolvedValue({ _max: { sortOrder: 0 } });
+    createChecklistItem.mockResolvedValue({
+      id: "item-1",
+      checklistId: "cl-1",
+      title: "Revisar copy",
+      isDone: false,
+      sortOrder: 1,
+      assigneeId: null,
+      dueDate: null,
+      linkedDemandId: null,
+    });
   });
 
-  it("ao demandar para alguém, distribui como AVAILABLE e não ASSIGNED", async () => {
+  it("cria item leve e não chama demand.create", async () => {
     const { addChecklistItem } = await import("./checklist.service");
 
-    await addChecklistItem(actor, "parent-1", {
-      title: "Criar conjunto de anúncios",
-      description: "Variações Meta Ads 1:1 e 9:16",
-      format: "Feed",
-      assigneeId: "traf-1",
+    const item = await addChecklistItem(actor, "cl-1", "Revisar copy");
+
+    expect(createDemand).not.toHaveBeenCalled();
+    expect(createChecklistItem).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          title: "Revisar copy",
+          sortOrder: 1,
+          checklistId: "cl-1",
+        }),
+      })
+    );
+    expect(item.linkedDemandId).toBeNull();
+  });
+});
+
+describe("assignChecklistItem", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    findChecklistItem.mockResolvedValue({
+      id: "item-1",
+      checklistId: "cl-1",
+      title: "Revisar copy",
+      isDone: false,
+      linkedDemandId: null,
+      assigneeId: null,
+      checklist: {
+        id: "cl-1",
+        demandId: "parent-1",
+        demand: parentDemand,
+      },
     });
+    findDemand.mockResolvedValue(parentDemand);
+    findUser.mockResolvedValue({ id: "traf-1", sectorId: "sec-traf" });
+    createDemand.mockResolvedValue({ id: "child-1", title: "Revisar copy" });
+    assignDemand.mockResolvedValue({});
+    updateChecklistItem.mockResolvedValue({
+      id: "item-1",
+      checklistId: "cl-1",
+      title: "Revisar copy",
+      linkedDemandId: "child-1",
+      assigneeId: "traf-1",
+      isDone: false,
+    });
+  });
+
+  it("cria Demand filha e seta linkedDemandId", async () => {
+    const { assignChecklistItem } = await import("./checklist.service");
+
+    const item = await assignChecklistItem(actor, "item-1", "traf-1");
 
     expect(createDemand).toHaveBeenCalled();
     const created = createDemand.mock.calls[0][0].data;
-    expect(created.description).toBe("Variações Meta Ads 1:1 e 9:16");
-    expect(created.format).toBe("Feed");
-    expect(created.status).toBe(DemandStatus.DEMANDED);
-    expect(created.boardColumn).toBe("available");
-    expect(created.internalStatus).toBe("Disponível no setor");
-    expect(assignDemand).not.toHaveBeenCalled();
-    expect(distributeDemandToSector).toHaveBeenCalledWith(
+    expect(created.isChecklistItem).toBe(true);
+    expect(created.parentDemand.connect.id).toBe("parent-1");
+    expect(assignDemand).toHaveBeenCalledWith(
+      "child-1",
+      "traf-1",
+      actor,
+      expect.anything()
+    );
+    expect(updateChecklistItem).toHaveBeenCalledWith(
       expect.objectContaining({
-        demandId: "child-1",
-        sectorId: "sec-traf",
-        title: "Criar conjunto de anúncios",
+        where: { id: "item-1" },
+        data: expect.objectContaining({
+          linkedDemandId: "child-1",
+          assigneeId: "traf-1",
+        }),
+      })
+    );
+    expect(item.linkedDemandId).toBe("child-1");
+  });
+});
+
+describe("toggleChecklistItemDone", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("sem link só atualiza isDone do item", async () => {
+    findChecklistItem.mockResolvedValue({
+      id: "item-1",
+      checklistId: "cl-1",
+      title: "Revisar copy",
+      isDone: false,
+      linkedDemandId: null,
+      assigneeId: null,
+      checklist: {
+        id: "cl-1",
+        demandId: "parent-1",
+        demand: parentDemand,
+      },
+    });
+    findDemand.mockResolvedValue(parentDemand);
+    updateChecklistItem.mockResolvedValue({
+      id: "item-1",
+      isDone: true,
+      linkedDemandId: null,
+    });
+
+    const { toggleChecklistItemDone } = await import("./checklist.service");
+
+    await toggleChecklistItemDone(actor, "item-1", true);
+
+    expect(updateDemand).not.toHaveBeenCalled();
+    expect(updateChecklistItem).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "item-1" },
+        data: expect.objectContaining({ isDone: true }),
       })
     );
   });
 });
 
-describe("completeChecklistItem", () => {
-  beforeEach(async () => {
+describe("deleteChecklistItem", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    findChecklistItem.mockResolvedValue({
+      id: "item-1",
+      checklistId: "cl-1",
+      title: "Revisar copy",
+      linkedDemandId: "child-1",
+      checklist: {
+        id: "cl-1",
+        demandId: "parent-1",
+        demand: parentDemand,
+      },
+    });
+    findDemand.mockResolvedValue(parentDemand);
+  });
+
+  it("bloqueia delete quando há sessão ACTIVE/PAUSED", async () => {
+    findWorkSession.mockResolvedValue({
+      id: "ws-1",
+      status: WorkSessionStatus.ACTIVE,
+    });
+
+    const { deleteChecklistItem } = await import("./checklist.service");
+
+    await expect(deleteChecklistItem(actor, "item-1")).rejects.toThrow(
+      /sessão|produção|ativa/i
+    );
+    expect(deleteDemand).not.toHaveBeenCalled();
+    expect(deleteChecklistItemRow).not.toHaveBeenCalled();
+  });
+});
+
+describe("completeChecklistItem (compat)", () => {
+  beforeEach(() => {
     vi.clearAllMocks();
     findDemand.mockResolvedValue({
       id: "child-1",
@@ -162,7 +319,7 @@ describe("completeChecklistItem", () => {
     });
   });
 
-  it("marca a demanda e a atribuição como concluídas", async () => {
+  it("marca demanda e atribuição como concluídas", async () => {
     const { completeChecklistItem } = await import("./checklist.service");
 
     await completeChecklistItem(actor, "child-1");
@@ -178,40 +335,10 @@ describe("completeChecklistItem", () => {
         where: { id: "child-1" },
         data: expect.objectContaining({
           status: DemandStatus.DONE,
-          internalStatus: "Concluída",
-          boardColumn: "done",
           productionCompletedAt: expect.any(Date),
         }),
       })
     );
     expect(resolveDelayOnTerminalStatus).toHaveBeenCalledWith("child-1", "DONE");
-  });
-
-  it("permite o líder do setor concluir o item", async () => {
-    const { completeChecklistItem } = await import("./checklist.service");
-    const leader = {
-      ...actor,
-      id: "leader-1",
-      permissions: [] as string[],
-    };
-
-    await expect(completeChecklistItem(leader, "child-1")).resolves.toBeTruthy();
-  });
-
-  it("conclui item ainda em Disponíveis (assignment AVAILABLE)", async () => {
-    findAssignment.mockResolvedValue({
-      id: "asg-avail",
-      status: AssignmentStatus.AVAILABLE,
-    });
-    const { completeChecklistItem } = await import("./checklist.service");
-
-    await completeChecklistItem(actor, "child-1");
-
-    expect(updateAssignment).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { id: "asg-avail" },
-        data: expect.objectContaining({ status: AssignmentStatus.DONE }),
-      })
-    );
   });
 });
