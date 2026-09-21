@@ -422,7 +422,7 @@ export function DemandChecklist({
                   value={titleValue}
                   disabled={pending}
                   aria-label={`Título do checklist ${checklist.id}`}
-                  className="h-8 border-transparent bg-transparent px-1 text-sm font-medium shadow-none focus-visible:border-border focus-visible:bg-background"
+                  className="h-8 min-w-0 flex-1 border-transparent bg-transparent px-1 text-sm font-medium shadow-none focus-visible:border-border focus-visible:bg-background"
                   onChange={(e) =>
                     setDraftTitles((prev) => ({
                       ...prev,
@@ -517,7 +517,7 @@ export function DemandChecklist({
                           key={`${item.id}-${item.title}`}
                           disabled={pending}
                           className={cn(
-                            "h-8 border-transparent bg-transparent px-1 text-sm shadow-none focus-visible:border-border focus-visible:bg-background",
+                            "h-8 min-w-0 flex-1 border-transparent bg-transparent px-1 text-sm shadow-none focus-visible:border-border focus-visible:bg-background",
                             item.isDone &&
                               "text-muted-foreground line-through"
                           )}
@@ -593,7 +593,7 @@ export function DemandChecklist({
                       </div>
                     </div>
                     {canEdit ? (
-                      <DropdownMenu>
+                      <DropdownMenu modal={false}>
                         <DropdownMenuTrigger asChild>
                           <Button
                             type="button"
