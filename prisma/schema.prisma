@@ -331,6 +331,7 @@ model User {
   workSessions           WorkSession[]
   announcements          Announcement[]        @relation("AnnouncementAuthor")
   absences               Absence[]
+  checklistItems         ChecklistItem[]
 
   @@index([userType])
   @@index([status])
@@ -700,6 +701,8 @@ model Demand {
   project         Project?         @relation(fields: [projectId], references: [id])
   parentDemand    Demand?          @relation("DemandChecklist", fields: [parentDemandId], references: [id], onDelete: Cascade)
   childDemands    Demand[]         @relation("DemandChecklist")
+  checklists          Checklist[]
+  linkedChecklistItem ChecklistItem?
   comments        Comment[]
   attachments     Attachment[]
   assignments     DemandAssignment[]
@@ -717,6 +720,40 @@ model Demand {
   @@index([boardColumn])
   @@index([dueDate])
   @@index([parentDemandId])
+}
+
+model Checklist {
+  id        String   @id @default(cuid())
+  demandId  String
+  title     String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  demand Demand          @relation(fields: [demandId], references: [id], onDelete: Cascade)
+  items  ChecklistItem[]
+
+  @@index([demandId])
+}
+
+model ChecklistItem {
+  id             String    @id @default(cuid())
+  checklistId    String
+  title          String
+  isDone         Boolean   @default(false)
+  sortOrder      Int       @default(0)
+  assigneeId     String?
+  dueDate        DateTime?
+  linkedDemandId String?   @unique
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  checklist    Checklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+  assignee     User?     @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
+  linkedDemand Demand?   @relation(fields: [linkedDemandId], references: [id], onDelete: SetNull)
+
+  @@index([checklistId])
+  @@index([assigneeId])
 }
 
 model DemandDelay {
