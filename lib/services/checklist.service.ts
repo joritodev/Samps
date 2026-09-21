@@ -150,6 +150,7 @@ async function completeLinkedDemand(user: SessionUser, childId: string) {
   }
 
   if (TERMINAL_STATUSES.includes(child.status)) {
+    await syncLinkedChecklistItemDone(childId, true);
     return child;
   }
 
@@ -198,12 +199,57 @@ async function completeLinkedDemand(user: SessionUser, childId: string) {
     },
   });
 
+  await syncLinkedChecklistItemDone(childId, true);
   await resolveDelayOnTerminalStatus(childId, "DONE");
   if (child.sectorId) {
     await recalculateSectorPriorities(child.sectorId);
   }
 
   return updated;
+}
+
+/** Sync ChecklistItem.isDone for all items pointing at this linked demand. */
+async function syncLinkedChecklistItemDone(
+  linkedDemandId: string,
+  isDone: boolean
+) {
+  await db.checklistItem.updateMany({
+    where: { linkedDemandId },
+    data: { isDone },
+  });
+}
+
+/**
+ * Auth for linked complete/reopen: demands.edit OR assignee OR sector leader.
+ * Mirrors completeLinkedDemand gate (not demands.edit-only).
+ */
+async function assertCanActOnLinkedDemand(user: SessionUser, childId: string) {
+  const child = await db.demand.findUnique({
+    where: { id: childId },
+    select: {
+      id: true,
+      clientId: true,
+      assigneeId: true,
+      isChecklistItem: true,
+      sector: { select: { leaderId: true } },
+    },
+  });
+
+  if (!child || !child.isChecklistItem) {
+    throw new Error("Item de checklist não encontrado");
+  }
+  if (!canAccessClient(user.permissions, user.clientIds, child.clientId)) {
+    throw new Error("Sem permissão para este cliente");
+  }
+
+  const canEdit = hasPermission(user.permissions, "demands.edit");
+  const isAssignee = child.assigneeId === user.id;
+  const isLeader = child.sector?.leaderId === user.id;
+  if (!canEdit && !isAssignee && !isLeader) {
+    throw new Error("Sem permissão para concluir este item");
+  }
+
+  return child;
 }
 
 async function reopenLinkedDemand(childId: string) {
@@ -252,6 +298,8 @@ async function reopenLinkedDemand(childId: string) {
       },
     });
   }
+
+  await syncLinkedChecklistItemDone(childId, false);
 
   if (child.sectorId) {
     await recalculateSectorPriorities(child.sectorId);
@@ -374,14 +422,23 @@ export async function updateChecklistItemTitle(
   itemId: string,
   title: string
 ): Promise<ChecklistItem> {
-  await loadItemForEdit(user, itemId);
+  const item = await loadItemForEdit(user, itemId);
   const trimmed = title.trim();
   if (!trimmed) throw new Error("Título é obrigatório");
 
-  return db.checklistItem.update({
+  const updated = await db.checklistItem.update({
     where: { id: itemId },
     data: { title: trimmed },
   });
+
+  if (item.linkedDemandId) {
+    await db.demand.update({
+      where: { id: item.linkedDemandId },
+      data: { title: trimmed },
+    });
+  }
+
+  return updated;
 }
 
 export async function setChecklistItemDueDate(
@@ -389,12 +446,21 @@ export async function setChecklistItemDueDate(
   itemId: string,
   dueDate: Date | null
 ): Promise<ChecklistItem> {
-  await loadItemForEdit(user, itemId);
+  const item = await loadItemForEdit(user, itemId);
 
-  return db.checklistItem.update({
+  const updated = await db.checklistItem.update({
     where: { id: itemId },
     data: { dueDate },
   });
+
+  if (item.linkedDemandId) {
+    await db.demand.update({
+      where: { id: item.linkedDemandId },
+      data: { dueDate },
+    });
+  }
+
+  return updated;
 }
 
 export async function assignChecklistItem(
@@ -420,6 +486,7 @@ export async function assignChecklistItem(
   let linkedDemandId = item.linkedDemandId;
 
   if (!linkedDemandId) {
+    // assignDemand uses global db (not tx-aware) — create then orphan-cleanup on fail
     const child = await db.demand.create({
       data: {
         title: item.title,
@@ -450,27 +517,39 @@ export async function assignChecklistItem(
     });
     linkedDemandId = child.id;
 
-    await assignDemand(
-      child.id,
-      assignee.id,
-      user,
-      AssignmentMethod.MANAGEMENT
-    );
-  } else {
-    await db.demand.update({
-      where: { id: linkedDemandId },
-      data: {
-        sector: { connect: { id: assignee.sectorId } },
-        assignee: { connect: { id: assignee.id } },
-      },
-    });
-    await assignDemand(
-      linkedDemandId,
-      assignee.id,
-      user,
-      AssignmentMethod.MANAGEMENT
-    );
+    try {
+      await assignDemand(
+        child.id,
+        assignee.id,
+        user,
+        AssignmentMethod.MANAGEMENT
+      );
+      return await db.checklistItem.update({
+        where: { id: itemId },
+        data: {
+          linkedDemandId,
+          assigneeId: assignee.id,
+        },
+      });
+    } catch (err) {
+      await db.demand.delete({ where: { id: child.id } }).catch(() => undefined);
+      throw err;
+    }
   }
+
+  await db.demand.update({
+    where: { id: linkedDemandId },
+    data: {
+      sector: { connect: { id: assignee.sectorId } },
+      assignee: { connect: { id: assignee.id } },
+    },
+  });
+  await assignDemand(
+    linkedDemandId,
+    assignee.id,
+    user,
+    AssignmentMethod.MANAGEMENT
+  );
 
   return db.checklistItem.update({
     where: { id: itemId },
@@ -508,14 +587,14 @@ export async function toggleChecklistItemDone(
   const item = await loadItem(itemId);
 
   if (item.linkedDemandId && isDone) {
-    // Spec §6: linked complete uses same auth as completeChecklistItem
-    // (demands.edit OR assignee OR sector leader) — not demands.edit-only.
+    // Spec §6: linked complete — demands.edit OR assignee OR sector leader
     await completeLinkedDemand(user, item.linkedDemandId);
+  } else if (item.linkedDemandId && !isDone) {
+    // Same auth as complete (not demands.edit-only via parent)
+    await assertCanActOnLinkedDemand(user, item.linkedDemandId);
+    await reopenLinkedDemand(item.linkedDemandId);
   } else {
     await assertCanEditParent(user, item.checklist.demandId);
-    if (item.linkedDemandId && !isDone) {
-      await reopenLinkedDemand(item.linkedDemandId);
-    }
   }
 
   return db.checklistItem.update({

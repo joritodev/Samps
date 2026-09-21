@@ -28,6 +28,7 @@ const deleteChecklistItemRow = vi.fn();
 const findChecklistItem = vi.fn();
 const aggregateChecklistItem = vi.fn();
 const findManyChecklistItems = vi.fn();
+const updateManyChecklistItems = vi.fn();
 const transaction = vi.fn();
 const assignDemand = vi.fn();
 const distributeDemandToSector = vi.fn();
@@ -65,6 +66,7 @@ vi.mock("@/lib/db", () => ({
     checklistItem: {
       create: (...args: unknown[]) => createChecklistItem(...args),
       update: (...args: unknown[]) => updateChecklistItem(...args),
+      updateMany: (...args: unknown[]) => updateManyChecklistItems(...args),
       delete: (...args: unknown[]) => deleteChecklistItemRow(...args),
       findUnique: (...args: unknown[]) => findChecklistItem(...args),
       findMany: (...args: unknown[]) => findManyChecklistItems(...args),
@@ -306,6 +308,7 @@ describe("toggleChecklistItemDone", () => {
       isDone: true,
       linkedDemandId: "child-1",
     });
+    updateManyChecklistItems.mockResolvedValue({ count: 1 });
 
     const { toggleChecklistItemDone } = await import("./checklist.service");
 
@@ -317,9 +320,91 @@ describe("toggleChecklistItemDone", () => {
         data: expect.objectContaining({ status: DemandStatus.DONE }),
       })
     );
+    expect(updateManyChecklistItems).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { linkedDemandId: "child-1" },
+        data: { isDone: true },
+      })
+    );
     expect(updateChecklistItem).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ isDone: true }),
+      })
+    );
+  });
+
+  it("com link: reopen (isDone false) — assignee sem demands.edit pode reabrir", async () => {
+    const assignee = {
+      ...actor,
+      id: "traf-1",
+      permissions: [] as string[],
+    };
+    findChecklistItem.mockResolvedValue({
+      id: "item-1",
+      checklistId: "cl-1",
+      title: "Revisar copy",
+      isDone: true,
+      linkedDemandId: "child-1",
+      assigneeId: "traf-1",
+      checklist: {
+        id: "cl-1",
+        demandId: "parent-1",
+        demand: parentDemand,
+      },
+    });
+    // assertCanActOnLinkedDemand then reopenLinkedDemand both findUnique
+    findDemand
+      .mockResolvedValueOnce({
+        id: "child-1",
+        clientId: "cli-1",
+        assigneeId: "traf-1",
+        isChecklistItem: true,
+        sector: { leaderId: "leader-1" },
+      })
+      .mockResolvedValueOnce({
+        id: "child-1",
+        assigneeId: "traf-1",
+        status: DemandStatus.DONE,
+        sectorId: "sec-traf",
+      });
+    findAssignment.mockResolvedValue({
+      id: "asg-1",
+      status: AssignmentStatus.DONE,
+    });
+    updateAssignment.mockResolvedValue({});
+    updateDemand.mockResolvedValue({
+      id: "child-1",
+      status: DemandStatus.DEMANDED,
+    });
+    updateManyChecklistItems.mockResolvedValue({ count: 1 });
+    updateChecklistItem.mockResolvedValue({
+      id: "item-1",
+      isDone: false,
+      linkedDemandId: "child-1",
+    });
+
+    const { toggleChecklistItemDone } = await import("./checklist.service");
+
+    await toggleChecklistItemDone(assignee, "item-1", false);
+
+    expect(updateDemand).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "child-1" },
+        data: expect.objectContaining({
+          status: DemandStatus.DEMANDED,
+          productionCompletedAt: null,
+        }),
+      })
+    );
+    expect(updateManyChecklistItems).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { linkedDemandId: "child-1" },
+        data: { isDone: false },
+      })
+    );
+    expect(updateChecklistItem).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ isDone: false }),
       })
     );
   });
@@ -475,6 +560,7 @@ describe("completeChecklistItem (compat)", () => {
       assignee: null,
       sector: null,
     });
+    updateManyChecklistItems.mockResolvedValue({ count: 1 });
   });
 
   it("marca demanda e atribuição como concluídas", async () => {
@@ -495,6 +581,12 @@ describe("completeChecklistItem (compat)", () => {
           status: DemandStatus.DONE,
           productionCompletedAt: expect.any(Date),
         }),
+      })
+    );
+    expect(updateManyChecklistItems).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { linkedDemandId: "child-1" },
+        data: { isDone: true },
       })
     );
     expect(resolveDelayOnTerminalStatus).toHaveBeenCalledWith("child-1", "DONE");

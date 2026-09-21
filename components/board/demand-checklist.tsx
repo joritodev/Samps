@@ -116,8 +116,8 @@ export function DemandChecklist({
     [assignees]
   );
 
-  function refresh(next: ChecklistView[]) {
-    setChecklists(next);
+  function refresh(recipe: (prev: ChecklistView[]) => ChecklistView[]) {
+    setChecklists((prev) => recipe(prev));
     router.refresh();
   }
 
@@ -126,8 +126,8 @@ export function DemandChecklist({
     itemId: string,
     patch: Partial<ChecklistItemView>
   ) {
-    refresh(
-      checklists.map((cl) =>
+    refresh((prev) =>
+      prev.map((cl) =>
         cl.id !== checklistId
           ? cl
           : {
@@ -155,8 +155,8 @@ export function DemandChecklist({
         );
         return;
       }
-      refresh([
-        ...checklists,
+      refresh((prev) => [
+        ...prev,
         {
           id: result.checklist.id,
           title: result.checklist.title,
@@ -192,8 +192,8 @@ export function DemandChecklist({
         );
         return;
       }
-      refresh(
-        checklists.map((cl) =>
+      refresh((prev) =>
+        prev.map((cl) =>
           cl.id === checklistId ? { ...cl, title: result.checklist.title } : cl
         )
       );
@@ -216,7 +216,7 @@ export function DemandChecklist({
         );
         return;
       }
-      refresh(checklists.filter((cl) => cl.id !== checklistId));
+      refresh((prev) => prev.filter((cl) => cl.id !== checklistId));
     });
   }
 
@@ -239,8 +239,8 @@ export function DemandChecklist({
       }
       const item = result.item;
       setNewItemTitles((prev) => ({ ...prev, [checklistId]: "" }));
-      refresh(
-        checklists.map((cl) =>
+      refresh((prev) =>
+        prev.map((cl) =>
           cl.id !== checklistId
             ? cl
             : {
@@ -391,8 +391,8 @@ export function DemandChecklist({
         );
         return;
       }
-      refresh(
-        checklists.map((cl) =>
+      refresh((prev) =>
+        prev.map((cl) =>
           cl.id !== checklistId
             ? cl
             : { ...cl, items: cl.items.filter((i) => i.id !== itemId) }
