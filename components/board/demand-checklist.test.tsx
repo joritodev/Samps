@@ -9,7 +9,10 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@/app/actions/checklist", () => ({
   addChecklistItemAction: vi.fn(),
+  assignChecklistItemAction: vi.fn(),
   completeChecklistItemAction: vi.fn(),
+  createChecklistAction: vi.fn(),
+  setChecklistItemDueDateAction: vi.fn(),
 }));
 
 afterEach(() => {

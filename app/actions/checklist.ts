@@ -1,155 +1,324 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/permissions/check";
-import { canAccessClient } from "@/lib/permissions/resolve";
 import { revalidateOperationalViews } from "@/lib/revalidate-operational";
 import {
   addChecklistItem,
   assignChecklistItem,
   completeChecklistItem,
-  getChecklistProgress,
-  listChecklistItems,
+  createChecklist,
+  deleteChecklist,
+  deleteChecklistItem,
+  renameChecklist,
+  setChecklistItemDueDate,
+  toggleChecklistItemDone,
+  unassignChecklistItem,
+  updateChecklistItemTitle,
 } from "@/lib/services/checklist.service";
 
-const addSchema = z.object({
-  parentId: z.string().min(1),
+const createSchema = z.object({
+  demandId: z.string().min(1),
   clientId: z.string().min(1),
-  title: z.string().trim().min(1, "Título é obrigatório.").max(160),
-  description: z.string().trim().max(4000).optional(),
-  format: z.string().trim().max(80).optional(),
-  dueDate: z
-    .string()
-    .trim()
-    .optional()
-    .transform((v) => (v ? new Date(`${v}T12:00:00.000Z`) : undefined))
-    .refine((d) => d === undefined || !Number.isNaN(d.getTime()), {
-      message: "Prazo inválido.",
-    }),
-  assigneeId: z.string().optional(),
-  sectorId: z.string().optional(),
+  title: z.string().trim().min(1).max(200).optional(),
 });
 
-/**
- * Compat UI antiga até Task 4.
- * `parentId` no form antigo = demand pai; service novo espera `checklistId`.
- * Sem checklistId real, retorna erro pedindo Task 4 — evita create Demand pesado.
- */
-export async function addChecklistItemAction(input: {
-  parentId: string;
+const renameSchema = z.object({
+  checklistId: z.string().min(1),
+  clientId: z.string().min(1),
+  title: z.string().trim().min(1).max(200),
+});
+
+const deleteChecklistSchema = z.object({
+  checklistId: z.string().min(1),
+  clientId: z.string().min(1),
+});
+
+const addItemSchema = z.object({
+  checklistId: z.string().min(1),
+  clientId: z.string().min(1),
+  title: z.string().trim().min(1).max(200),
+});
+
+const updateItemTitleSchema = z.object({
+  itemId: z.string().min(1),
+  clientId: z.string().min(1),
+  title: z.string().trim().min(1).max(200),
+});
+
+const dueDateSchema = z.object({
+  itemId: z.string().min(1),
+  clientId: z.string().min(1),
+  dueDate: z
+    .union([z.string().trim().min(1), z.null()])
+    .transform((v) => {
+      if (v === null) return null;
+      const d = new Date(`${v}T12:00:00.000Z`);
+      return d;
+    })
+    .refine((d) => d === null || !Number.isNaN(d.getTime()), {
+      message: "Prazo inválido.",
+    }),
+});
+
+const assignSchema = z.object({
+  itemId: z.string().min(1),
+  clientId: z.string().min(1),
+  assigneeId: z.string().min(1),
+});
+
+const itemClientSchema = z.object({
+  itemId: z.string().min(1),
+  clientId: z.string().min(1),
+});
+
+const toggleSchema = z.object({
+  itemId: z.string().min(1),
+  clientId: z.string().min(1),
+  isDone: z.boolean(),
+});
+
+function actionError(error: unknown, fallback: string) {
+  return {
+    error: error instanceof Error ? error.message : fallback,
+  };
+}
+
+export async function createChecklistAction(input: {
+  demandId: string;
   clientId: string;
-  title: string;
-  description: string;
-  format?: string;
-  dueDate?: string;
-  assigneeId?: string;
-  sectorId?: string;
+  title?: string;
 }) {
   const user = await requireAuth();
-  const parsed = addSchema.safeParse(input);
+  const parsed = createSchema.safeParse(input);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
   }
 
   try {
-    // Task 4 rewrites this action to accept checklistId.
-    // Temporary: treat parentId as checklistId only if a Checklist with that id exists.
-    const asChecklist = await db.checklist.findUnique({
-      where: { id: parsed.data.parentId },
-      select: { id: true },
-    });
-    if (!asChecklist) {
-      return {
-        error:
-          "Checklist Trello: use a nova action (Task 4). Lista ainda não migrada neste formulário.",
-      };
-    }
-
-    let item = await addChecklistItem(
+    const checklist = await createChecklist(
       user,
-      parsed.data.parentId,
+      parsed.data.demandId,
       parsed.data.title
     );
-    if (parsed.data.assigneeId) {
-      item = await assignChecklistItem(user, item.id, parsed.data.assigneeId);
-    }
     revalidateOperationalViews(parsed.data.clientId);
-    revalidatePath(`/clientes/${parsed.data.clientId}/quadro`);
-    // Shape legado para UI até Task 4 (não reescrever demand-checklist).
-    return {
-      success: true as const,
-      child: {
-        id: item.id,
-        title: item.title,
-        description: null as string | null,
-        format: null as string | null,
-        status: item.isDone ? "DONE" : "OPEN",
-        checklistOrder: item.sortOrder,
-        dueDate: item.dueDate,
-        assignee: null as { id?: string; name: string } | null,
-      },
-    };
+    return { success: true as const, checklist };
   } catch (error) {
-    return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Não foi possível adicionar o item.",
-    };
+    return actionError(error, "Não foi possível criar o checklist.");
+  }
+}
+
+export async function renameChecklistAction(input: {
+  checklistId: string;
+  clientId: string;
+  title: string;
+}) {
+  const user = await requireAuth();
+  const parsed = renameSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+  }
+
+  try {
+    const checklist = await renameChecklist(
+      user,
+      parsed.data.checklistId,
+      parsed.data.title
+    );
+    revalidateOperationalViews(parsed.data.clientId);
+    return { success: true as const, checklist };
+  } catch (error) {
+    return actionError(error, "Não foi possível renomear o checklist.");
+  }
+}
+
+export async function deleteChecklistAction(input: {
+  checklistId: string;
+  clientId: string;
+}) {
+  const user = await requireAuth();
+  const parsed = deleteChecklistSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+  }
+
+  try {
+    await deleteChecklist(user, parsed.data.checklistId);
+    revalidateOperationalViews(parsed.data.clientId);
+    return { success: true as const };
+  } catch (error) {
+    return actionError(error, "Não foi possível apagar o checklist.");
+  }
+}
+
+export async function addChecklistItemAction(input: {
+  checklistId: string;
+  clientId: string;
+  title: string;
+}) {
+  const user = await requireAuth();
+  const parsed = addItemSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+  }
+
+  try {
+    const item = await addChecklistItem(
+      user,
+      parsed.data.checklistId,
+      parsed.data.title
+    );
+    revalidateOperationalViews(parsed.data.clientId);
+    return { success: true as const, item };
+  } catch (error) {
+    return actionError(error, "Não foi possível adicionar o item.");
+  }
+}
+
+export async function updateChecklistItemTitleAction(input: {
+  itemId: string;
+  clientId: string;
+  title: string;
+}) {
+  const user = await requireAuth();
+  const parsed = updateItemTitleSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+  }
+
+  try {
+    const item = await updateChecklistItemTitle(
+      user,
+      parsed.data.itemId,
+      parsed.data.title
+    );
+    revalidateOperationalViews(parsed.data.clientId);
+    return { success: true as const, item };
+  } catch (error) {
+    return actionError(error, "Não foi possível atualizar o título.");
+  }
+}
+
+export async function setChecklistItemDueDateAction(input: {
+  itemId: string;
+  clientId: string;
+  dueDate: string | null;
+}) {
+  const user = await requireAuth();
+  const parsed = dueDateSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+  }
+
+  try {
+    const item = await setChecklistItemDueDate(
+      user,
+      parsed.data.itemId,
+      parsed.data.dueDate
+    );
+    revalidateOperationalViews(parsed.data.clientId);
+    return { success: true as const, item };
+  } catch (error) {
+    return actionError(error, "Não foi possível atualizar o prazo.");
   }
 }
 
 export async function assignChecklistItemAction(input: {
-  childId: string;
+  itemId: string;
   clientId: string;
   assigneeId: string;
 }) {
   const user = await requireAuth();
-  if (!input.childId || !input.assigneeId) {
-    return { error: "Dados inválidos." };
+  const parsed = assignSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
   }
 
   try {
-    // Task 4: childId → itemId. Aceita ChecklistItem id.
     const item = await assignChecklistItem(
       user,
-      input.childId,
-      input.assigneeId
+      parsed.data.itemId,
+      parsed.data.assigneeId
     );
-    revalidateOperationalViews(input.clientId);
-    return {
-      success: true as const,
-      child: {
-        id: item.id,
-        title: item.title,
-        description: null as string | null,
-        format: null as string | null,
-        status: item.isDone ? "DONE" : "OPEN",
-        checklistOrder: item.sortOrder,
-        dueDate: item.dueDate,
-        assignee: item.assigneeId
-          ? { id: item.assigneeId, name: "" }
-          : null,
-      },
-    };
+    revalidateOperationalViews(parsed.data.clientId);
+    return { success: true as const, item };
   } catch (error) {
-    return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Não foi possível atribuir o item.",
-    };
+    return actionError(error, "Não foi possível atribuir o item.");
   }
 }
 
+export async function unassignChecklistItemAction(input: {
+  itemId: string;
+  clientId: string;
+}) {
+  const user = await requireAuth();
+  const parsed = itemClientSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+  }
+
+  try {
+    const item = await unassignChecklistItem(user, parsed.data.itemId);
+    revalidateOperationalViews(parsed.data.clientId);
+    return { success: true as const, item };
+  } catch (error) {
+    return actionError(error, "Não foi possível remover o responsável.");
+  }
+}
+
+export async function toggleChecklistItemDoneAction(input: {
+  itemId: string;
+  clientId: string;
+  isDone: boolean;
+}) {
+  const user = await requireAuth();
+  const parsed = toggleSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+  }
+
+  try {
+    const item = await toggleChecklistItemDone(
+      user,
+      parsed.data.itemId,
+      parsed.data.isDone
+    );
+    revalidateOperationalViews(parsed.data.clientId);
+    return { success: true as const, item };
+  } catch (error) {
+    return actionError(error, "Não foi possível atualizar o item.");
+  }
+}
+
+export async function deleteChecklistItemAction(input: {
+  itemId: string;
+  clientId: string;
+}) {
+  const user = await requireAuth();
+  const parsed = itemClientSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+  }
+
+  try {
+    await deleteChecklistItem(user, parsed.data.itemId);
+    revalidateOperationalViews(parsed.data.clientId);
+    return { success: true as const };
+  } catch (error) {
+    return actionError(error, "Não foi possível apagar o item.");
+  }
+}
+
+/**
+ * Compat: conclui demanda-filha legada / linked a partir do sheet do card.
+ * Task 5 migra UI checklist; sheets de demanda-filha ainda usam Demand.id.
+ */
 export async function completeChecklistItemAction(input: {
   childId: string;
   clientId: string;
 }) {
   const user = await requireAuth();
-  if (!input.childId) {
+  if (!input.childId || !input.clientId) {
     return { error: "Dados inválidos." };
   }
 
@@ -158,42 +327,6 @@ export async function completeChecklistItemAction(input: {
     revalidateOperationalViews(input.clientId);
     return { success: true as const, child };
   } catch (error) {
-    return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Não foi possível concluir o item.",
-    };
-  }
-}
-
-export async function listChecklistItemsAction(parentId: string) {
-  const user = await requireAuth();
-  if (!parentId) {
-    return { error: "Demanda inválida." };
-  }
-
-  try {
-    const parent = await db.demand.findUnique({
-      where: { id: parentId },
-      select: { clientId: true, isChecklistItem: true },
-    });
-    if (!parent || parent.isChecklistItem) {
-      return { error: "Demanda não encontrada." };
-    }
-    if (!canAccessClient(user.permissions, user.clientIds, parent.clientId)) {
-      return { error: "Sem permissão para este cliente." };
-    }
-
-    const items = await listChecklistItems(parentId);
-    const progress = await getChecklistProgress(parentId);
-    return { success: true as const, items, progress };
-  } catch (error) {
-    return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Não foi possível carregar o checklist.",
-    };
+    return actionError(error, "Não foi possível concluir o item.");
   }
 }

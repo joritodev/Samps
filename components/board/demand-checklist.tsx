@@ -7,7 +7,10 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import {
   addChecklistItemAction,
+  assignChecklistItemAction,
   completeChecklistItemAction,
+  createChecklistAction,
+  setChecklistItemDueDateAction,
 } from "@/app/actions/checklist";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -73,9 +76,12 @@ export function DemandChecklist({
   const [assigneeId, setAssigneeId] = useState("");
   const [pending, startTransition] = useTransition();
   const [items, setItems] = useState(initialItems);
+  /** Task 5: props passam checklists[].id; até lá cria/reusa na sessão. */
+  const [checklistId, setChecklistId] = useState<string | null>(null);
 
   useEffect(() => {
     setItems(initialItems);
+    setChecklistId(null);
   }, [initialItems, parentId]);
 
   useEffect(() => {
@@ -110,62 +116,114 @@ export function DemandChecklist({
       toast.error("Informe o título da demanda.");
       return;
     }
-    if (!description.trim()) {
-      toast.error("Informe a descrição da demanda.");
-      return;
-    }
 
     startTransition(async () => {
-      const selected = sortedAssignees.find((a) => a.id === assigneeId);
+      let activeChecklistId = checklistId;
+      if (!activeChecklistId) {
+        const created = await createChecklistAction({
+          demandId: parentId,
+          clientId,
+          title: "Checklist",
+        });
+        if (!("success" in created) || !created.success) {
+          toast.error(
+            "error" in created
+              ? created.error
+              : "Não foi possível criar o checklist."
+          );
+          return;
+        }
+        activeChecklistId = created.checklist.id;
+        setChecklistId(activeChecklistId);
+      }
+
       const result = await addChecklistItemAction({
-        parentId,
+        checklistId: activeChecklistId,
         clientId,
-        title,
-        description: description.trim(),
-        format: format.trim() || undefined,
-        dueDate: dueDate || undefined,
-        assigneeId: assigneeId || undefined,
-        sectorId: selected?.sectorId,
+        title: title.trim(),
       });
-      if (result.error) {
-        toast.error(result.error);
+      if (!("success" in result) || !result.success) {
+        toast.error(
+          "error" in result
+            ? result.error
+            : "Não foi possível adicionar o item."
+        );
         return;
       }
+
+      let item = result.item;
+      if (dueDate) {
+        const due = await setChecklistItemDueDateAction({
+          itemId: item.id,
+          clientId,
+          dueDate,
+        });
+        if (!("success" in due) || !due.success) {
+          toast.error(
+            "error" in due ? due.error : "Não foi possível atualizar o prazo."
+          );
+          return;
+        }
+        item = due.item;
+      }
+      if (assigneeId) {
+        const assigned = await assignChecklistItemAction({
+          itemId: item.id,
+          clientId,
+          assigneeId,
+        });
+        if (!("success" in assigned) || !assigned.success) {
+          toast.error(
+            "error" in assigned
+              ? assigned.error
+              : "Não foi possível atribuir o item."
+          );
+          return;
+        }
+        item = assigned.item;
+      }
+
+      const assigneeName =
+        sortedAssignees.find((a) => a.id === (item.assigneeId ?? assigneeId))
+          ?.name ?? null;
+
       toast.success(
         assigneeId
-          ? "Demanda enviada ao setor em Disponíveis."
-          : "Demanda adicionada ao checklist."
+          ? "Item enviado ao setor em Disponíveis."
+          : "Item adicionado ao checklist."
       );
       setTitle("");
       setDescription("");
       setFormat("");
       setDueDate(toDateInputValue(defaultDueDate));
       setAssigneeId("");
-      if (result.child) {
-        refreshFromServer([
-          ...items,
-          {
-            id: result.child.id,
-            title: result.child.title,
-            description: result.child.description,
-            format: result.child.format,
-            status: result.child.status,
-            checklistOrder: result.child.checklistOrder,
-            dueDate: result.child.dueDate,
-            assignee: result.child.assignee,
-          },
-        ]);
-      } else {
-        router.refresh();
-      }
+      refreshFromServer([
+        ...items,
+        {
+          id: item.id,
+          title: item.title,
+          description: description.trim() || null,
+          format: format.trim() || null,
+          status: item.isDone ? "DONE" : "OPEN",
+          checklistOrder: item.sortOrder,
+          dueDate: item.dueDate,
+          assignee: item.assigneeId
+            ? { id: item.assigneeId, name: assigneeName ?? "" }
+            : null,
+        },
+      ]);
     });
   }
 
   function handleComplete(childId: string) {
     startTransition(async () => {
       const result = await completeChecklistItemAction({ childId, clientId });
-      if (result.error) {
-        toast.error(result.error);
+      if (!("success" in result) || !result.success) {
+        toast.error(
+          "error" in result
+            ? result.error
+            : "Não foi possível concluir o item."
+        );
         return;
       }
       toast.success("Demanda do checklist concluída.");

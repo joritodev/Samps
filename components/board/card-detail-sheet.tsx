@@ -205,8 +205,13 @@ export function CardDetailSheet({
                       childId: card.id,
                       clientId,
                     });
-                    if (r.error) toast.error(r.error);
-                    else {
+                    if (!("success" in r) || !r.success) {
+                      toast.error(
+                        "error" in r
+                          ? r.error
+                          : "Não foi possível concluir o item."
+                      );
+                    } else {
                       toast.success("Demanda do checklist concluída.");
                       onOpenChange(false);
                     }
