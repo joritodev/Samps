@@ -29,6 +29,7 @@ export type ExtraDemandAssigneeOption = {
   id: string;
   name: string;
   sectorId: string;
+  avatarUrl?: string | null;
 };
 
 export function ExtraDemandSheet({

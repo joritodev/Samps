@@ -2,26 +2,17 @@ import { describe, expect, it } from "vitest";
 import { computeChecklistProgress } from "./checklist-progress";
 
 describe("computeChecklistProgress", () => {
-  it("returns 0/0 for empty checklist", () => {
-    expect(computeChecklistProgress([])).toEqual({ done: 0, total: 0 });
+  it("conta isDone", () => {
+    expect(
+      computeChecklistProgress([{ isDone: true }, { isDone: false }, { isDone: true }])
+    ).toEqual({ done: 2, total: 3, percent: 67 });
   });
 
-  it("counts partial progress", () => {
-    expect(
-      computeChecklistProgress([
-        { status: "DONE" },
-        { status: "IN_PRODUCTION" },
-      ])
-    ).toEqual({ done: 1, total: 2 });
-  });
-
-  it("treats DONE, PUBLISHED and DELIVERED as done", () => {
-    expect(
-      computeChecklistProgress([
-        { status: "DONE" },
-        { status: "PUBLISHED" },
-        { status: "DELIVERED" },
-      ])
-    ).toEqual({ done: 3, total: 3 });
+  it("lista vazia = 0%", () => {
+    expect(computeChecklistProgress([])).toEqual({
+      done: 0,
+      total: 0,
+      percent: 0,
+    });
   });
 });

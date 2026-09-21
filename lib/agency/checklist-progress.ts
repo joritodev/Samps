@@ -1,12 +1,8 @@
 export function computeChecklistProgress(
-  children: { status: string }[]
-): { done: number; total: number } {
-  const total = children.length;
-  const done = children.filter(
-    (c) =>
-      c.status === "DONE" ||
-      c.status === "PUBLISHED" ||
-      c.status === "DELIVERED"
-  ).length;
-  return { done, total };
+  items: { isDone: boolean }[]
+): { done: number; total: number; percent: number } {
+  const total = items.length;
+  const done = items.filter((i) => i.isDone).length;
+  const percent = total === 0 ? 0 : Math.round((done / total) * 100);
+  return { done, total, percent };
 }

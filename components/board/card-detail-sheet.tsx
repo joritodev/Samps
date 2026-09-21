@@ -66,15 +66,20 @@ type CardDetail = {
   isChecklistItem?: boolean;
   parentDemandId?: string | null;
   parentDemand?: { id: string; title: string } | null;
-  childDemands?: {
+  checklists?: {
     id: string;
     title: string;
-    description?: string | null;
-    format?: string | null;
-    status: string;
-    checklistOrder?: number | null;
-    dueDate?: Date | string | null;
-    assignee?: { id?: string; name: string } | null;
+    sortOrder: number;
+    items: {
+      id: string;
+      title: string;
+      isDone: boolean;
+      sortOrder: number;
+      dueDate?: Date | string | null;
+      assigneeId?: string | null;
+      assignee?: { id: string; name: string } | null;
+      linkedDemandId?: string | null;
+    }[];
   }[];
   slidesCount?: number | null;
   screensCount?: number | null;
@@ -205,8 +210,13 @@ export function CardDetailSheet({
                       childId: card.id,
                       clientId,
                     });
-                    if (r.error) toast.error(r.error);
-                    else {
+                    if (!("success" in r) || !r.success) {
+                      toast.error(
+                        "error" in r
+                          ? r.error
+                          : "Não foi possível concluir o item."
+                      );
+                    } else {
                       toast.success("Demanda do checklist concluída.");
                       onOpenChange(false);
                     }
@@ -265,13 +275,12 @@ export function CardDetailSheet({
               {!card.isChecklistItem ? (
                 <TabsContent value="checklist" className="space-y-3">
                   <DemandChecklist
-                    parentId={card.id}
+                    demandId={card.id}
                     clientId={clientId}
-                    items={card.childDemands ?? []}
+                    checklists={card.checklists ?? []}
                     assignees={checklistAssignees}
                     canEdit={canEditChecklist}
-                    defaultDueDate={card.dueDate}
-                    onOpenItem={onOpenDemand}
+                    onOpenLinkedDemand={onOpenDemand}
                   />
                 </TabsContent>
               ) : null}
