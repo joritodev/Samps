@@ -84,7 +84,7 @@ async function loadChecklistForEdit(user: SessionUser, checklistId: string) {
   return checklist;
 }
 
-async function loadItemForEdit(user: SessionUser, itemId: string) {
+async function loadItem(itemId: string) {
   const item = await db.checklistItem.findUnique({
     where: { id: itemId },
     include: {
@@ -107,6 +107,11 @@ async function loadItemForEdit(user: SessionUser, itemId: string) {
     },
   });
   if (!item) throw new Error("Item de checklist não encontrado");
+  return item;
+}
+
+async function loadItemForEdit(user: SessionUser, itemId: string) {
+  const item = await loadItem(itemId);
   await assertCanEditParent(user, item.checklist.demandId);
   return item;
 }
@@ -323,11 +328,21 @@ export async function deleteChecklist(
     select: { id: true, linkedDemandId: true },
   });
 
-  for (const item of items) {
-    await deleteLinkedDemandIfSafe(item.linkedDemandId);
+  const linkedIds = items
+    .map((item) => item.linkedDemandId)
+    .filter((id): id is string => Boolean(id));
+
+  // Preflight all linked demands before deleting any
+  for (const linkedId of linkedIds) {
+    await assertNoActiveProductionSession(linkedId);
   }
 
-  await db.checklist.delete({ where: { id: checklistId } });
+  await db.$transaction(async (tx) => {
+    for (const linkedId of linkedIds) {
+      await tx.demand.delete({ where: { id: linkedId } });
+    }
+    await tx.checklist.delete({ where: { id: checklist.id } });
+  });
 }
 
 export async function addChecklistItem(
@@ -491,12 +506,15 @@ export async function toggleChecklistItemDone(
   itemId: string,
   isDone: boolean
 ): Promise<ChecklistItem> {
-  const item = await loadItemForEdit(user, itemId);
+  const item = await loadItem(itemId);
 
-  if (item.linkedDemandId) {
-    if (isDone) {
-      await completeLinkedDemand(user, item.linkedDemandId);
-    } else {
+  if (item.linkedDemandId && isDone) {
+    // Spec §6: linked complete uses same auth as completeChecklistItem
+    // (demands.edit OR assignee OR sector leader) — not demands.edit-only.
+    await completeLinkedDemand(user, item.linkedDemandId);
+  } else {
+    await assertCanEditParent(user, item.checklist.demandId);
+    if (item.linkedDemandId && !isDone) {
       await reopenLinkedDemand(item.linkedDemandId);
     }
   }
