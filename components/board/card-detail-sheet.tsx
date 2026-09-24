@@ -227,7 +227,22 @@ export function CardDetailSheet({
               </Button>
             ) : null}
 
-            <Tabs defaultValue="identification" className="mt-4">
+            {card.isChecklistItem && card.parentDemand && onOpenDemand ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="mt-2 h-8 px-2 text-xs"
+                onClick={() => onOpenDemand(card.parentDemand!.id)}
+              >
+                Voltar para {card.parentDemand.title}
+              </Button>
+            ) : null}
+
+            <Tabs
+              defaultValue={card.isChecklistItem ? "briefing" : "identification"}
+              className="mt-4"
+            >
               <TabsList className="flex flex-wrap h-auto gap-1">
                 <TabsTrigger value="identification">Identificação</TabsTrigger>
                 <TabsTrigger value="planning">Planejamento</TabsTrigger>

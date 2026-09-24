@@ -392,6 +392,49 @@ export async function deleteChecklist(
   });
 }
 
+/** Cria a demanda-filha se o item ainda não tem cartão. Sem responsável: não entra no Meu Painel. */
+export async function ensureChecklistItemDemand(
+  user: SessionUser,
+  itemId: string
+): Promise<{ demandId: string }> {
+  const item = await loadItemForEdit(user, itemId);
+  if (item.linkedDemandId) return { demandId: item.linkedDemandId };
+
+  const parent = item.checklist.demand;
+  const child = await db.demand.create({
+    data: {
+      title: item.title,
+      description: "",
+      type: parent.type ?? DemandType.OTHER,
+      origin:
+        parent.origin === DemandOrigin.EXTRA
+          ? DemandOrigin.EXTRA
+          : DemandOrigin.CLIENT_BOARD,
+      status: DemandStatus.OPEN,
+      internalStatus: "Aberta",
+      boardColumn: "open",
+      isContractual: false,
+      visibleToClient: false,
+      isChecklistItem: true,
+      dueDate: item.dueDate,
+      client: { connect: { id: parent.clientId } },
+      parentDemand: { connect: { id: parent.id } },
+      requester: { connect: { id: user.id } },
+      ...(parent.boardId ? { board: { connect: { id: parent.boardId } } } : {}),
+      ...(parent.competenceId
+        ? { competence: { connect: { id: parent.competenceId } } }
+        : {}),
+    },
+  });
+
+  await db.checklistItem.update({
+    where: { id: itemId },
+    data: { linkedDemandId: child.id },
+  });
+
+  return { demandId: child.id };
+}
+
 export async function addChecklistItem(
   user: SessionUser,
   checklistId: string,

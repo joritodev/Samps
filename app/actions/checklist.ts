@@ -10,6 +10,7 @@ import {
   createChecklist,
   deleteChecklist,
   deleteChecklistItem,
+  ensureChecklistItemDemand,
   renameChecklist,
   reorderChecklistItems,
   setChecklistItemDueDate,
@@ -173,6 +174,25 @@ export async function addChecklistItemAction(input: {
     return { success: true as const, item };
   } catch (error) {
     return actionError(error, "Não foi possível adicionar o item.");
+  }
+}
+
+export async function openChecklistItemAction(input: {
+  itemId: string;
+  clientId: string;
+}) {
+  const user = await requireAuth();
+  const parsed = itemClientSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+  }
+
+  try {
+    const opened = await ensureChecklistItemDemand(user, parsed.data.itemId);
+    revalidateOperationalViews(parsed.data.clientId);
+    return { success: true as const, demandId: opened.demandId };
+  } catch (error) {
+    return actionError(error, "Não foi possível abrir o item.");
   }
 }
 

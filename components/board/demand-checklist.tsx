@@ -28,6 +28,7 @@ import {
   addChecklistItemAction,
   assignChecklistItemAction,
   createChecklistAction,
+  openChecklistItemAction,
   deleteChecklistAction,
   deleteChecklistItemAction,
   renameChecklistAction,
@@ -35,7 +36,6 @@ import {
   setChecklistItemDueDateAction,
   toggleChecklistItemDoneAction,
   unassignChecklistItemAction,
-  updateChecklistItemTitleAction,
 } from "@/app/actions/checklist";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -197,22 +197,20 @@ function SortableChecklistItem({
   pending,
   assignees,
   onToggle,
-  onTitleBlur,
+  onOpen,
   onDueDate,
   onAssign,
   onDelete,
-  onOpenLinkedDemand,
 }: {
   item: ChecklistItemView;
   canEdit: boolean;
   pending: boolean;
   assignees: ChecklistAssigneeOption[];
   onToggle: () => void;
-  onTitleBlur: (title: string) => void;
+  onOpen?: () => void;
   onDueDate: (dueDate: string) => void;
   onAssign: (assigneeId: string) => void;
   onDelete: () => void;
-  onOpenLinkedDemand?: (id: string) => void;
 }) {
   const {
     attributes,
@@ -256,27 +254,24 @@ function SortableChecklistItem({
         aria-label={`Concluir ${item.title}`}
       />
       <div className="min-w-0 flex-1 space-y-1">
-        {canEdit ? (
-          <Input
-            defaultValue={item.title}
-            key={`${item.id}-${item.title}`}
+        {onOpen ? (
+          <button
+            type="button"
             disabled={pending}
             className={cn(
-              "h-8 min-w-0 flex-1 border-transparent bg-transparent px-1 text-sm shadow-none focus-visible:border-border focus-visible:bg-background",
-              item.isDone && "text-muted-foreground line-through"
+              "block w-full truncate rounded-sm px-1 text-left text-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              item.isDone
+                ? "text-muted-foreground line-through"
+                : "text-foreground"
             )}
-            onBlur={(e) => onTitleBlur(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                (e.target as HTMLInputElement).blur();
-              }
-            }}
-          />
+            onClick={onOpen}
+          >
+            {item.title}
+          </button>
         ) : (
           <p
             className={cn(
-              "text-sm",
+              "truncate px-1 text-sm",
               item.isDone
                 ? "text-muted-foreground line-through"
                 : "text-foreground"
@@ -321,18 +316,6 @@ function SortableChecklistItem({
               {toDateInputValue(item.dueDate)}
             </span>
           ) : null}
-          {item.linkedDemandId && onOpenLinkedDemand ? (
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              className="h-7 px-2 text-xs"
-              disabled={pending}
-              onClick={() => onOpenLinkedDemand(item.linkedDemandId!)}
-            >
-              Abrir
-            </Button>
-          ) : null}
         </div>
       </div>
       {canEdit ? (
@@ -371,11 +354,10 @@ function ChecklistItemsList({
   assignees,
   onReorder,
   onToggle,
-  onTitleBlur,
+  onOpen,
   onDueDate,
   onAssign,
   onDelete,
-  onOpenLinkedDemand,
 }: {
   checklist: ChecklistView;
   visibleItems: ChecklistItemView[];
@@ -384,11 +366,10 @@ function ChecklistItemsList({
   assignees: ChecklistAssigneeOption[];
   onReorder: (orderedItemIds: string[]) => void;
   onToggle: (item: ChecklistItemView) => void;
-  onTitleBlur: (item: ChecklistItemView, title: string) => void;
+  onOpen?: (item: ChecklistItemView) => void;
   onDueDate: (itemId: string, dueDate: string) => void;
   onAssign: (itemId: string, assigneeId: string) => void;
   onDelete: (itemId: string) => void;
-  onOpenLinkedDemand?: (id: string) => void;
 }) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
@@ -425,11 +406,10 @@ function ChecklistItemsList({
           pending={pending}
           assignees={assignees}
           onToggle={() => onToggle(item)}
-          onTitleBlur={(title) => onTitleBlur(item, title)}
+          onOpen={onOpen ? () => onOpen(item) : undefined}
           onDueDate={(dueDate) => onDueDate(item.id, dueDate)}
           onAssign={(assigneeId) => onAssign(item.id, assigneeId)}
           onDelete={() => onDelete(item.id)}
-          onOpenLinkedDemand={onOpenLinkedDemand}
         />
       ))}
     </ul>
@@ -655,28 +635,25 @@ export function DemandChecklist({
     });
   }
 
-  function handleItemTitleBlur(
-    checklistId: string,
-    item: ChecklistItemView,
-    nextTitle: string
-  ) {
-    const title = nextTitle.trim();
-    if (!title || title === item.title) return;
+  function handleOpenItem(checklistId: string, item: ChecklistItemView) {
+    if (!onOpenLinkedDemand) return;
     startTransition(async () => {
-      const result = await updateChecklistItemTitleAction({
+      if (item.linkedDemandId) {
+        onOpenLinkedDemand(item.linkedDemandId);
+        return;
+      }
+      const result = await openChecklistItemAction({
         itemId: item.id,
         clientId,
-        title,
       });
       if (!("success" in result) || !result.success) {
         toast.error(
-          "error" in result
-            ? result.error
-            : "Não foi possível atualizar o título."
+          "error" in result ? result.error : "Não foi possível abrir o item."
         );
         return;
       }
-      patchItem(checklistId, item.id, { title: result.item.title });
+      patchItem(checklistId, item.id, { linkedDemandId: result.demandId });
+      onOpenLinkedDemand(result.demandId);
     });
   }
 
@@ -913,8 +890,10 @@ export function DemandChecklist({
                 handleReorder(checklist.id, orderedItemIds)
               }
               onToggle={(item) => handleToggle(checklist.id, item)}
-              onTitleBlur={(item, title) =>
-                handleItemTitleBlur(checklist.id, item, title)
+              onOpen={
+                onOpenLinkedDemand
+                  ? (item) => handleOpenItem(checklist.id, item)
+                  : undefined
               }
               onDueDate={(itemId, dueDate) =>
                 handleDueDate(checklist.id, itemId, dueDate)
@@ -923,7 +902,6 @@ export function DemandChecklist({
                 handleAssign(checklist.id, itemId, assigneeId)
               }
               onDelete={(itemId) => handleDeleteItem(checklist.id, itemId)}
-              onOpenLinkedDemand={onOpenLinkedDemand}
             />
 
             {canEdit ? (

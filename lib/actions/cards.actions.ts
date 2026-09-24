@@ -56,6 +56,12 @@ export async function demandBriefingAction(
   const user = await requireAuth();
   try {
     await completeBriefingAndDemand(cardId, user, data);
+    if (data.title) {
+      await db.checklistItem.updateMany({
+        where: { linkedDemandId: cardId },
+        data: { title: data.title },
+      });
+    }
     revalidateOperationalViews(clientId);
     return { success: true as const };
   } catch (e) {

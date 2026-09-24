@@ -16,9 +16,9 @@ vi.mock("@/app/actions/checklist", () => ({
   renameChecklistAction: vi.fn(),
   reorderChecklistItemsAction: vi.fn(),
   setChecklistItemDueDateAction: vi.fn(),
+  openChecklistItemAction: vi.fn(),
   toggleChecklistItemDoneAction: vi.fn(),
   unassignChecklistItemAction: vi.fn(),
-  updateChecklistItemTitleAction: vi.fn(),
 }));
 
 afterEach(() => {
@@ -94,9 +94,11 @@ describe("DemandChecklist", () => {
       />
     );
 
-    expect(screen.getByDisplayValue("Criar conjunto de anúncios")).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Criar conjunto de anúncios" })
+    ).toBeTruthy();
     expect(screen.getByRole("checkbox")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Abrir" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Abrir" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Concluir" })).toBeNull();
     expect(screen.queryByLabelText("Descrição")).toBeNull();
   });
