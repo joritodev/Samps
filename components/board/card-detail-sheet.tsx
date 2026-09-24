@@ -34,7 +34,7 @@ import {
   DemandChecklist,
   type ChecklistAssigneeOption,
 } from "@/components/board/demand-checklist";
-import { completeChecklistItemAction } from "@/app/actions/checklist";
+import { completeChecklistItemAction, updateChecklistChildAction } from "@/app/actions/checklist";
 import { toast } from "sonner";
 import {
   canCompleteProduction,
@@ -66,10 +66,15 @@ type CardDetail = {
   isChecklistItem?: boolean;
   parentDemandId?: string | null;
   parentDemand?: { id: string; title: string } | null;
+  priorityId?: string | null;
+  priority?: { id: string; name: string } | null;
   checklists?: {
     id: string;
     title: string;
     sortOrder: number;
+    description?: string | null;
+    priorityId?: string | null;
+    comments?: { id: string; text: string; user: { name: string } }[];
     items: {
       id: string;
       title: string;
@@ -100,6 +105,7 @@ type CardDetail = {
     id: string;
     text: string;
     commentType: string;
+    entityType?: string | null;
     createdAt: Date;
     user: { name: string };
   }[];
@@ -113,6 +119,7 @@ export function CardDetailSheet({
   canChangeDeadline = false,
   canEditChecklist = false,
   checklistAssignees = [],
+  priorities = [],
   delays = [],
   onOpenDemand,
 }: {
@@ -123,12 +130,14 @@ export function CardDetailSheet({
   canChangeDeadline?: boolean;
   canEditChecklist?: boolean;
   checklistAssignees?: ChecklistAssigneeOption[];
+  priorities?: { id: string; name: string }[];
   delays?: DemandDelayRow[];
   onOpenDemand?: (id: string) => void;
 }) {
   const [pending, startTransition] = useTransition();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [priorityId, setPriorityId] = useState("");
   const [materialUrl, setMaterialUrl] = useState("");
   const [publishedUrl, setPublishedUrl] = useState("");
   const [comment, setComment] = useState("");
@@ -164,6 +173,7 @@ export function CardDetailSheet({
     if (card && open) {
       setTitle(card.title);
       setDescription(card.description ?? "");
+      setPriorityId(card.priorityId ?? card.priority?.id ?? "");
       setMaterialUrl(card.materialUrl ?? "");
       setPublishedUrl(card.publishedUrl ?? "");
       setVisible(card.visibleToClient);
@@ -294,6 +304,7 @@ export function CardDetailSheet({
                     clientId={clientId}
                     checklists={card.checklists ?? []}
                     assignees={checklistAssignees}
+                    priorities={priorities}
                     canEdit={canEditChecklist}
                     onOpenLinkedDemand={onOpenDemand}
                   />
@@ -319,15 +330,39 @@ export function CardDetailSheet({
                   <Input value={title} onChange={(e) => setTitle(e.target.value)} disabled={!canBriefing} />
                 </div>
                 <div className="space-y-1">
-                  <Label>Descrição *</Label>
+                  <Label>{card.isChecklistItem ? "Descrição" : "Descrição *"}</Label>
                   <Textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    disabled={!canBriefing}
+                    disabled={card.isChecklistItem ? !canEditChecklist : !canBriefing}
                     rows={5}
-                    placeholder="Descreva o briefing antes de demandar"
+                    placeholder={
+                      card.isChecklistItem
+                        ? "Descrição da sub-etapa"
+                        : "Descreva o briefing antes de demandar"
+                    }
                   />
                 </div>
+                {card.isChecklistItem ? (
+                  <div className="space-y-1">
+                    <Label htmlFor="child-priority">Prioridade</Label>
+                    <select
+                      id="child-priority"
+                      aria-label="Prioridade"
+                      disabled={!canEditChecklist || pending}
+                      value={priorityId}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+                      onChange={(e) => setPriorityId(e.target.value)}
+                    >
+                      <option value="">Sem prioridade</option>
+                      {priorities.map((priority) => (
+                        <option key={priority.id} value={priority.id}>
+                          {priority.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : null}
                 {fmt.includes("carrossel") && (
                   <div className="space-y-1">
                     <Label>Slides</Label>
@@ -364,7 +399,32 @@ export function CardDetailSheet({
                     </div>
                   </>
                 )}
-                {canBriefing && (
+                {card.isChecklistItem && canEditChecklist ? (
+                  <Button
+                    disabled={pending || !title.trim()}
+                    onClick={() =>
+                      startTransition(async () => {
+                        const r = await updateChecklistChildAction({
+                          childId: card.id,
+                          clientId,
+                          title: title.trim(),
+                          description,
+                          priorityId: priorityId || null,
+                        });
+                        if ("success" in r && r.success) {
+                          toast.success("Demanda salva");
+                        } else if ("error" in r && r.error) {
+                          toast.error(r.error);
+                        } else {
+                          toast.error("Não foi possível salvar a demanda.");
+                        }
+                      })
+                    }
+                  >
+                    Salvar
+                  </Button>
+                ) : null}
+                {canBriefing && !card.isChecklistItem && (
                   <Button
                     disabled={pending}
                     onClick={() =>
@@ -402,7 +462,7 @@ export function CardDetailSheet({
                     Concluir briefing e demandar
                   </Button>
                 )}
-                {!canBriefing && (
+                {!canBriefing && !card.isChecklistItem && (
                   <p className="text-xs text-muted-foreground">
                     {locked && card.briefingLockedAt
                       ? `Briefing bloqueado em ${format(new Date(card.briefingLockedAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}`
@@ -578,7 +638,9 @@ export function CardDetailSheet({
 
               <TabsContent value="communication" className="space-y-3">
                 <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {(card.comments ?? []).map((c) => (
+                  {(card.comments ?? [])
+                    .filter((c) => c.entityType !== "Checklist")
+                    .map((c) => (
                     <div key={c.id} className="rounded-lg bg-muted p-2 text-sm">
                       <p className="font-medium text-xs">{c.user.name}</p>
                       <p>{c.text}</p>

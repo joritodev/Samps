@@ -16,7 +16,10 @@ import {
   setChecklistItemDueDate,
   toggleChecklistItemDone,
   unassignChecklistItem,
+  updateChecklistChildFields,
+  updateChecklistDetails,
   updateChecklistItemTitle,
+  addChecklistComment,
 } from "@/lib/services/checklist.service";
 
 const createSchema = z.object({
@@ -357,6 +360,116 @@ export async function reorderChecklistItemsAction(input: {
     return { success: true as const };
   } catch (error) {
     return actionError(error, "Não foi possível reordenar os itens.");
+  }
+}
+
+const detailsSchema = z.object({
+  checklistId: z.string().min(1),
+  clientId: z.string().min(1),
+  description: z.string().max(5000),
+  priorityId: z.string().min(1).nullable(),
+});
+
+export async function updateChecklistDetailsAction(input: {
+  checklistId: string;
+  clientId: string;
+  description: string;
+  priorityId: string | null;
+}) {
+  const user = await requireAuth();
+  const parsed = detailsSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+  }
+
+  try {
+    const checklist = await updateChecklistDetails(user, parsed.data.checklistId, {
+      description: parsed.data.description,
+      priorityId: parsed.data.priorityId,
+    });
+    revalidateOperationalViews(parsed.data.clientId);
+    return {
+      success: true as const,
+      checklist: {
+        id: checklist.id,
+        description: checklist.description,
+        priorityId: checklist.priorityId,
+      },
+    };
+  } catch (error) {
+    return actionError(error, "Não foi possível salvar os detalhes.");
+  }
+}
+
+const commentSchema = z.object({
+  checklistId: z.string().min(1),
+  clientId: z.string().min(1),
+  text: z.string().trim().min(1).max(2000),
+});
+
+export async function addChecklistCommentAction(input: {
+  checklistId: string;
+  clientId: string;
+  text: string;
+}) {
+  const user = await requireAuth();
+  const parsed = commentSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+  }
+
+  try {
+    const comment = await addChecklistComment(
+      user,
+      parsed.data.checklistId,
+      parsed.data.text
+    );
+    revalidateOperationalViews(parsed.data.clientId);
+    return {
+      success: true as const,
+      comment: {
+        id: comment.id,
+        text: comment.text,
+        createdAt: comment.createdAt,
+        user: comment.user,
+      },
+    };
+  } catch (error) {
+    return actionError(error, "Não foi possível comentar.");
+  }
+}
+
+const childFieldsSchema = z.object({
+  childId: z.string().min(1),
+  clientId: z.string().min(1),
+  title: z.string().trim().min(1).max(200),
+  description: z.string().max(5000),
+  priorityId: z.string().min(1).nullable(),
+});
+
+export async function updateChecklistChildAction(input: {
+  childId: string;
+  clientId: string;
+  title: string;
+  description: string;
+  priorityId: string | null;
+}) {
+  const user = await requireAuth();
+  const parsed = childFieldsSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+  }
+
+  try {
+    await updateChecklistChildFields(user, parsed.data.childId, {
+      title: parsed.data.title,
+      description: parsed.data.description,
+      priorityId: parsed.data.priorityId,
+    });
+    revalidateOperationalViews(parsed.data.clientId);
+    return { success: true as const };
+  } catch (error) {
+    return actionError(error, "Não foi possível salvar a demanda.");
   }
 }
 

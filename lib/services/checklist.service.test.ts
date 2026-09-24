@@ -30,6 +30,8 @@ const aggregateChecklistItem = vi.fn();
 const findManyChecklistItems = vi.fn();
 const updateManyChecklistItems = vi.fn();
 const transaction = vi.fn();
+const createComment = vi.fn();
+const findPriority = vi.fn();
 const assignDemand = vi.fn();
 const distributeDemandToSector = vi.fn();
 const resolveDelayOnTerminalStatus = vi.fn();
@@ -71,6 +73,13 @@ vi.mock("@/lib/db", () => ({
       findUnique: (...args: unknown[]) => findChecklistItem(...args),
       findMany: (...args: unknown[]) => findManyChecklistItems(...args),
       aggregate: (...args: unknown[]) => aggregateChecklistItem(...args),
+    },
+    comment: {
+      create: (...args: unknown[]) => createComment(...args),
+      findMany: vi.fn(),
+    },
+    priorityLevel: {
+      findFirst: (...args: unknown[]) => findPriority(...args),
     },
     $transaction: (...args: unknown[]) => transaction(...args),
   },
@@ -124,17 +133,18 @@ const parentDemand = {
   status: DemandStatus.PUBLISHED,
 };
 
-describe("addChecklistItem (leve)", () => {
+describe("addChecklistItem", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     findChecklist.mockResolvedValue({
       id: "cl-1",
       demandId: "parent-1",
-      title: "Checklist",
+      title: "Planejamento",
       demand: parentDemand,
     });
     findDemand.mockResolvedValue(parentDemand);
     aggregateChecklistItem.mockResolvedValue({ _max: { sortOrder: 0 } });
+    createDemand.mockResolvedValue({ id: "child-1" });
     createChecklistItem.mockResolvedValue({
       id: "item-1",
       checklistId: "cl-1",
@@ -143,26 +153,79 @@ describe("addChecklistItem (leve)", () => {
       sortOrder: 1,
       assigneeId: null,
       dueDate: null,
-      linkedDemandId: null,
+      linkedDemandId: "child-1",
     });
+    transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
+      fn({
+        demand: { create: (...args: unknown[]) => createDemand(...args) },
+        checklistItem: {
+          create: (...args: unknown[]) => createChecklistItem(...args),
+        },
+      })
+    );
   });
 
-  it("cria item leve e não chama demand.create", async () => {
+  it("cria demanda filha aberta na mesma transação, sem responsável", async () => {
     const { addChecklistItem } = await import("./checklist.service");
 
     const item = await addChecklistItem(actor, "cl-1", "Revisar copy");
 
-    expect(createDemand).not.toHaveBeenCalled();
+    expect(createDemand).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          title: "Revisar copy",
+          description: "",
+          isChecklistItem: true,
+          status: DemandStatus.OPEN,
+          parentDemand: { connect: { id: "parent-1" } },
+        }),
+      })
+    );
+    expect(createDemand.mock.calls[0]?.[0].data.assignee).toBeUndefined();
     expect(createChecklistItem).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           title: "Revisar copy",
           sortOrder: 1,
           checklistId: "cl-1",
+          linkedDemandId: "child-1",
         }),
       })
     );
-    expect(item.linkedDemandId).toBeNull();
+    expect(item.linkedDemandId).toBe("child-1");
+  });
+});
+
+describe("addChecklistComment", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    findChecklist.mockResolvedValue({
+      id: "cl-1",
+      demand: { id: "parent-1", clientId: "cli-1" },
+    });
+    createComment.mockResolvedValue({
+      id: "c-1",
+      text: "Falta o prazo",
+      user: { id: "admin-1", name: "Admin" },
+    });
+  });
+
+  it("grava no pai com entityType Checklist", async () => {
+    const { addChecklistComment } = await import("./checklist.service");
+
+    await addChecklistComment(actor, "cl-1", "  Falta o prazo  ");
+
+    expect(createComment).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          demandId: "parent-1",
+          entityType: "Checklist",
+          entityId: "cl-1",
+          text: "Falta o prazo",
+          userId: "admin-1",
+        }),
+      })
+    );
   });
 });
 

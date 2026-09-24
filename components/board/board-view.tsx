@@ -184,6 +184,7 @@ export function BoardView({
   const [extraSheetOpen, setExtraSheetOpen] = useState(false);
   const [canChangeDeadline, setCanChangeDeadline] = useState(false);
   const [canEditChecklist, setCanEditChecklist] = useState(false);
+  const [priorities, setPriorities] = useState<{ id: string; name: string }[]>([]);
   const [cardDelays, setCardDelays] = useState<DemandDelayRow[]>([]);
   const [, startTransition] = useTransition();
 
@@ -202,6 +203,7 @@ export function BoardView({
         setSelectedCard(result.card as CardDetail);
         setCanChangeDeadline(result.canChangeDeadline ?? false);
         setCanEditChecklist(result.canEditChecklist ?? false);
+        setPriorities(result.priorities ?? []);
         setCardDelays(result.delays ?? []);
       }
     });
@@ -270,6 +272,7 @@ export function BoardView({
         canChangeDeadline={canChangeDeadline}
         canEditChecklist={canEditChecklist}
         checklistAssignees={sectorUsers}
+        priorities={priorities}
         delays={cardDelays}
         onOpenDemand={openCard}
       />

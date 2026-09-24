@@ -8,6 +8,7 @@ import {
   WorkSessionStatus,
   type Checklist,
   type ChecklistItem,
+  type Prisma,
 } from "@prisma/client";
 import { db } from "@/lib/db";
 import { canAccessClient, hasPermission } from "@/lib/permissions/resolve";
@@ -365,6 +366,152 @@ export async function renameChecklist(
   });
 }
 
+function childDemandCreate(
+  parent: ParentDemandSelect,
+  requesterId: string,
+  title: string
+): Prisma.DemandCreateInput {
+  return {
+    title,
+    description: "",
+    type: parent.type ?? DemandType.OTHER,
+    origin:
+      parent.origin === DemandOrigin.EXTRA
+        ? DemandOrigin.EXTRA
+        : DemandOrigin.CLIENT_BOARD,
+    status: DemandStatus.OPEN,
+    internalStatus: "Aberta",
+    boardColumn: "open",
+    isContractual: false,
+    visibleToClient: false,
+    isChecklistItem: true,
+    client: { connect: { id: parent.clientId } },
+    parentDemand: { connect: { id: parent.id } },
+    requester: { connect: { id: requesterId } },
+    ...(parent.boardId ? { board: { connect: { id: parent.boardId } } } : {}),
+    ...(parent.competenceId
+      ? { competence: { connect: { id: parent.competenceId } } }
+      : {}),
+  };
+}
+
+async function assertActivePriority(priorityId: string | null) {
+  if (!priorityId) return;
+  const priority = await db.priorityLevel.findFirst({
+    where: { id: priorityId, isActive: true },
+    select: { id: true },
+  });
+  if (!priority) throw new Error("Prioridade inválida");
+}
+
+export async function updateChecklistDetails(
+  user: SessionUser,
+  checklistId: string,
+  input: { description: string | null; priorityId: string | null }
+): Promise<Checklist> {
+  await loadChecklistForEdit(user, checklistId);
+  await assertActivePriority(input.priorityId);
+  const description = input.description?.trim() ? input.description.trim() : null;
+  return db.checklist.update({
+    where: { id: checklistId },
+    data: { description, priorityId: input.priorityId },
+  });
+}
+
+export async function addChecklistComment(
+  user: SessionUser,
+  checklistId: string,
+  text: string
+) {
+  const trimmed = text.trim();
+  if (!trimmed) throw new Error("Comentário vazio");
+
+  const checklist = await db.checklist.findUnique({
+    where: { id: checklistId },
+    include: {
+      demand: { select: { id: true, clientId: true } },
+    },
+  });
+  if (!checklist) throw new Error("Checklist não encontrado");
+  if (
+    !canAccessClient(
+      user.permissions,
+      user.clientIds,
+      checklist.demand.clientId
+    )
+  ) {
+    throw new Error("Sem permissão para este cliente");
+  }
+
+  return db.comment.create({
+    data: {
+      demandId: checklist.demand.id,
+      entityType: "Checklist",
+      entityId: checklist.id,
+      userId: user.id,
+      text: trimmed,
+      commentType: "GENERAL",
+      visibility: "INTERNAL",
+    },
+    include: { user: { select: { id: true, name: true } } },
+  });
+}
+
+export async function withChecklistComments<T extends { id: string }>(
+  checklists: T[]
+) {
+  if (checklists.length === 0) {
+    return checklists.map((checklist) => ({ ...checklist, comments: [] }));
+  }
+  const comments = await db.comment.findMany({
+    where: {
+      entityType: "Checklist",
+      entityId: { in: checklists.map((checklist) => checklist.id) },
+    },
+    include: { user: { select: { id: true, name: true } } },
+    orderBy: { createdAt: "asc" },
+  });
+  return checklists.map((checklist) => ({
+    ...checklist,
+    comments: comments.filter((comment) => comment.entityId === checklist.id),
+  }));
+}
+
+export async function updateChecklistChildFields(
+  user: SessionUser,
+  childId: string,
+  input: { title: string; description: string; priorityId: string | null }
+): Promise<void> {
+  if (!hasPermission(user.permissions, "demands.edit")) {
+    throw new Error("Sem permissão para editar demandas");
+  }
+  const title = input.title.trim();
+  if (!title) throw new Error("Título é obrigatório");
+  await assertActivePriority(input.priorityId);
+
+  const child = await db.demand.findUnique({
+    where: { id: childId },
+    select: { id: true, clientId: true, isChecklistItem: true },
+  });
+  if (!child?.isChecklistItem) throw new Error("Demanda não encontrada");
+  if (!canAccessClient(user.permissions, user.clientIds, child.clientId)) {
+    throw new Error("Sem permissão para este cliente");
+  }
+
+  await db.demand.update({
+    where: { id: childId },
+    data: {
+      title,
+      description: input.description.trim(),
+      priorityId: input.priorityId,
+    },
+  });
+  await db.checklistItem.updateMany({
+    where: { linkedDemandId: childId },
+    data: { title },
+  });
+}
+
 export async function deleteChecklist(
   user: SessionUser,
   checklistId: string
@@ -440,7 +587,7 @@ export async function addChecklistItem(
   checklistId: string,
   title: string
 ): Promise<ChecklistItem> {
-  await loadChecklistForEdit(user, checklistId);
+  const checklist = await loadChecklistForEdit(user, checklistId);
 
   const trimmed = title.trim();
   if (!trimmed) throw new Error("Título é obrigatório");
@@ -450,13 +597,20 @@ export async function addChecklistItem(
     _max: { sortOrder: true },
   });
   const sortOrder = (maxOrder._max.sortOrder ?? 0) + 1;
+  const parent = checklist.demand;
 
-  return db.checklistItem.create({
-    data: {
-      checklistId,
-      title: trimmed,
-      sortOrder,
-    },
+  return db.$transaction(async (tx) => {
+    const child = await tx.demand.create({
+      data: childDemandCreate(parent, user.id, trimmed),
+    });
+    return tx.checklistItem.create({
+      data: {
+        checklistId,
+        title: trimmed,
+        sortOrder,
+        linkedDemandId: child.id,
+      },
+    });
   });
 }
 
