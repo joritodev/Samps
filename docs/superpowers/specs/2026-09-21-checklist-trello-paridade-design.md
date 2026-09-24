@@ -1,7 +1,7 @@
 # Spec — Checklist tipo Trello (itens leves + N listas)
 
 **Data:** 2026-09-21  
-**Status:** Draft para review  
+**Status:** Substituída em 2026-09-24 no ciclo de vida do item. N listas, barra, responsável e prazo continuam. Ver `2026-09-24-checklist-item-demanda-design.md`.  
 **Origem:** rejeição do checklist atual (form pesado ≠ Trello) + brainstorming sessão 21/09  
 **Substitui / estende:** seção 6 de `2026-09-15-demandas-visibilidade-avulsa-checklist-design.md` (modelo de UI e ciclo de vida do item; filhos `Demand` continuam só quando há responsável)
 

@@ -501,7 +501,8 @@ model PriorityLevel {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 
-  demands Demand[]
+  demands    Demand[]
+  checklists Checklist[] @relation("ChecklistPriority")
 }
 
 model ActivityStatusConfig {
@@ -723,17 +724,21 @@ model Demand {
 }
 
 model Checklist {
-  id        String   @id @default(cuid())
-  demandId  String
-  title     String
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  demandId    String
+  title       String
+  description String?
+  priorityId  String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  demand Demand          @relation(fields: [demandId], references: [id], onDelete: Cascade)
-  items  ChecklistItem[]
+  demand   Demand          @relation(fields: [demandId], references: [id], onDelete: Cascade)
+  priority PriorityLevel?  @relation("ChecklistPriority", fields: [priorityId], references: [id], onDelete: SetNull)
+  items    ChecklistItem[]
 
   @@index([demandId])
+  @@index([priorityId])
 }
 
 model ChecklistItem {

@@ -28,6 +28,7 @@ import {
   addChecklistItemAction,
   assignChecklistItemAction,
   createChecklistAction,
+  openChecklistItemAction,
   deleteChecklistAction,
   deleteChecklistItemAction,
   renameChecklistAction,
@@ -35,7 +36,8 @@ import {
   setChecklistItemDueDateAction,
   toggleChecklistItemDoneAction,
   unassignChecklistItemAction,
-  updateChecklistItemTitleAction,
+  updateChecklistDetailsAction,
+  addChecklistCommentAction,
 } from "@/app/actions/checklist";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -48,6 +50,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Popover,
   PopoverContent,
@@ -74,10 +77,24 @@ export type ChecklistItemView = {
   linkedDemandId?: string | null;
 };
 
+export type ChecklistCommentView = {
+  id: string;
+  text: string;
+  user: { name: string };
+};
+
+export type ChecklistPriorityOption = {
+  id: string;
+  name: string;
+};
+
 export type ChecklistView = {
   id: string;
   title: string;
   sortOrder: number;
+  description?: string | null;
+  priorityId?: string | null;
+  comments?: ChecklistCommentView[];
   items: ChecklistItemView[];
 };
 
@@ -197,22 +214,20 @@ function SortableChecklistItem({
   pending,
   assignees,
   onToggle,
-  onTitleBlur,
+  onOpen,
   onDueDate,
   onAssign,
   onDelete,
-  onOpenLinkedDemand,
 }: {
   item: ChecklistItemView;
   canEdit: boolean;
   pending: boolean;
   assignees: ChecklistAssigneeOption[];
   onToggle: () => void;
-  onTitleBlur: (title: string) => void;
+  onOpen?: () => void;
   onDueDate: (dueDate: string) => void;
   onAssign: (assigneeId: string) => void;
   onDelete: () => void;
-  onOpenLinkedDemand?: (id: string) => void;
 }) {
   const {
     attributes,
@@ -256,27 +271,24 @@ function SortableChecklistItem({
         aria-label={`Concluir ${item.title}`}
       />
       <div className="min-w-0 flex-1 space-y-1">
-        {canEdit ? (
-          <Input
-            defaultValue={item.title}
-            key={`${item.id}-${item.title}`}
+        {onOpen ? (
+          <button
+            type="button"
             disabled={pending}
             className={cn(
-              "h-8 min-w-0 flex-1 border-transparent bg-transparent px-1 text-sm shadow-none focus-visible:border-border focus-visible:bg-background",
-              item.isDone && "text-muted-foreground line-through"
+              "block w-full truncate rounded-sm px-1 text-left text-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              item.isDone
+                ? "text-muted-foreground line-through"
+                : "text-foreground"
             )}
-            onBlur={(e) => onTitleBlur(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                (e.target as HTMLInputElement).blur();
-              }
-            }}
-          />
+            onClick={onOpen}
+          >
+            {item.title}
+          </button>
         ) : (
           <p
             className={cn(
-              "text-sm",
+              "truncate px-1 text-sm",
               item.isDone
                 ? "text-muted-foreground line-through"
                 : "text-foreground"
@@ -321,18 +333,6 @@ function SortableChecklistItem({
               {toDateInputValue(item.dueDate)}
             </span>
           ) : null}
-          {item.linkedDemandId && onOpenLinkedDemand ? (
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              className="h-7 px-2 text-xs"
-              disabled={pending}
-              onClick={() => onOpenLinkedDemand(item.linkedDemandId!)}
-            >
-              Abrir
-            </Button>
-          ) : null}
         </div>
       </div>
       {canEdit ? (
@@ -371,11 +371,10 @@ function ChecklistItemsList({
   assignees,
   onReorder,
   onToggle,
-  onTitleBlur,
+  onOpen,
   onDueDate,
   onAssign,
   onDelete,
-  onOpenLinkedDemand,
 }: {
   checklist: ChecklistView;
   visibleItems: ChecklistItemView[];
@@ -384,11 +383,10 @@ function ChecklistItemsList({
   assignees: ChecklistAssigneeOption[];
   onReorder: (orderedItemIds: string[]) => void;
   onToggle: (item: ChecklistItemView) => void;
-  onTitleBlur: (item: ChecklistItemView, title: string) => void;
+  onOpen?: (item: ChecklistItemView) => void;
   onDueDate: (itemId: string, dueDate: string) => void;
   onAssign: (itemId: string, assigneeId: string) => void;
   onDelete: (itemId: string) => void;
-  onOpenLinkedDemand?: (id: string) => void;
 }) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
@@ -425,11 +423,10 @@ function ChecklistItemsList({
           pending={pending}
           assignees={assignees}
           onToggle={() => onToggle(item)}
-          onTitleBlur={(title) => onTitleBlur(item, title)}
+          onOpen={onOpen ? () => onOpen(item) : undefined}
           onDueDate={(dueDate) => onDueDate(item.id, dueDate)}
           onAssign={(assigneeId) => onAssign(item.id, assigneeId)}
           onDelete={() => onDelete(item.id)}
-          onOpenLinkedDemand={onOpenLinkedDemand}
         />
       ))}
     </ul>
@@ -458,6 +455,7 @@ export function DemandChecklist({
   clientId,
   checklists: initialChecklists,
   assignees = [],
+  priorities = [],
   canEdit = false,
   onOpenLinkedDemand,
 }: {
@@ -465,6 +463,7 @@ export function DemandChecklist({
   clientId: string;
   checklists: ChecklistView[];
   assignees?: ChecklistAssigneeOption[];
+  priorities?: ChecklistPriorityOption[];
   canEdit?: boolean;
   onOpenLinkedDemand?: (id: string) => void;
 }) {
@@ -476,11 +475,20 @@ export function DemandChecklist({
   const [newItemTitles, setNewItemTitles] = useState<Record<string, string>>(
     {}
   );
+  const [detailsOpen, setDetailsOpen] = useState<Record<string, boolean>>({});
+  const [draftDescriptions, setDraftDescriptions] = useState<
+    Record<string, string>
+  >({});
+  const [draftComments, setDraftComments] = useState<Record<string, string>>(
+    {}
+  );
 
   useEffect(() => {
     setChecklists(initialChecklists);
     setDraftTitles({});
     setNewItemTitles({});
+    setDraftDescriptions({});
+    setDraftComments({});
   }, [initialChecklists, demandId]);
 
   const sortedAssignees = useMemo(
@@ -655,28 +663,25 @@ export function DemandChecklist({
     });
   }
 
-  function handleItemTitleBlur(
-    checklistId: string,
-    item: ChecklistItemView,
-    nextTitle: string
-  ) {
-    const title = nextTitle.trim();
-    if (!title || title === item.title) return;
+  function handleOpenItem(checklistId: string, item: ChecklistItemView) {
+    if (!onOpenLinkedDemand) return;
     startTransition(async () => {
-      const result = await updateChecklistItemTitleAction({
+      if (item.linkedDemandId) {
+        onOpenLinkedDemand(item.linkedDemandId);
+        return;
+      }
+      const result = await openChecklistItemAction({
         itemId: item.id,
         clientId,
-        title,
       });
       if (!("success" in result) || !result.success) {
         toast.error(
-          "error" in result
-            ? result.error
-            : "Não foi possível atualizar o título."
+          "error" in result ? result.error : "Não foi possível abrir o item."
         );
         return;
       }
-      patchItem(checklistId, item.id, { title: result.item.title });
+      patchItem(checklistId, item.id, { linkedDemandId: result.demandId });
+      onOpenLinkedDemand(result.demandId);
     });
   }
 
@@ -815,6 +820,90 @@ export function DemandChecklist({
     });
   }
 
+  function handleSaveDescription(checklistId: string) {
+    const current = checklists.find((checklist) => checklist.id === checklistId);
+    if (!current) return;
+    const description = draftDescriptions[checklistId] ?? current.description ?? "";
+    if (description.trim() === (current.description ?? "").trim()) return;
+    startTransition(async () => {
+      const result = await updateChecklistDetailsAction({
+        checklistId,
+        clientId,
+        description,
+        priorityId: current.priorityId ?? null,
+      });
+      if (!("success" in result) || !result.success) {
+        toast.error(
+          "error" in result ? result.error : "Não foi possível salvar os detalhes."
+        );
+        return;
+      }
+      refresh((prev) =>
+        prev.map((checklist) =>
+          checklist.id === checklistId
+            ? { ...checklist, description: result.checklist.description }
+            : checklist
+        )
+      );
+    });
+  }
+
+  function handlePriority(checklistId: string, priorityId: string) {
+    const current = checklists.find((checklist) => checklist.id === checklistId);
+    if (!current) return;
+    const nextPriority = priorityId || null;
+    startTransition(async () => {
+      const result = await updateChecklistDetailsAction({
+        checklistId,
+        clientId,
+        description: draftDescriptions[checklistId] ?? current.description ?? "",
+        priorityId: nextPriority,
+      });
+      if (!("success" in result) || !result.success) {
+        toast.error(
+          "error" in result ? result.error : "Não foi possível salvar a prioridade."
+        );
+        return;
+      }
+      refresh((prev) =>
+        prev.map((checklist) =>
+          checklist.id === checklistId
+            ? { ...checklist, priorityId: result.checklist.priorityId }
+            : checklist
+        )
+      );
+    });
+  }
+
+  function handleChecklistComment(checklistId: string) {
+    const text = (draftComments[checklistId] ?? "").trim();
+    if (!text) return;
+    startTransition(async () => {
+      const result = await addChecklistCommentAction({
+        checklistId,
+        clientId,
+        text,
+      });
+      if (!("success" in result) || !result.success) {
+        toast.error(
+          "error" in result ? result.error : "Não foi possível comentar."
+        );
+        return;
+      }
+      setDraftComments((prev) => ({ ...prev, [checklistId]: "" }));
+      refresh((prev) =>
+        prev.map((checklist) =>
+          checklist.id === checklistId
+            ? {
+                ...checklist,
+                comments: [...(checklist.comments ?? []), result.comment],
+              }
+            : checklist
+        )
+      );
+    });
+  }
+
   return (
     <div className="space-y-4">
       {checklists.map((checklist) => {
@@ -903,6 +992,107 @@ export function DemandChecklist({
               />
             </div>
 
+            {(() => {
+              const detailsVisible = detailsOpen[checklist.id] ?? true;
+              const descriptionValue =
+                draftDescriptions[checklist.id] ?? checklist.description ?? "";
+              return (
+                <div className="space-y-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs"
+                    onClick={() =>
+                      setDetailsOpen((prev) => ({
+                        ...prev,
+                        [checklist.id]: !detailsVisible,
+                      }))
+                    }
+                  >
+                    Detalhes
+                  </Button>
+                  {detailsVisible ? (
+                    <div className="space-y-2">
+                      <Textarea
+                        value={descriptionValue}
+                        disabled={!canEdit || pending}
+                        rows={3}
+                        aria-label="Descrição"
+                        placeholder="Descrição"
+                        onChange={(e) =>
+                          setDraftDescriptions((prev) => ({
+                            ...prev,
+                            [checklist.id]: e.target.value,
+                          }))
+                        }
+                        onBlur={() => handleSaveDescription(checklist.id)}
+                      />
+                      <select
+                        aria-label="Prioridade"
+                        disabled={!canEdit || pending}
+                        value={checklist.priorityId ?? ""}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+                        onChange={(e) =>
+                          handlePriority(checklist.id, e.target.value)
+                        }
+                      >
+                        <option value="">Sem prioridade</option>
+                        {priorities.map((priority) => (
+                          <option key={priority.id} value={priority.id}>
+                            {priority.name}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="space-y-1">
+                        {(checklist.comments ?? []).map((entry) => (
+                          <p key={entry.id} className="text-xs text-muted-foreground">
+                            <span className="font-medium text-foreground">
+                              {entry.user.name}
+                            </span>
+                            {": "}
+                            {entry.text}
+                          </p>
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Input
+                          value={draftComments[checklist.id] ?? ""}
+                          disabled={pending}
+                          placeholder="Comentário"
+                          aria-label="Comentário do checklist"
+                          className="h-8"
+                          onChange={(e) =>
+                            setDraftComments((prev) => ({
+                              ...prev,
+                              [checklist.id]: e.target.value,
+                            }))
+                          }
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              handleChecklistComment(checklist.id);
+                            }
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 shrink-0"
+                          disabled={pending}
+                          aria-label="Publicar comentário"
+                          onClick={() => handleChecklistComment(checklist.id)}
+                        >
+                          <SendHorizontal className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })()}
+
             <ChecklistItemsList
               checklist={checklist}
               visibleItems={visibleItems}
@@ -913,8 +1103,10 @@ export function DemandChecklist({
                 handleReorder(checklist.id, orderedItemIds)
               }
               onToggle={(item) => handleToggle(checklist.id, item)}
-              onTitleBlur={(item, title) =>
-                handleItemTitleBlur(checklist.id, item, title)
+              onOpen={
+                onOpenLinkedDemand
+                  ? (item) => handleOpenItem(checklist.id, item)
+                  : undefined
               }
               onDueDate={(itemId, dueDate) =>
                 handleDueDate(checklist.id, itemId, dueDate)
@@ -923,7 +1115,6 @@ export function DemandChecklist({
                 handleAssign(checklist.id, itemId, assigneeId)
               }
               onDelete={(itemId) => handleDeleteItem(checklist.id, itemId)}
-              onOpenLinkedDemand={onOpenLinkedDemand}
             />
 
             {canEdit ? (

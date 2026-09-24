@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { DemandChecklist } from "./demand-checklist";
 
@@ -16,9 +16,11 @@ vi.mock("@/app/actions/checklist", () => ({
   renameChecklistAction: vi.fn(),
   reorderChecklistItemsAction: vi.fn(),
   setChecklistItemDueDateAction: vi.fn(),
+  openChecklistItemAction: vi.fn(),
   toggleChecklistItemDoneAction: vi.fn(),
   unassignChecklistItemAction: vi.fn(),
-  updateChecklistItemTitleAction: vi.fn(),
+  updateChecklistDetailsAction: vi.fn(),
+  addChecklistCommentAction: vi.fn(),
 }));
 
 afterEach(() => {
@@ -26,7 +28,7 @@ afterEach(() => {
 });
 
 describe("DemandChecklist", () => {
-  it("mostra checkbox + Adicionar um item e não mostra Descrição", () => {
+  it("mostra checkbox, adicionar item e detalhes abertos", () => {
     render(
       <DemandChecklist
         demandId="parent-1"
@@ -59,8 +61,32 @@ describe("DemandChecklist", () => {
     expect(
       screen.getByRole("button", { name: "Atribuir responsável" })
     ).toBeTruthy();
-    expect(screen.queryByLabelText("Descrição")).toBeNull();
+    expect(screen.getByLabelText("Descrição")).toBeTruthy();
     expect(screen.getByRole("button", { name: /Adicionar checklist/i })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Detalhes" })).toBeTruthy();
+  });
+
+  it("minimiza detalhes abertos", () => {
+    render(
+      <DemandChecklist
+        demandId="parent-1"
+        clientId="cli-1"
+        canEdit
+        checklists={[
+          {
+            id: "cl-1",
+            title: "Planejamento",
+            sortOrder: 0,
+            items: [],
+          },
+        ]}
+      />
+    );
+
+    expect(screen.getByLabelText("Descrição")).toBeTruthy();
+    expect(screen.getByLabelText("Prioridade")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Detalhes" }));
+    expect(screen.queryByLabelText("Descrição")).toBeNull();
   });
 
   it("mostra Abrir quando há linkedDemandId e não mostra Concluir", () => {
@@ -94,10 +120,12 @@ describe("DemandChecklist", () => {
       />
     );
 
-    expect(screen.getByDisplayValue("Criar conjunto de anúncios")).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Criar conjunto de anúncios" })
+    ).toBeTruthy();
     expect(screen.getByRole("checkbox")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Abrir" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Abrir" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Concluir" })).toBeNull();
-    expect(screen.queryByLabelText("Descrição")).toBeNull();
+    expect(screen.getByLabelText("Descrição")).toBeTruthy();
   });
 });

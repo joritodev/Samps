@@ -35,6 +35,9 @@ const demandInclude = {
   priority: { select: { id: true, name: true, color: true, weight: true } },
   sector: { select: { id: true, name: true, color: true, slug: true } },
   parentDemand: { select: { id: true, title: true } },
+  linkedChecklistItem: {
+    select: { checklist: { select: { title: true } } },
+  },
   assignments: {
     orderBy: { createdAt: "desc" as const },
     take: 1,

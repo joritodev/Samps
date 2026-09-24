@@ -15,6 +15,7 @@ import {
   updateDemandListAndOrder,
 } from "@/lib/services/cards.service";
 import { notifyCommentMentions } from "@/lib/services/mentions.service";
+import { listPriorities } from "@/lib/services/settings.service";
 
 export async function getCardDetailAction(cardId: string) {
   const user = await requireAuth();
@@ -32,11 +33,16 @@ export async function getCardDetailAction(cardId: string) {
     "demands.change_deadline"
   );
   const canEditChecklist = hasPermission(user.permissions, "demands.edit");
+  const priorities = await listPriorities();
 
   return {
     card,
     canChangeDeadline,
     canEditChecklist,
+    priorities: priorities.map((priority) => ({
+      id: priority.id,
+      name: priority.name,
+    })),
     delays: delays.map((d) => ({
       id: d.id,
       originalDueDate: d.originalDueDate.toISOString(),
@@ -56,6 +62,12 @@ export async function demandBriefingAction(
   const user = await requireAuth();
   try {
     await completeBriefingAndDemand(cardId, user, data);
+    if (data.title) {
+      await db.checklistItem.updateMany({
+        where: { linkedDemandId: cardId },
+        data: { title: data.title },
+      });
+    }
     revalidateOperationalViews(clientId);
     return { success: true as const };
   } catch (e) {

@@ -21,6 +21,7 @@ type DemandCardData = {
   origin?: string;
   isChecklistItem?: boolean;
   parentDemand?: { title: string } | null;
+  linkedChecklistItem?: { checklist: { title: string } } | null;
   timerPreview?: {
     status: string;
     startedAt: Date;
@@ -94,7 +95,9 @@ export function DemandCard({
         )}
         {demand.isChecklistItem && demand.parentDemand?.title ? (
           <Badge variant="secondary" className="mt-1 text-xs font-normal">
-            Parte de: {demand.parentDemand.title}
+            {demand.linkedChecklistItem?.checklist.title
+              ? `Parte de: ${demand.parentDemand.title} · ${demand.linkedChecklistItem.checklist.title}`
+              : `Parte de: ${demand.parentDemand.title}`}
           </Badge>
         ) : null}
       </CardHeader>

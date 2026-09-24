@@ -29,6 +29,23 @@ describe("DemandCard", () => {
     expect(screen.getByText("Campanha X")).toBeTruthy();
   });
 
+  it("mostra pai e checklist na tag da filha", () => {
+    render(
+      <DemandCard
+        demand={{
+          ...base,
+          isChecklistItem: true,
+          parentDemand: { title: "Campanha Meta" },
+          linkedChecklistItem: { checklist: { title: "Planejamento" } },
+        }}
+      />
+    );
+
+    expect(
+      screen.getByText("Parte de: Campanha Meta · Planejamento")
+    ).toBeTruthy();
+  });
+
   it("shows timer elapsed with tabular-nums class", () => {
     render(
       <DemandCard

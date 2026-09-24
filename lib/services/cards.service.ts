@@ -1,5 +1,6 @@
 import { AuditAction, DemandOrigin, DemandStatus, NotificationType } from "@prisma/client";
 import { db } from "@/lib/db";
+import { withChecklistComments } from "@/lib/services/checklist.service";
 import {
   assertCanRegisterPublication,
   BRIEFING_DEMAND_STATUSES,
@@ -18,7 +19,7 @@ import { videoDemoMissingFields } from "@/lib/agency/video-demo-briefing";
 const BRIEFING_REQUIRED = ["title", "description", "format"] as const;
 
 export async function getCardById(id: string) {
-  return db.demand.findUnique({
+  const card = await db.demand.findUnique({
     where: { id },
     include: {
       client: true,
@@ -65,6 +66,11 @@ export async function getCardById(id: string) {
       },
     },
   });
+  if (!card) return null;
+  return {
+    ...card,
+    checklists: await withChecklistComments(card.checklists),
+  };
 }
 
 function computeDemoDeadlines(publishDate: Date) {
