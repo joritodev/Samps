@@ -147,30 +147,39 @@ export async function completeBriefingAndDemand(
     throw new Error("Setor responsável é obrigatório");
   }
 
-  const updated = await db.demand.update({
-    where: { id: cardId },
-    data: {
-      title: data.title,
-      description: data.description,
-      objective: data.objective as never,
-      format: data.format,
-      priorityId: data.priorityId,
-      sectorId,
-      publishDate: data.publishDate,
-      complexityLevel: data.complexityLevel,
-      slidesCount: data.slidesCount,
-      screensCount: data.screensCount,
-      durationSeconds: data.durationSeconds,
-      orientation: data.orientation,
-      ...deadlines,
-      status: DemandStatus.DEMANDED,
-      internalStatus: "Demandada",
-      externalStatus: "Em preparação",
-      briefingLockedAt: new Date(),
-      briefingLockedById: user.id,
-      requesterId: user.id,
-      origin: DemandOrigin.CLIENT_BOARD,
-    },
+  const updated = await db.$transaction(async (tx) => {
+    const demand = await tx.demand.update({
+      where: { id: cardId },
+      data: {
+        title: data.title,
+        description: data.description,
+        objective: data.objective as never,
+        format: data.format,
+        priorityId: data.priorityId,
+        sectorId,
+        publishDate: data.publishDate,
+        complexityLevel: data.complexityLevel,
+        slidesCount: data.slidesCount,
+        screensCount: data.screensCount,
+        durationSeconds: data.durationSeconds,
+        orientation: data.orientation,
+        ...deadlines,
+        status: DemandStatus.DEMANDED,
+        internalStatus: "Demandada",
+        externalStatus: "Em preparação",
+        briefingLockedAt: new Date(),
+        briefingLockedById: user.id,
+        requesterId: user.id,
+        origin: DemandOrigin.CLIENT_BOARD,
+      },
+    });
+    if (data.title) {
+      await tx.checklistItem.updateMany({
+        where: { linkedDemandId: cardId },
+        data: { title: data.title },
+      });
+    }
+    return demand;
   });
 
   await logAudit({

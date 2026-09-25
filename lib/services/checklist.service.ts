@@ -4,11 +4,11 @@ import {
   DemandOrigin,
   DemandStatus,
   DemandType,
+  Prisma,
   UserStatus,
   WorkSessionStatus,
   type Checklist,
   type ChecklistItem,
-  type Prisma,
 } from "@prisma/client";
 import { db } from "@/lib/db";
 import { canAccessClient, hasPermission } from "@/lib/permissions/resolve";
@@ -369,7 +369,8 @@ export async function renameChecklist(
 function childDemandCreate(
   parent: ParentDemandSelect,
   requesterId: string,
-  title: string
+  title: string,
+  dueDate?: Date | null
 ): Prisma.DemandCreateInput {
   return {
     title,
@@ -385,6 +386,7 @@ function childDemandCreate(
     isContractual: false,
     visibleToClient: false,
     isChecklistItem: true,
+    ...(dueDate ? { dueDate } : {}),
     client: { connect: { id: parent.clientId } },
     parentDemand: { connect: { id: parent.id } },
     requester: { connect: { id: requesterId } },
@@ -548,38 +550,31 @@ export async function ensureChecklistItemDemand(
   if (item.linkedDemandId) return { demandId: item.linkedDemandId };
 
   const parent = item.checklist.demand;
-  const child = await db.demand.create({
-    data: {
-      title: item.title,
-      description: "",
-      type: parent.type ?? DemandType.OTHER,
-      origin:
-        parent.origin === DemandOrigin.EXTRA
-          ? DemandOrigin.EXTRA
-          : DemandOrigin.CLIENT_BOARD,
-      status: DemandStatus.OPEN,
-      internalStatus: "Aberta",
-      boardColumn: "open",
-      isContractual: false,
-      visibleToClient: false,
-      isChecklistItem: true,
-      dueDate: item.dueDate,
-      client: { connect: { id: parent.clientId } },
-      parentDemand: { connect: { id: parent.id } },
-      requester: { connect: { id: user.id } },
-      ...(parent.boardId ? { board: { connect: { id: parent.boardId } } } : {}),
-      ...(parent.competenceId
-        ? { competence: { connect: { id: parent.competenceId } } }
-        : {}),
-    },
-  });
 
-  await db.checklistItem.update({
-    where: { id: itemId },
-    data: { linkedDemandId: child.id },
-  });
-
-  return { demandId: child.id };
+  try {
+    const demandId = await db.$transaction(async (tx) => {
+      const child = await tx.demand.create({
+        data: childDemandCreate(parent, user.id, item.title, item.dueDate),
+        select: { id: true },
+      });
+      await tx.checklistItem.update({
+        where: { id: itemId },
+        data: { linkedDemandId: child.id },
+      });
+      return child.id;
+    });
+    return { demandId };
+  } catch (e) {
+    // Unique constraint on linkedDemandId: concurrent session won the race
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+      const fresh = await db.checklistItem.findUnique({
+        where: { id: itemId },
+        select: { linkedDemandId: true },
+      });
+      if (fresh?.linkedDemandId) return { demandId: fresh.linkedDemandId };
+    }
+    throw e;
+  }
 }
 
 export async function addChecklistItem(
