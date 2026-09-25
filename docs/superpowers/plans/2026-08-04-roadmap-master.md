@@ -41,7 +41,8 @@ Nenhuma fase de código começa antes de a anterior ter PRs mergeados e gates ap
 - Migration: `prisma/migrations/20260924130000_checklist_details` (aplicada)  
 - Base: N listas da spec 21/09  
 
-**Fila depois desta fatia:** Fase **3.2** anexos (Drive-first) → 3.7 CSP → 3.3/3.5 → Fase 4.  
+**Fila depois desta fatia:** 3.7 CSP enforce → 3.3 categorias de vídeo (criar e editar) + briefing → 3.5 pontuação → 4.3 agenda organizacional.  
+**Adiado (25/09, sem certeza de necessidade):** 3.2 anexos na demanda; 4.2 capacidade de 8h por pessoa.  
 Nota: onda 15/09 permanece como contexto. A spec 21/09 (itens leves) foi **substituída** no ciclo de vida do item pela spec 24/09. N listas, barra, responsável e prazo ficam.  
 Nota: a antiga “3.4 visibilidade aberta” foi **redefinida** pelos áudios de 10–15/09 (hierarquia Trello, não leitura cruzada).
 

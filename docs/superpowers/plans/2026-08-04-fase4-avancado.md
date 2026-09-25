@@ -34,6 +34,8 @@
 
 ## Fatia 4.2 — Capacidade e limite de 8h por pessoa
 
+**Status (25/09):** adiada. Não entra na fila atual.
+
 **Pedido da reunião:** calcular tempo por tipo de entrega, limitar a carga diária a 8h e ganhar previsibilidade.
 
 **Depende de:** dados reais de `WorkSession` acumulados nas Fases 2 e 3, e das médias por tipo da fatia 3.1. Sem histórico, o cálculo é chute.
@@ -77,6 +79,6 @@ Reservar espaço nesta fase para o que as anteriores empurraram:
 ## Critério de saída da Fase 4
 
 1. Quadro por cliente personalizável sem quebrar as regras de status
-2. Aviso de capacidade funcionando com base em tempo real medido
+2. Capacidade de 8h: adiada em 25/09. Não bloqueia a saída da fase.
 3. Agenda organizacional com eventos próprios e participantes
 4. Dívida técnica da lista acima zerada ou repriorizada por escrito
