@@ -135,7 +135,8 @@ export async function completeBriefingAndDemand(
   if (card.contentType) {
     const gaps = missingBriefingFields(card.contentType, {
       durationSeconds: data.durationSeconds ?? card.durationSeconds,
-      format: data.format ?? card.format,
+      // `Demand.format` é a peça (Feed, Reel). O requisito de formato
+      // olha a orientação preenchida no briefing.
       orientation: data.orientation ?? card.orientation,
       caption: data.caption ?? null,
       reference: data.reference ?? null,
