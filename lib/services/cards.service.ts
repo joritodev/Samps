@@ -138,9 +138,9 @@ export async function completeBriefingAndDemand(
       // `Demand.format` é a peça (Feed, Reel). O requisito de formato
       // olha a orientação preenchida no briefing.
       orientation: data.orientation ?? card.orientation,
-      caption: data.caption ?? null,
-      reference: data.reference ?? null,
-      rawDelivery: data.rawDelivery ?? null,
+      caption: data.caption ?? card.caption,
+      reference: data.reference ?? card.briefingReference,
+      rawDelivery: data.rawDelivery ?? card.rawDelivery,
     });
     if (gaps.length) {
       throw new Error(`Briefing incompleto: preencha ${gaps.join(" e ")}.`);
@@ -179,6 +179,13 @@ export async function completeBriefingAndDemand(
         screensCount: data.screensCount,
         durationSeconds: data.durationSeconds,
         orientation: data.orientation,
+        ...(data.caption !== undefined ? { caption: data.caption } : {}),
+        ...(data.reference !== undefined
+          ? { briefingReference: data.reference }
+          : {}),
+        ...(data.rawDelivery !== undefined
+          ? { rawDelivery: data.rawDelivery }
+          : {}),
         ...deadlines,
         status: DemandStatus.DEMANDED,
         internalStatus: "Demandada",

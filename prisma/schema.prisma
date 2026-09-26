@@ -673,6 +673,9 @@ model Demand {
   screensCount          Int?
   durationSeconds       Int?
   orientation           String?
+  caption               String?
+  briefingReference     String?
+  rawDelivery           Boolean?
   rawMaterialAvailable  Boolean?
   scriptAvailable       Boolean?
   productionStartedAt   DateTime?

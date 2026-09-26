@@ -91,6 +91,9 @@ type CardDetail = {
   screensCount?: number | null;
   durationSeconds?: number | null;
   orientation?: string | null;
+  caption?: string | null;
+  briefingReference?: string | null;
+  rawDelivery?: boolean | null;
   contentType?: {
     requiresDuration: boolean;
     requiresFormat: boolean;
@@ -192,9 +195,9 @@ export function CardDetailSheet({
         card.durationSeconds != null ? String(card.durationSeconds) : ""
       );
       setOrientation(card.orientation ?? "");
-      setCaption("");
-      setReference("");
-      setRawDelivery(false);
+      setCaption(card.caption ?? "");
+      setReference(card.briefingReference ?? "");
+      setRawDelivery(card.rawDelivery ?? false);
       setAttachName("");
       setAttachUrl("");
       setAttachVisible(false);
