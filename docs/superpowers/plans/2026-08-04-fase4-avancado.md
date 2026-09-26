@@ -52,6 +52,8 @@
 
 ## Fatia 4.3 — Agenda organizacional
 
+**Status em 2026-09-26:** brainstorming escrito, plano ainda não. Proposta: **sem Google Calendar** nesta fatia. Spec: `docs/superpowers/specs/2026-09-26-agenda-organizacional-design.md`. Implementação só depois do aceite.
+
 **Pedido da reunião:** duas agendas — a macro (execução de projetos e resultados) e a organizacional (reuniões, podcasts, compromissos), possivelmente integrando ou substituindo o Google Agenda.
 
 **Já existe:** `/agenda` com prazos, entregas, publicações e (Fase 2) aniversários e ausências.
