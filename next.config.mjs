@@ -1,11 +1,10 @@
 /** @type {import('next').NextConfig} */
 
-// CSP entra em Report-Only nesta fase: o app usa estilos inline do Tailwind/shadcn
-// e scripts do Next, então bloquear de primeira quebraria telas. Depois de checar
-// os relatórios, a Fase 3 troca para Content-Security-Policy sem "-Report-Only".
-const cspReportOnly = [
+// Enforce: Tailwind/shadcn precisa de style inline; Next injeta script inline.
+// Sem unsafe-eval — produção do Next 14 não usa eval().
+const cspEnforce = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
@@ -27,7 +26,7 @@ const securityHeaders = [
     key: "Strict-Transport-Security",
     value: "max-age=63072000; includeSubDomains; preload",
   },
-  { key: "Content-Security-Policy-Report-Only", value: cspReportOnly },
+  { key: "Content-Security-Policy", value: cspEnforce },
 ];
 
 const nextConfig = {
