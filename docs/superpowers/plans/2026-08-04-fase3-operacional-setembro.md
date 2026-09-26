@@ -41,6 +41,8 @@
 
 ## Fatia 3.2 — Anexos nas demandas
 
+**Status (25/09):** adiada. Não há certeza de que o upload na demanda é necessário. O que existe hoje (link) permanece.
+
 **Pedido da reunião:** habilitar anexo de arquivo direto na demanda, mesmo sabendo do impacto no banco.
 
 **Já existe:** model `Attachment`, portal já lista arquivos.
@@ -72,11 +74,12 @@
 **Já existe:** `ContentType` configurável, validação de briefing obrigatório no `concluirBriefing`.
 
 **Escopo:**
-- Campos específicos por categoria de vídeo (duração, formato, legendas, referência, entrega bruta ou editada)
-- Modelo de briefing por `ContentType`: quais campos são obrigatórios para cada tipo
+- Categorias de vídeo são cadastro: criar, renomear e editar em configurações (`ContentType`). Não é lista fixa no código.
+- Campos específicos por categoria (duração, formato, legendas, referência, entrega bruta ou editada)
+- Modelo de briefing por categoria: quais campos são obrigatórios para cada tipo
 - Bloqueio na criação e na demanda quando faltar campo obrigatório do tipo escolhido
 
-**Depende de:** lista real de categorias que a Samps usa.
+**Depende de:** a Samps usar a tela de categorias para montar a lista. O sistema não espera uma lista fechada antes de começar.
 
 **Aceite:** ao demandar um Reels, o sistema recusa sem duração e formato; ao demandar um estático, não pede duração.
 
@@ -146,7 +149,7 @@ Fecha a pendência deixada na Fase 1: analisar as violações reportadas, ajusta
 ## Critério de saída da Fase 3
 
 1. Relatórios respondendo desempenho por usuário e por tipo, com `n` visível
-2. Anexos funcionando com validação no servidor e sem vazar para o portal
+2. Anexos: adiado em 25/09. Não bloqueia a saída da fase.
 3. Briefing obrigatório por categoria, incluindo vídeo
 4. Visibilidade ampliada com permissão explícita e RLS intacto
 5. CSP em enforce

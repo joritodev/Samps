@@ -33,16 +33,15 @@ export async function getCardDetailAction(cardId: string) {
     "demands.change_deadline"
   );
   const canEditChecklist = hasPermission(user.permissions, "demands.edit");
-  const priorities = await listPriorities();
+  const priorities = card.isChecklistItem
+    ? (await listPriorities()).map((p) => ({ id: p.id, name: p.name }))
+    : [];
 
   return {
     card,
     canChangeDeadline,
     canEditChecklist,
-    priorities: priorities.map((priority) => ({
-      id: priority.id,
-      name: priority.name,
-    })),
+    priorities,
     delays: delays.map((d) => ({
       id: d.id,
       originalDueDate: d.originalDueDate.toISOString(),
@@ -62,12 +61,6 @@ export async function demandBriefingAction(
   const user = await requireAuth();
   try {
     await completeBriefingAndDemand(cardId, user, data);
-    if (data.title) {
-      await db.checklistItem.updateMany({
-        where: { linkedDemandId: cardId },
-        data: { title: data.title },
-      });
-    }
     revalidateOperationalViews(clientId);
     return { success: true as const };
   } catch (e) {

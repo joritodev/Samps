@@ -865,10 +865,20 @@ export function DemandChecklist({
         );
         return;
       }
+      const savedDescription = draftDescriptions[checklistId] ?? current.description ?? "";
+      setDraftDescriptions((prev) => {
+        const next = { ...prev };
+        delete next[checklistId];
+        return next;
+      });
       refresh((prev) =>
         prev.map((checklist) =>
           checklist.id === checklistId
-            ? { ...checklist, priorityId: result.checklist.priorityId }
+            ? {
+                ...checklist,
+                priorityId: result.checklist.priorityId,
+                description: result.checklist.description ?? savedDescription,
+              }
             : checklist
         )
       );
