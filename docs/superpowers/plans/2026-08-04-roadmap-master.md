@@ -36,12 +36,12 @@ Nenhuma fase de código começa antes de a anterior ter PRs mergeados e gates ap
 | Spec Fase 3 | `docs/superpowers/specs/2026-08-16-fase3-gestao-agencia-design.md` |
 
 **Próxima fatia a executar:**  
-**Checklist — item nasce demanda** (detalhes na lista, filha no Meu Painel, tag pai · checklist)  
-- Spec: `docs/superpowers/specs/2026-09-24-checklist-item-demanda-design.md`  
-- Migration: `prisma/migrations/20260924130000_checklist_details` (aplicada)  
-- Base: N listas da spec 21/09  
+**3.3 categorias de vídeo + briefing** — PR #60, ainda não mergeado. Aplicar as migrations antes do smoke.  
+**3.7 CSP enforce** — mergeada (#59).  
+**3.5 pontuação** — bloqueada em 26/09. Aguarda as regras da Samps. Sem código.  
+**4.3 agenda organizacional** — spec proposta em `docs/superpowers/specs/2026-09-26-agenda-organizacional-design.md` (sem Google Calendar). Plano só depois do aceite.
 
-**Fila depois desta fatia:** 3.7 CSP enforce → 3.3 categorias de vídeo (criar e editar) + briefing → 3.5 pontuação → 4.3 agenda organizacional.  
+**Fila:** merge da 3.3 → 3.5 quando as regras chegarem → 4.3 depois do aceite da spec.  
 **Adiado (25/09, sem certeza de necessidade):** 3.2 anexos na demanda; 4.2 capacidade de 8h por pessoa.  
 Nota: onda 15/09 permanece como contexto. A spec 21/09 (itens leves) foi **substituída** no ciclo de vida do item pela spec 24/09. N listas, barra, responsável e prazo ficam.  
 Nota: a antiga “3.4 visibilidade aberta” foi **redefinida** pelos áudios de 10–15/09 (hierarquia Trello, não leitura cruzada).
