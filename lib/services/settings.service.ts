@@ -173,6 +173,11 @@ export async function upsertContentType(
     slug?: string;
     sortOrder?: number;
     isActive?: boolean;
+    requiresDuration?: boolean;
+    requiresFormat?: boolean;
+    requiresCaption?: boolean;
+    requiresReference?: boolean;
+    requiresRawDelivery?: boolean;
   }
 ) {
   const name = input.name.trim();
@@ -182,6 +187,21 @@ export async function upsertContentType(
     slug,
     sortOrder: input.sortOrder ?? 0,
     isActive: input.isActive ?? true,
+    ...(input.requiresDuration !== undefined
+      ? { requiresDuration: input.requiresDuration }
+      : {}),
+    ...(input.requiresFormat !== undefined
+      ? { requiresFormat: input.requiresFormat }
+      : {}),
+    ...(input.requiresCaption !== undefined
+      ? { requiresCaption: input.requiresCaption }
+      : {}),
+    ...(input.requiresReference !== undefined
+      ? { requiresReference: input.requiresReference }
+      : {}),
+    ...(input.requiresRawDelivery !== undefined
+      ? { requiresRawDelivery: input.requiresRawDelivery }
+      : {}),
   };
   const row = input.id
     ? await db.contentType.update({ where: { id: input.id }, data })
@@ -195,6 +215,33 @@ export async function upsertContentType(
     origin: "configuracoes/tipos",
   });
   return row;
+}
+
+export async function updateContentTypeRequirements(
+  userId: string,
+  input: {
+    id: string;
+    requiresDuration: boolean;
+    requiresFormat: boolean;
+    requiresCaption: boolean;
+    requiresReference: boolean;
+    requiresRawDelivery: boolean;
+  }
+) {
+  const existing = await db.contentType.findUnique({ where: { id: input.id } });
+  if (!existing) throw new Error("Tipo não encontrado");
+  return upsertContentType(userId, {
+    id: existing.id,
+    name: existing.name,
+    slug: existing.slug,
+    sortOrder: existing.sortOrder,
+    isActive: existing.isActive,
+    requiresDuration: input.requiresDuration,
+    requiresFormat: input.requiresFormat,
+    requiresCaption: input.requiresCaption,
+    requiresReference: input.requiresReference,
+    requiresRawDelivery: input.requiresRawDelivery,
+  });
 }
 
 export async function upsertPriority(
