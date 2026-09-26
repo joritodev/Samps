@@ -481,12 +481,17 @@ model Sector {
 }
 
 model ContentType {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  slug      String   @unique
-  isActive  Boolean  @default(true)
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
+  id                  String   @id @default(cuid())
+  name                String   @unique
+  slug                String   @unique
+  isActive            Boolean  @default(true)
+  sortOrder           Int      @default(0)
+  requiresDuration    Boolean  @default(false)
+  requiresFormat      Boolean  @default(false)
+  requiresCaption     Boolean  @default(false)
+  requiresReference   Boolean  @default(false)
+  requiresRawDelivery Boolean  @default(false)
+  createdAt           DateTime @default(now())
 
   demands          Demand[]
   contractServices ContractService[]
