@@ -7,6 +7,7 @@ import {
   setCatalogActive,
   updateAgencySettings,
   upsertActivityStatus,
+  updateContentTypeRequirements,
   upsertContentType,
   upsertPriority,
   upsertSector,
@@ -132,6 +133,26 @@ export async function upsertContentTypeAction(input: {
   } catch (e) {
     return {
       error: e instanceof Error ? e.message : "Erro ao salvar tipo",
+    };
+  }
+}
+
+export async function updateContentTypeRequirementsAction(input: {
+  id: string;
+  requiresDuration: boolean;
+  requiresFormat: boolean;
+  requiresCaption: boolean;
+  requiresReference: boolean;
+  requiresRawDelivery: boolean;
+}) {
+  const user = await requirePermission("settings.access");
+  try {
+    await updateContentTypeRequirements(user.id, input);
+    revalidateSettings("/configuracoes/tipos");
+    return { success: true as const };
+  } catch (e) {
+    return {
+      error: e instanceof Error ? e.message : "Erro ao salvar campos obrigatórios",
     };
   }
 }

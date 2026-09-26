@@ -217,6 +217,33 @@ export async function upsertContentType(
   return row;
 }
 
+export async function updateContentTypeRequirements(
+  userId: string,
+  input: {
+    id: string;
+    requiresDuration: boolean;
+    requiresFormat: boolean;
+    requiresCaption: boolean;
+    requiresReference: boolean;
+    requiresRawDelivery: boolean;
+  }
+) {
+  const existing = await db.contentType.findUnique({ where: { id: input.id } });
+  if (!existing) throw new Error("Tipo não encontrado");
+  return upsertContentType(userId, {
+    id: existing.id,
+    name: existing.name,
+    slug: existing.slug,
+    sortOrder: existing.sortOrder,
+    isActive: existing.isActive,
+    requiresDuration: input.requiresDuration,
+    requiresFormat: input.requiresFormat,
+    requiresCaption: input.requiresCaption,
+    requiresReference: input.requiresReference,
+    requiresRawDelivery: input.requiresRawDelivery,
+  });
+}
+
 export async function upsertPriority(
   userId: string,
   input: {
