@@ -117,6 +117,11 @@ export async function upsertContentTypeAction(input: {
   slug?: string;
   sortOrder?: number;
   isActive?: boolean;
+  requiresDuration?: boolean;
+  requiresFormat?: boolean;
+  requiresCaption?: boolean;
+  requiresReference?: boolean;
+  requiresRawDelivery?: boolean;
 }) {
   const user = await requirePermission("settings.access");
   if (!input.name.trim()) return { error: "Nome é obrigatório" as const };

@@ -173,6 +173,11 @@ export async function upsertContentType(
     slug?: string;
     sortOrder?: number;
     isActive?: boolean;
+    requiresDuration?: boolean;
+    requiresFormat?: boolean;
+    requiresCaption?: boolean;
+    requiresReference?: boolean;
+    requiresRawDelivery?: boolean;
   }
 ) {
   const name = input.name.trim();
@@ -182,6 +187,21 @@ export async function upsertContentType(
     slug,
     sortOrder: input.sortOrder ?? 0,
     isActive: input.isActive ?? true,
+    ...(input.requiresDuration !== undefined
+      ? { requiresDuration: input.requiresDuration }
+      : {}),
+    ...(input.requiresFormat !== undefined
+      ? { requiresFormat: input.requiresFormat }
+      : {}),
+    ...(input.requiresCaption !== undefined
+      ? { requiresCaption: input.requiresCaption }
+      : {}),
+    ...(input.requiresReference !== undefined
+      ? { requiresReference: input.requiresReference }
+      : {}),
+    ...(input.requiresRawDelivery !== undefined
+      ? { requiresRawDelivery: input.requiresRawDelivery }
+      : {}),
   };
   const row = input.id
     ? await db.contentType.update({ where: { id: input.id }, data })
