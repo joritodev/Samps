@@ -438,7 +438,7 @@ export function AgendaView({
                         disabled={!cell.day}
                         onClick={() => cell.day && setSelectedDay(cell.day)}
                         className={cn(
-                          "flex min-h-0 flex-col overflow-hidden bg-card p-1.5 text-left transition-colors",
+                          "flex min-h-0 flex-col overflow-hidden bg-card p-0.5 text-left transition-colors sm:p-1.5",
                           cell.day && "hover:bg-muted",
                           !cell.day && "bg-muted/80",
                           isSelected && "ring-2 ring-inset ring-primary/70",
@@ -449,7 +449,7 @@ export function AgendaView({
                           <>
                             <span
                               className={cn(
-                                "inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-medium text-muted-foreground",
+                                "inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-medium text-muted-foreground sm:h-6 sm:w-6",
                                 isToday && "bg-primary text-primary-foreground"
                               )}
                             >

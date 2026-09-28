@@ -546,7 +546,7 @@ export function CardDetailSheet({
                 {(card.attachments?.length ?? 0) > 0 ? (
                   <div className="space-y-2 rounded-lg border border-border p-3">
                     <p className="text-xs font-medium text-muted-foreground">
-                      Anexos (links Drive — demo)
+                      Anexos
                     </p>
                     <ul className="space-y-1">
                       {card.attachments!.map((a) => (
@@ -571,7 +571,7 @@ export function CardDetailSheet({
                 ) : null}
                 <div className="space-y-2 rounded-lg border border-dashed border-border p-3">
                   <p className="text-xs font-medium text-muted-foreground">
-                    Adicionar link (demo 3.2 — sem upload de arquivo)
+                    Adicionar link do Drive
                   </p>
                   <Input
                     value={attachName}
