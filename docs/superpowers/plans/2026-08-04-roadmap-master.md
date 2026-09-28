@@ -36,13 +36,11 @@ Nenhuma fase de código começa antes de a anterior ter PRs mergeados e gates ap
 | Spec Fase 3 | `docs/superpowers/specs/2026-08-16-fase3-gestao-agencia-design.md` |
 
 **Próxima fatia a executar:**  
-**3.3 categorias de vídeo + briefing** — PR #60, ainda não mergeado. Aplicar as migrations antes do smoke.  
-**3.7 CSP enforce** — mergeada (#59).  
-**3.5 pontuação** — bloqueada em 26/09. Aguarda as regras da Samps. Sem código.  
-**4.3 agenda organizacional** — aceite sem Google Calendar. Reunião no `/agenda` (nome, horário, link, descrição, local, tipo). Spec: `docs/superpowers/specs/2026-09-26-agenda-organizacional-design.md`.
+**3.5 pontuação** — bloqueada. Aguarda as regras da Samps. Sem código até o documento chegar.
 
-**Fila:** merge da 3.3 → 3.5 quando as regras chegarem → 4.3 depois do aceite da spec.  
-**Adiado (25/09, sem certeza de necessidade):** 3.2 anexos na demanda; 4.2 capacidade de 8h por pessoa.  
+**Já na master:** 3.3 briefing por categoria (#60), 3.7 CSP enforce (#59), 4.3 reunião na agenda (#62), 4.4 dívida técnica fechada em 28/09.  
+**Adiado (25/09):** 3.2 anexos na demanda; 4.2 capacidade de 8h por pessoa.  
+**Fora do código:** Deployment Protection na Vercel e checks obrigatórios no GitHub (`verify`, `secrets`).  
 Nota: onda 15/09 permanece como contexto. A spec 21/09 (itens leves) foi **substituída** no ciclo de vida do item pela spec 24/09. N listas, barra, responsável e prazo ficam.  
 Nota: a antiga “3.4 visibilidade aberta” foi **redefinida** pelos áudios de 10–15/09 (hierarquia Trello, não leitura cruzada).
 

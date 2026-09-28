@@ -70,11 +70,18 @@
 
 ## Fatia 4.4 — Dívidas técnicas acumuladas
 
-Reservar espaço nesta fase para o que as anteriores empurraram:
-- Itens cosméticos de mobile listados em `docs/superpowers/notas/2026-08-mobile.md`
-- Achados de severidade média do Security Review
-- Upgrade de major do Next, se a Fase 1 tiver deixado pendência sem patch em 14.x
-- Cobertura de teste nos services mais críticos (`demands`, `board`, `priority`)
+**Status (28/09):** fechada. Cada item abaixo está feito ou repriorizado por escrito. Nada desta lista bloqueia a entrega operacional.
+
+| Item | Decisão |
+|------|---------|
+| Agenda no mobile (células estreitas) | Feito em `9d74de4`: padding e badge menores na grade. |
+| Portal com sidebar fixa | Já usa Sheet no mobile (`portal-sidebar.tsx`). A nota de agosto está velha. |
+| Tabs densas do cartão | Só vira select se o time reclamar. Não entra agora. |
+| CSP Report-Only | Feito na 3.7 (#59): modo enforce. |
+| Next sem patch em 14.x | A CVE crítica já está em 14.2.35. Os `high` que sobram só saem no Next 16. Upgrade de major fica tarefa própria, com plano e smoke. Não entra nesta fatia. |
+| Attachment com `clientId` nulo | Anda junto com anexos (3.2), adiada em 25/09. |
+| Testes de `demands`, `board`, `priority` | Há teste de ciclo, lista e arraste. Suite nova de `priority.service` espera as regras da 3.5. Sem o documento da Samps, o teste gravaria a fórmula errada. |
+| Deployment Protection e checks obrigatórios no GitHub | Humano, na conta Vercel/GitHub. O código não fecha isso. |
 
 ---
 
@@ -83,4 +90,4 @@ Reservar espaço nesta fase para o que as anteriores empurraram:
 1. Quadro por cliente personalizável sem quebrar as regras de status
 2. Capacidade de 8h: adiada em 25/09. Não bloqueia a saída da fase.
 3. Agenda organizacional com eventos próprios e participantes
-4. Dívida técnica da lista acima zerada ou repriorizada por escrito
+4. Dívida técnica da 4.4: fechada em 28/09 (feita ou repriorizada na tabela da fatia).
