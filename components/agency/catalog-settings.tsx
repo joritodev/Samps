@@ -16,6 +16,7 @@ import {
   upsertStatusAction,
 } from "@/lib/actions/settings.actions";
 import { cn } from "@/lib/utils";
+import type { ReactNode } from "react";
 
 export type CatalogKind = "contentType" | "priority" | "status";
 
@@ -38,6 +39,7 @@ export function CatalogSettings({
   showColor = false,
   showWeight = false,
   showFinal = false,
+  rowExtra,
 }: {
   title: string;
   description: string;
@@ -46,6 +48,7 @@ export function CatalogSettings({
   showColor?: boolean;
   showWeight?: boolean;
   showFinal?: boolean;
+  rowExtra?: (row: CatalogRow) => ReactNode;
 }) {
   const [pending, startTransition] = useTransition();
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -218,10 +221,11 @@ export function CatalogSettings({
             <li
               key={row.id}
               className={cn(
-                "flex items-center justify-between gap-3 rounded-xl border border-border px-4 py-3",
+                "rounded-xl border border-border",
                 !row.isActive && "opacity-60"
               )}
             >
+              <div className="flex items-center justify-between gap-3 px-4 py-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   {row.color && (
@@ -257,6 +261,8 @@ export function CatalogSettings({
                   onCheckedChange={() => toggle(row)}
                 />
               </div>
+              </div>
+              {rowExtra?.(row)}
             </li>
           ))}
           {rows.length === 0 && (

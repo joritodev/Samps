@@ -14,7 +14,7 @@ import {
 import { completeWorkSession } from "@/lib/services/work-session.service";
 import { resolveDelayOnTerminalStatus } from "@/lib/services/deadline.service";
 import type { SessionUser } from "@/types/auth";
-import { videoDemoMissingFields } from "@/lib/agency/video-demo-briefing";
+import { missingBriefingFields } from "@/lib/agency/content-type-requirements";
 
 const BRIEFING_REQUIRED = ["title", "description", "format"] as const;
 
@@ -97,11 +97,25 @@ export async function completeBriefingAndDemand(
     screensCount?: number;
     durationSeconds?: number;
     orientation?: string;
+    caption?: string;
+    reference?: string;
+    rawDelivery?: boolean;
   }
 ) {
   const card = await db.demand.findUnique({
     where: { id: cardId },
-    include: { contentType: { select: { slug: true } } },
+    include: {
+      contentType: {
+        select: {
+          slug: true,
+          requiresDuration: true,
+          requiresFormat: true,
+          requiresCaption: true,
+          requiresReference: true,
+          requiresRawDelivery: true,
+        },
+      },
+    },
   });
   if (!card) throw new Error("Cartão não encontrado");
   if (card.briefingLockedAt) throw new Error("Briefing já bloqueado");
@@ -118,17 +132,19 @@ export async function completeBriefingAndDemand(
     }
   }
 
-  const videoGaps = videoDemoMissingFields({
-    contentTypeSlug: card.contentType?.slug,
-    demandType: card.type,
-    durationSeconds: data.durationSeconds ?? card.durationSeconds,
-    format: data.format ?? card.format,
-    orientation: data.orientation ?? card.orientation,
-  });
-  if (videoGaps.length) {
-    throw new Error(
-      `Briefing de vídeo (demo): preencha ${videoGaps.join(" e ")}.`
-    );
+  if (card.contentType) {
+    const gaps = missingBriefingFields(card.contentType, {
+      durationSeconds: data.durationSeconds ?? card.durationSeconds,
+      // `Demand.format` é a peça (Feed, Reel). O requisito de formato
+      // olha a orientação preenchida no briefing.
+      orientation: data.orientation ?? card.orientation,
+      caption: data.caption ?? card.caption,
+      reference: data.reference ?? card.briefingReference,
+      rawDelivery: data.rawDelivery ?? card.rawDelivery,
+    });
+    if (gaps.length) {
+      throw new Error(`Briefing incompleto: preencha ${gaps.join(" e ")}.`);
+    }
   }
 
   const deadlines = data.publishDate
@@ -163,6 +179,13 @@ export async function completeBriefingAndDemand(
         screensCount: data.screensCount,
         durationSeconds: data.durationSeconds,
         orientation: data.orientation,
+        ...(data.caption !== undefined ? { caption: data.caption } : {}),
+        ...(data.reference !== undefined
+          ? { briefingReference: data.reference }
+          : {}),
+        ...(data.rawDelivery !== undefined
+          ? { rawDelivery: data.rawDelivery }
+          : {}),
         ...deadlines,
         status: DemandStatus.DEMANDED,
         internalStatus: "Demandada",

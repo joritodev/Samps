@@ -43,6 +43,7 @@ import {
   canRequestAdjustment,
   demandStatusLabel,
 } from "@/lib/agency/labels";
+import { missingBriefingFields } from "@/lib/agency/content-type-requirements";
 
 type CardDetail = {
   id: string;
@@ -90,6 +91,16 @@ type CardDetail = {
   screensCount?: number | null;
   durationSeconds?: number | null;
   orientation?: string | null;
+  caption?: string | null;
+  briefingReference?: string | null;
+  rawDelivery?: boolean | null;
+  contentType?: {
+    requiresDuration: boolean;
+    requiresFormat: boolean;
+    requiresCaption: boolean;
+    requiresReference: boolean;
+    requiresRawDelivery: boolean;
+  } | null;
   complexityLevel?: number | null;
   client?: { name: string };
   list?: { name: string } | null;
@@ -144,6 +155,9 @@ export function CardDetailSheet({
   const [visible, setVisible] = useState(false);
   const [durationSeconds, setDurationSeconds] = useState("");
   const [orientation, setOrientation] = useState("");
+  const [caption, setCaption] = useState("");
+  const [reference, setReference] = useState("");
+  const [rawDelivery, setRawDelivery] = useState(false);
   const [attachName, setAttachName] = useState("");
   const [attachUrl, setAttachUrl] = useState("");
   const [attachVisible, setAttachVisible] = useState(false);
@@ -181,6 +195,9 @@ export function CardDetailSheet({
         card.durationSeconds != null ? String(card.durationSeconds) : ""
       );
       setOrientation(card.orientation ?? "");
+      setCaption(card.caption ?? "");
+      setReference(card.briefingReference ?? "");
+      setRawDelivery(card.rawDelivery ?? false);
       setAttachName("");
       setAttachUrl("");
       setAttachVisible(false);
@@ -375,30 +392,64 @@ export function CardDetailSheet({
                     <Input type="number" defaultValue={card.screensCount ?? ""} disabled={!canBriefing} />
                   </div>
                 )}
-                {(fmt.includes("reel") || fmt.includes("video")) && (
-                  <>
-                    <div className="space-y-1">
-                      <Label>Duração (seg) *</Label>
-                      <Input
-                        type="number"
-                        value={durationSeconds}
-                        onChange={(e) => setDurationSeconds(e.target.value)}
-                        disabled={!canBriefing}
-                        className="tabular-nums"
-                        placeholder="Ex.: 30"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>Orientação / formato *</Label>
-                      <Input
-                        value={orientation}
-                        onChange={(e) => setOrientation(e.target.value)}
-                        disabled={!canBriefing}
-                        placeholder="Ex.: 9:16 vertical"
-                      />
-                    </div>
-                  </>
-                )}
+                {card.contentType?.requiresDuration ? (
+                  <div className="space-y-1">
+                    <Label>Duração (seg) *</Label>
+                    <Input
+                      type="number"
+                      value={durationSeconds}
+                      onChange={(e) => setDurationSeconds(e.target.value)}
+                      disabled={!canBriefing}
+                      className="tabular-nums"
+                      placeholder="Ex.: 30"
+                    />
+                  </div>
+                ) : null}
+                {card.contentType?.requiresFormat ? (
+                  <div className="space-y-1">
+                    <Label>Orientação / formato *</Label>
+                    <Input
+                      value={orientation}
+                      onChange={(e) => setOrientation(e.target.value)}
+                      disabled={!canBriefing}
+                      placeholder="Ex.: 9:16 vertical"
+                    />
+                  </div>
+                ) : null}
+                {card.contentType?.requiresCaption ? (
+                  <div className="space-y-1">
+                    <Label>Legenda *</Label>
+                    <Textarea
+                      value={caption}
+                      onChange={(e) => setCaption(e.target.value)}
+                      disabled={!canBriefing}
+                      rows={3}
+                      placeholder="Texto da legenda"
+                    />
+                  </div>
+                ) : null}
+                {card.contentType?.requiresReference ? (
+                  <div className="space-y-1">
+                    <Label>Referência *</Label>
+                    <Input
+                      value={reference}
+                      onChange={(e) => setReference(e.target.value)}
+                      disabled={!canBriefing}
+                      placeholder="Link ou descrição da referência"
+                    />
+                  </div>
+                ) : null}
+                {card.contentType?.requiresRawDelivery ? (
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      id="raw-delivery"
+                      checked={rawDelivery}
+                      onCheckedChange={setRawDelivery}
+                      disabled={!canBriefing}
+                    />
+                    <Label htmlFor="raw-delivery">Entrega bruta *</Label>
+                  </div>
+                ) : null}
                 {card.isChecklistItem && canEditChecklist ? (
                   <Button
                     disabled={pending || !title.trim()}
@@ -440,14 +491,33 @@ export function CardDetailSheet({
                         const duration = durationSeconds.trim()
                           ? Number(durationSeconds)
                           : undefined;
+                        const durationValue = Number.isFinite(duration)
+                          ? duration
+                          : undefined;
+                        if (card.contentType) {
+                          const gaps = missingBriefingFields(card.contentType, {
+                            durationSeconds: durationValue ?? null,
+                            orientation: orientation.trim() || null,
+                            caption,
+                            reference,
+                            rawDelivery,
+                          });
+                          if (gaps.length) {
+                            toast.error(
+                              `Briefing incompleto: preencha ${gaps.join(" e ")}.`
+                            );
+                            return;
+                          }
+                        }
                         const r = await demandBriefingAction(card.id, clientId, {
                           title: title.trim(),
                           description: description.trim(),
                           format: card.format ?? "Feed",
-                          durationSeconds: Number.isFinite(duration)
-                            ? duration
-                            : undefined,
+                          durationSeconds: durationValue,
                           orientation: orientation.trim() || undefined,
+                          caption: caption.trim() || undefined,
+                          reference: reference.trim() || undefined,
+                          rawDelivery,
                         });
                         if ("success" in r && r.success) {
                           toast.success("Briefing demandado");
