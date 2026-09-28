@@ -110,6 +110,8 @@ A demo 3.4 de “colaborador lê outros setores” fica **revogada** na Fatia A 
 
 ## Fatia 3.5 — Regras de pontuação e priorização
 
+**Status em 2026-09-26:** bloqueada. A Samps ainda não enviou as regras. Sem código, sem fórmula nova e sem tela até esse documento chegar.
+
 **Pedido da reunião:** a Samps envia as regras; o sistema aplica.
 
 **Já existe:** `lib/services/priority.service.ts` com `scoreDemand`, `recalculateSectorPriorities`, `getTop5ForSector`, e `/configuracoes/prioridades`.
