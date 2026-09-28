@@ -19,6 +19,10 @@ import {
   type AgendaEventKind,
 } from "@/lib/agency/agenda-events";
 import { cn } from "@/lib/utils";
+import {
+  AgendaMeetingForm,
+  type AgendaMeetingFormValue,
+} from "@/components/agency/agenda-meeting-form";
 
 const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
@@ -28,6 +32,7 @@ const KIND_CHIP: Record<AgendaEventKind, string> = {
   publish: "bg-primary/15 text-primary",
   birthday: "bg-brand/15 text-brand",
   absence: "bg-destructive/15 text-destructive",
+  meeting: "bg-foreground/10 text-foreground",
 };
 
 const KIND_CARD: Record<AgendaEventKind, string> = {
@@ -36,6 +41,7 @@ const KIND_CARD: Record<AgendaEventKind, string> = {
   publish: "border-primary/35 bg-primary/5",
   birthday: "border-brand/35 bg-brand/5",
   absence: "border-destructive/35 bg-destructive/5",
+  meeting: "border-foreground/20 bg-foreground/5",
 };
 
 const KIND_BADGE: Record<AgendaEventKind, string> = {
@@ -44,6 +50,7 @@ const KIND_BADGE: Record<AgendaEventKind, string> = {
   publish: "border-primary/35 bg-primary/10 text-primary",
   birthday: "border-brand/35 bg-brand/10 text-brand",
   absence: "border-destructive/35 bg-destructive/10 text-destructive",
+  meeting: "border-foreground/20 bg-foreground/10 text-foreground",
 };
 
 const KIND_OPTIONS: AgendaEventKind[] = [
@@ -52,6 +59,7 @@ const KIND_OPTIONS: AgendaEventKind[] = [
   "publish",
   "birthday",
   "absence",
+  "meeting",
 ];
 
 function daysInMonth(year: number, month: number) {
@@ -95,12 +103,41 @@ function eventHref(event: AgendaEvent) {
   return "/demandas";
 }
 
-export function AgendaView({ events }: { events: AgendaEvent[] }) {
+function meetingFormValue(event: AgendaEvent): AgendaMeetingFormValue {
+  const id = event.id.startsWith("meeting:") ? event.id.slice("meeting:".length) : event.id;
+  return {
+    id,
+    title: event.title,
+    description: event.description,
+    meetingUrl: event.meetingUrl,
+    location: event.location,
+    kind: event.status,
+    startsAt: event.date,
+    endsAt: event.endsAt,
+  };
+}
+
+function formatClock(iso: string) {
+  return new Date(iso).toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+export function AgendaView({
+  events,
+  canManageMeetings = false,
+}: {
+  events: AgendaEvent[];
+  canManageMeetings?: boolean;
+}) {
   const today = new Date();
   const [cursor, setCursor] = useState(
     () => new Date(today.getFullYear(), today.getMonth(), 1)
   );
   const [selectedDay, setSelectedDay] = useState(today.getDate());
+  const [meetingOpen, setMeetingOpen] = useState(false);
+  const [editingMeeting, setEditingMeeting] = useState<AgendaEvent | null>(null);
 
   const sectorOptions = useMemo(() => {
     const map = new Map<string, string>();
@@ -120,6 +157,7 @@ export function AgendaView({ events }: { events: AgendaEvent[] }) {
     publish: true,
     birthday: true,
     absence: true,
+    meeting: true,
   }));
   const [enabledSectors, setEnabledSectors] = useState<Record<string, boolean>>(
     () => Object.fromEntries(sectorOptions.map((s) => [s.id, true]))
@@ -229,13 +267,26 @@ export function AgendaView({ events }: { events: AgendaEvent[] }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-background">
-      <header className="shrink-0 border-b border-border bg-background px-6 py-4">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          Agenda
-        </h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          Prazos, entregas e publicações das demandas
-        </p>
+      <header className="flex shrink-0 items-start justify-between gap-4 border-b border-border bg-background px-6 py-4">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">
+            Agenda
+          </h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Prazos, entregas, publicações e reuniões da equipe
+          </p>
+        </div>
+        {canManageMeetings ? (
+          <Button
+            type="button"
+            onClick={() => {
+              setEditingMeeting(null);
+              setMeetingOpen(true);
+            }}
+          >
+            Nova reunião
+          </Button>
+        ) : null}
       </header>
 
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
@@ -454,6 +505,85 @@ export function AgendaView({ events }: { events: AgendaEvent[] }) {
                 ) : (
                   selectedEvents.map((event) => {
                     const p = eventDayParts(event.date);
+                    const timeLabel = event.endsAt
+                      ? `${formatClock(event.date)}–${formatClock(event.endsAt)}`
+                      : p.time;
+                    if (event.kind === "meeting") {
+                      return (
+                        <article
+                          key={event.id}
+                          className={cn(
+                            "rounded-xl border p-4",
+                            KIND_CARD[event.kind]
+                          )}
+                        >
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "mb-2 font-normal",
+                              KIND_BADGE[event.kind]
+                            )}
+                          >
+                            {event.meetingKindLabel ?? AGENDA_KIND_LABEL.meeting}
+                          </Badge>
+                          <h3 className="text-sm font-semibold tracking-tight text-foreground">
+                            {event.title}
+                          </h3>
+                          {event.description ? (
+                            <p className="mt-2 text-sm text-muted-foreground">
+                              {event.description}
+                            </p>
+                          ) : null}
+                          <dl className="mt-3 space-y-1.5 text-xs text-muted-foreground">
+                            <div className="flex gap-2">
+                              <dt className="w-20 shrink-0">Horário</dt>
+                              <dd>{timeLabel}</dd>
+                            </div>
+                            {event.location ? (
+                              <div className="flex gap-2">
+                                <dt className="w-20 shrink-0">Local</dt>
+                                <dd>{event.location}</dd>
+                              </div>
+                            ) : null}
+                            {event.meetingUrl ? (
+                              <div className="flex gap-2">
+                                <dt className="w-20 shrink-0">Link</dt>
+                                <dd className="min-w-0">
+                                  <a
+                                    href={event.meetingUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="break-all text-primary underline"
+                                  >
+                                    {event.meetingUrl}
+                                  </a>
+                                </dd>
+                              </div>
+                            ) : null}
+                            {event.assigneeName ? (
+                              <div className="flex gap-2">
+                                <dt className="w-20 shrink-0">Marcou</dt>
+                                <dd>{event.assigneeName}</dd>
+                              </div>
+                            ) : null}
+                          </dl>
+                          {canManageMeetings ? (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="mt-3"
+                              onClick={() => {
+                                setEditingMeeting(event);
+                                setMeetingOpen(true);
+                              }}
+                            >
+                              Editar
+                            </Button>
+                          ) : null}
+                        </article>
+                      );
+                    }
                     return (
                       <Link
                         key={event.id}
@@ -483,7 +613,7 @@ export function AgendaView({ events }: { events: AgendaEvent[] }) {
                           </div>
                           <div className="flex gap-2">
                             <dt className="w-20 shrink-0">Horário</dt>
-                            <dd>{p.time}</dd>
+                            <dd>{timeLabel}</dd>
                           </div>
                           {event.assigneeName ? (
                             <div className="flex gap-2">
@@ -501,6 +631,14 @@ export function AgendaView({ events }: { events: AgendaEvent[] }) {
           </aside>
         </section>
       </div>
+      {canManageMeetings ? (
+        <AgendaMeetingForm
+          key={editingMeeting?.id ?? "new"}
+          open={meetingOpen}
+          onOpenChange={setMeetingOpen}
+          initial={editingMeeting ? meetingFormValue(editingMeeting) : null}
+        />
+      ) : null}
     </div>
   );
 }

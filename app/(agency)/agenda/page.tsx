@@ -1,11 +1,13 @@
-import { ClientStatus, UserStatus } from "@prisma/client";
+import { ClientStatus, UserStatus, UserType } from "@prisma/client";
 import { AgendaView } from "@/components/agency/agenda-view";
 import { mapAbsencesToAgendaEvents } from "@/lib/agency/absences";
+import { mapMeetingsToAgendaEvents } from "@/lib/agency/agenda-meeting";
 import { mapDemandsToAgendaEvents } from "@/lib/agency/agenda-events";
 import { mapBirthdaysToAgendaEvents } from "@/lib/agency/birthdays";
 import { db } from "@/lib/db";
 import { clientScopeFilter, requireAuth } from "@/lib/permissions/check";
 import { listAbsences } from "@/lib/services/absences.service";
+import { listAgendaMeetings } from "@/lib/services/agenda-meeting.service";
 import { listDemands } from "@/lib/services/demands.service";
 
 export default async function AgendaPage() {
@@ -15,7 +17,8 @@ export default async function AgendaPage() {
   const rangeFrom = new Date(Date.UTC(year, 0, 1));
   const rangeTo = new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999));
 
-  const [demands, clients, teammates, absences] = await Promise.all([
+  const internal = user.userType !== UserType.EXTERNAL_CLIENT;
+  const [demands, clients, teammates, absences, meetings] = await Promise.all([
     listDemands(user, { context: "calendar" }),
     db.client.findMany({
       where: {
@@ -30,6 +33,7 @@ export default async function AgendaPage() {
       select: { id: true, name: true, birthDate: true },
     }),
     listAbsences({ from: rangeFrom, to: rangeTo }),
+    internal ? listAgendaMeetings(rangeFrom, rangeTo) : Promise.resolve([]),
   ]);
 
   const events = [
@@ -52,7 +56,8 @@ export default async function AgendaPage() {
       year
     ),
     ...mapAbsencesToAgendaEvents(absences),
+    ...mapMeetingsToAgendaEvents(meetings),
   ];
 
-  return <AgendaView events={events} />;
+  return <AgendaView events={events} canManageMeetings={internal} />;
 }

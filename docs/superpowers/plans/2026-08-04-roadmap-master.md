@@ -39,7 +39,7 @@ Nenhuma fase de código começa antes de a anterior ter PRs mergeados e gates ap
 **3.3 categorias de vídeo + briefing** — PR #60, ainda não mergeado. Aplicar as migrations antes do smoke.  
 **3.7 CSP enforce** — mergeada (#59).  
 **3.5 pontuação** — bloqueada em 26/09. Aguarda as regras da Samps. Sem código.  
-**4.3 agenda organizacional** — spec proposta em `docs/superpowers/specs/2026-09-26-agenda-organizacional-design.md` (sem Google Calendar). Plano só depois do aceite.
+**4.3 agenda organizacional** — aceite sem Google Calendar. Reunião no `/agenda` (nome, horário, link, descrição, local, tipo). Spec: `docs/superpowers/specs/2026-09-26-agenda-organizacional-design.md`.
 
 **Fila:** merge da 3.3 → 3.5 quando as regras chegarem → 4.3 depois do aceite da spec.  
 **Adiado (25/09, sem certeza de necessidade):** 3.2 anexos na demanda; 4.2 capacidade de 8h por pessoa.  

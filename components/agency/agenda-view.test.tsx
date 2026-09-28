@@ -4,6 +4,12 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { AgendaEvent, AgendaEventKind } from "@/lib/agency/agenda-events";
 import { AgendaView } from "./agenda-view";
 
+vi.mock("@/lib/actions/agenda-meeting.actions", () => ({
+  createAgendaMeetingAction: vi.fn(),
+  updateAgendaMeetingAction: vi.fn(),
+  deleteAgendaMeetingAction: vi.fn(),
+}));
+
 vi.mock("next/link", () => ({
   default: ({
     href,
@@ -89,6 +95,37 @@ describe("AgendaView tokens", () => {
   },
     15_000
   );
+
+  it("mostra nome, descrição, horário e link da reunião", () => {
+    render(
+      <AgendaView
+        canManageMeetings
+        events={[
+          event({
+            id: "meeting:m1",
+            kind: "meeting",
+            title: "Alinhamento semanal",
+            description: "Pauta do comercial",
+            meetingUrl: "https://meet.google.com/abc-defg-hij",
+            location: "Sala 2",
+            meetingKindLabel: "Reunião",
+            assigneeName: "Ana",
+          }),
+        ]}
+      />
+    );
+
+    expect(screen.getByRole("button", { name: "Nova reunião" })).toBeTruthy();
+    expect(screen.getByText("Pauta do comercial")).toBeTruthy();
+    expect(screen.getByText("Sala 2")).toBeTruthy();
+    expect(screen.getByText("Ana")).toBeTruthy();
+    const link = screen.getByRole("link", {
+      name: "https://meet.google.com/abc-defg-hij",
+    });
+    expect(link.getAttribute("href")).toBe("https://meet.google.com/abc-defg-hij");
+    expect(link.getAttribute("target")).toBe("_blank");
+    expect(screen.getByRole("button", { name: "Editar" })).toBeTruthy();
+  });
 
   it("renders the page header and filters on paper, not Card chrome", () => {
     render(

@@ -3,7 +3,8 @@ export type AgendaEventKind =
   | "delivery"
   | "publish"
   | "birthday"
-  | "absence";
+  | "absence"
+  | "meeting";
 
 export type AgendaEvent = {
   id: string;
@@ -17,8 +18,13 @@ export type AgendaEvent = {
   kind: AgendaEventKind;
   /** ISO date string */
   date: string;
+  endsAt?: string | null;
   status: string;
   assigneeName: string | null;
+  description?: string | null;
+  meetingUrl?: string | null;
+  location?: string | null;
+  meetingKindLabel?: string | null;
 };
 
 export const AGENDA_KIND_LABEL: Record<AgendaEventKind, string> = {
@@ -27,6 +33,7 @@ export const AGENDA_KIND_LABEL: Record<AgendaEventKind, string> = {
   publish: "Publicação",
   birthday: "Aniversário",
   absence: "Ausência",
+  meeting: "Reunião",
 };
 
 type DemandLike = {

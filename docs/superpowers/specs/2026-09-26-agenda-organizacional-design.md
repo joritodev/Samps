@@ -1,8 +1,7 @@
 # Spec — Agenda organizacional (fatia 4.3)
 
 **Data:** 2026-09-26  
-**Status:** proposta de brainstorming. **Não aprovada.** Sem plano de implementação e sem código até a Samps confirmar a decisão abaixo.  
-**Pedido:** duas agendas — a macro (prazos e entregas) e a organizacional (reuniões, podcasts, compromissos). A reunião deixou em aberto se isso substitui o Google Agenda.
+**Aceite:** 2026-09-28. Sem Google Calendar. A reunião precisa de nome, horário, link, descrição e o que acompanha um compromisso (fim, local, tipo). Sem convite de participantes e sem sincronizar outra agenda.
 
 ---
 
@@ -24,13 +23,13 @@ O `/agenda` de hoje não é uma agenda de compromissos. `AgendaEvent` em `lib/ag
 
 Aceite da fase: três pessoas veem a reunião e recebem notificação. Isso fecha com o modelo de `Notification` que já existe. OAuth não entra nesse aceite.
 
-## O que a fatia passa a ser, se a proposta for aceita
+## O que esta fatia entrega
 
-- Evento próprio, separado da demanda: título, tipo (reunião, podcast, compromisso), início, fim, local ou link, cliente opcional, participantes internos.
-- Quem cria convida; o convidado vê o evento na agenda organizacional e recebe notificação.
-- A agenda macro continua sendo a de hoje (prazos, entregas, publicações, aniversários, ausências).
-- Troca de visão entre macro e organizacional.
-- Sem Google, sem `.ics`, sem coluna nova em `Demand`.
+- Compromisso próprio, separado da demanda, visível no `/agenda` junto dos prazos.
+- Campos: nome, início, fim, link da reunião, descrição, local, tipo (reunião, podcast ou compromisso).
+- Quem é da equipe cria, edita e apaga. Cliente externo não vê.
+- A agenda de prazos, entregas, publicações, aniversários e ausências continua como está.
+- Sem Google, sem `.ics`, sem convite e sem coluna nova em `Demand`.
 
 ## O que esta spec não fecha
 
@@ -40,4 +39,4 @@ Aceite da fase: três pessoas veem a reunião e recebem notificação. Isso fech
 
 ## Próximo passo
 
-Aceite ou recusa desta proposta pela Samps. Só então `writing-plans` da fatia 4.3. Se a resposta for “precisa do Google”, o plano começa pelo desenho de OAuth (quem autoriza e escopo mínimo), não pela tela.
+Implementar nesta fatia. Google Calendar continua fora.

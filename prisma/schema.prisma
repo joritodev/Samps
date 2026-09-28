@@ -272,6 +272,12 @@ enum AbsenceKind {
   SICK_LEAVE
 }
 
+enum AgendaMeetingKind {
+  MEETING
+  PODCAST
+  OTHER
+}
+
 model User {
   id                 String     @id @default(cuid())
   email              String     @unique
@@ -332,6 +338,7 @@ model User {
   announcements          Announcement[]        @relation("AnnouncementAuthor")
   absences               Absence[]
   checklistItems         ChecklistItem[]
+  agendaMeetings         AgendaMeeting[] @relation("AgendaMeetingAuthor")
 
   @@index([userType])
   @@index([status])
@@ -369,6 +376,25 @@ model Absence {
 
   @@index([userId, startsAt])
   @@index([startsAt, endsAt])
+}
+
+model AgendaMeeting {
+  id          String            @id @default(cuid())
+  title       String
+  description String?
+  meetingUrl  String?
+  location    String?
+  kind        AgendaMeetingKind @default(MEETING)
+  startsAt    DateTime
+  endsAt      DateTime?
+  createdById String
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  createdBy User @relation("AgendaMeetingAuthor", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([startsAt])
+  @@index([createdById])
 }
 
 model Role {
