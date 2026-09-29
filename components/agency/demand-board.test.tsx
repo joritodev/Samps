@@ -5,6 +5,8 @@ import { DemandBoard } from "./demand-board";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: vi.fn(), push: vi.fn(), replace: vi.fn() }),
+  usePathname: () => "/demandas",
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 vi.mock("@/app/actions/demand", () => ({

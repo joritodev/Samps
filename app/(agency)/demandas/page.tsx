@@ -67,9 +67,10 @@ function groupIntoStatusColumns(demands: BoardDemand[]): BoardColumn[] {
 export default async function DemandasPage({
   searchParams,
 }: {
-  searchParams: { filtro?: string; abrir?: string };
+  searchParams: { filtro?: string; abrir?: string; responsavel?: string };
 }) {
   const filter = demandFilter(searchParams.filtro);
+  const assigneeId = searchParams.responsavel || null;
   const user = await requireAuth();
   const canCreate = hasPermission(user.permissions, "demands.create");
   const scope = clientScopeFilter(user);
@@ -105,7 +106,12 @@ export default async function DemandasPage({
   try {
     const visibility = buildDemandVisibilityWhere(user, { ledSectorIds });
     const where: Prisma.DemandWhereInput = {
-      AND: [visibility, { isChecklistItem: false }, ...(filter ? [filter.where] : [])],
+      AND: [
+        visibility,
+        { isChecklistItem: false },
+        ...(filter ? [filter.where] : []),
+        ...(assigneeId ? [{ assigneeId }] : []),
+      ],
     };
 
     const rows = await db.demand.findMany({
@@ -120,6 +126,13 @@ export default async function DemandasPage({
   }
 
   const columns = groupIntoStatusColumns(demands);
+  const assignee = assigneeId
+    ? await db.user.findUnique({ where: { id: assigneeId }, select: { name: true } })
+    : null;
+  const filterLabel =
+    [filter?.label, assignee ? `Responsável: ${assignee.name}` : null]
+      .filter(Boolean)
+      .join(" · ") || undefined;
 
   const subtitle = isGestao
     ? "Visão global da operação"
@@ -135,7 +148,7 @@ export default async function DemandasPage({
       taxonomy={{ sectors, priorities }}
       clients={clients}
       canCreate={canCreate}
-      filterLabel={filter?.label}
+      filterLabel={filterLabel}
       openDemandId={searchParams.abrir}
     />
   );

@@ -224,7 +224,7 @@ Cantos suaves e consistentes: 6px em itens de menu, 9px em botões, campos e ite
 Faixa única de métricas num card, divididas por linhas finas (grade com 1px de espaço sobre fundo Linha). Rótulo em Label, número em Data; ponto e cor só para Atenção e Perigo. Cada número é um link para a lista que ele conta (`/demandas?filtro=`).
 
 ### Demand Card (signature)
-Título, prioridade (ponto + nome), cliente com quadradinho da cor da marca, chips de tipo/formato/status, rodapé com prazo (ícone de calendário, vermelho se atrasada) e responsável com iniciais. Clicável abre o detalhe; no painel é um link para `/demandas?abrir=<id>`.
+Título, prioridade (ponto + nome), cliente com quadradinho da cor da marca, chips de tipo/formato/status, rodapé com prazo (ícone de calendário, vermelho se atrasada) e responsável com iniciais. Clicável abre o detalhe; no painel é um link para `/demandas?abrir=<id>`. Em "Precisa de você" o card abre com o motivo em Label semibold ("Atrasada há 2 dias" em Perigo; "Sem responsável" ou "Vence amanhã" em Atenção), e o chip de prioridade some quando todos os cards têm a mesma.
 
 ## Do's and Don'ts
 

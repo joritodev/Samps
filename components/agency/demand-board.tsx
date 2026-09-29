@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Filter, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -79,6 +80,9 @@ export function DemandBoard({
 }) {
   const [selected, setSelected] = useState<BoardDemand | null>(null);
   const [open, setOpen] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     if (!openDemandId) return;
@@ -88,8 +92,28 @@ export function DemandBoard({
     if (target) {
       setSelected(target);
       setOpen(true);
+    } else {
+      toast.message("Essa demanda não está neste quadro.", {
+        description: "Ela pode ter sido concluída ou estar fora do filtro atual.",
+      });
+      clearOpenParam();
     }
-  }, [openDemandId, columns]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openDemandId]);
+
+  /** Tira `?abrir=` da URL para recarregar não reabrir o detalhe. */
+  function clearOpenParam() {
+    if (!searchParams.get("abrir")) return;
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete("abrir");
+    const qs = next.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }
+
+  function handleSheetChange(value: boolean) {
+    setOpen(value);
+    if (!value) clearOpenParam();
+  }
   const [createOpen, setCreateOpen] = useState(false);
 
   function handleOpenCard(demand: BoardDemand) {
@@ -140,7 +164,7 @@ export function DemandBoard({
         </div>
       </header>
 
-      <main className="min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden">
+      <div className="min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden">
         <div className="flex h-full min-h-0 min-w-max gap-3 px-1 pb-1 sm:px-2">
           {columns.map((column) => (
             <div key={column.id} className="snap-start">
@@ -152,13 +176,13 @@ export function DemandBoard({
             </div>
           ))}
         </div>
-      </main>
+      </div>
 
       <DemandDetailSheet
         demand={selected}
         taxonomy={taxonomy}
         open={open}
-        onOpenChange={setOpen}
+        onOpenChange={handleSheetChange}
       />
       {canCreate ? (
         <NewDemandSheet

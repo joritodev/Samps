@@ -7,7 +7,11 @@ export const OPEN_EXCLUDED: DemandStatus[] = [
   DemandStatus.PUBLISHED,
 ];
 
-/** Etapas do ciclo da demanda, na ordem em que o trabalho anda. */
+/**
+ * Etapas do ciclo da demanda, na ordem em que o trabalho anda.
+ * Ajuste não é etapa: é retorno da Revisão e conta dentro de Produção
+ * (a pessoa está refazendo), igual ao Kanban geral.
+ */
 export const FLOW_STAGES = [
   {
     key: "briefing",
@@ -24,8 +28,11 @@ export const FLOW_STAGES = [
     label: "A fazer",
     statuses: [DemandStatus.AVAILABLE, DemandStatus.DEMANDED],
   },
-  { key: "producao", label: "Produção", statuses: [DemandStatus.IN_PRODUCTION] },
-  { key: "ajustes", label: "Ajustes", statuses: [DemandStatus.ADJUSTMENTS] },
+  {
+    key: "producao",
+    label: "Produção",
+    statuses: [DemandStatus.IN_PRODUCTION, DemandStatus.ADJUSTMENTS],
+  },
   { key: "revisao", label: "Revisão", statuses: [DemandStatus.IN_REVIEW] },
   {
     key: "publicacao",
@@ -38,6 +45,7 @@ export type DemandFilterKey =
   | "atrasadas"
   | "sem-responsavel"
   | "concluidas-hoje"
+  | "ajustes"
   | (typeof FLOW_STAGES)[number]["key"];
 
 type DemandFilter = { label: string; where: Prisma.DemandWhereInput };
@@ -66,10 +74,7 @@ export function demandFilter(
     case "sem-responsavel":
       return {
         label: "Sem responsável",
-        where: {
-          assigneeId: null,
-          status: { notIn: [DemandStatus.DONE, DemandStatus.CANCELLED] },
-        },
+        where: { assigneeId: null, status: { notIn: OPEN_EXCLUDED } },
       };
     case "concluidas-hoje":
       return {
@@ -79,6 +84,11 @@ export function demandFilter(
           updatedAt: { gte: startOfToday(now) },
         },
       };
+    case "ajustes":
+      return {
+        label: "Voltaram para ajuste",
+        where: { status: DemandStatus.ADJUSTMENTS },
+      };
   }
   const stage = FLOW_STAGES.find((s) => s.key === key);
   if (!stage) return null;
@@ -87,4 +97,9 @@ export function demandFilter(
 
 export function demandFilterHref(key: DemandFilterKey) {
   return `/demandas?filtro=${key}`;
+}
+
+/** Fila de uma pessoa no quadro geral. */
+export function assigneeHref(userId: string) {
+  return `/demandas?responsavel=${encodeURIComponent(userId)}`;
 }

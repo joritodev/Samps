@@ -227,6 +227,7 @@ function SidebarBody({
                 <Link
                   href={item.href}
                   onClick={onNavigate}
+                  aria-current={active ? "page" : undefined}
                   className={linkClass(active)}
                 >
                   <Icon
@@ -255,6 +256,7 @@ function SidebarBody({
                 <Link
                   href={item.href}
                   onClick={onNavigate}
+                  aria-current={active ? "page" : undefined}
                   className={linkClass(active)}
                 >
                   <Icon
@@ -305,7 +307,7 @@ function SidebarBody({
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[13px] font-semibold text-foreground">
+                <p className="truncate text-sm font-semibold text-foreground">
                   {user.name}
                 </p>
                 <p className="truncate text-xs text-muted-foreground">

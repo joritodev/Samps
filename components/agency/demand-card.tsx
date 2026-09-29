@@ -3,7 +3,8 @@
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { CalendarClock } from "lucide-react";
+import Link from "next/link";
+import { CalendarClock, ChevronDown, ExternalLink, Timer, UserRound } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -27,6 +28,8 @@ import { concluirBriefing } from "@/app/actions/demand";
 import { canDemandBriefing, demandStatusLabel } from "@/lib/agency/labels";
 import type { BoardDemand, BoardTaxonomy } from "@/types/board-ui";
 import { cn } from "@/lib/utils";
+import { relativeDue } from "@/lib/agency/attention";
+import { assigneeHref } from "@/lib/agency/demand-filters";
 
 function formatDeadline(iso: string | null) {
   if (!iso) return null;
@@ -166,7 +169,28 @@ export function DemandDetailSheet({
           </SheetDescription>
         </SheetHeader>
 
-        <div className="flex-1 space-y-8 overflow-y-auto px-6 py-6">
+        <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6">
+          <OperationalSummary demand={demand} />
+
+          <details
+            open={canBriefing}
+            className="group rounded-xl border border-border/80 [&_summary::-webkit-details-marker]:hidden"
+          >
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-foreground hover:bg-secondary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <span>
+                Briefing e planejamento
+                {!canBriefing ? (
+                  <span className="ml-2 text-xs font-normal text-muted-foreground">
+                    concluído, só leitura
+                  </span>
+                ) : null}
+              </span>
+              <ChevronDown
+                className="size-4 text-muted-foreground transition-transform group-open:rotate-180"
+                aria-hidden
+              />
+            </summary>
+            <div className="space-y-6 px-4 pb-4 pt-1">
           <section className="space-y-4">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Planejamento
@@ -236,6 +260,8 @@ export function DemandDetailSheet({
               />
             </div>
           </section>
+            </div>
+          </details>
         </div>
 
         <SheetFooter className="mt-auto flex-col gap-2 border-t border-border bg-muted/80 px-6 py-4 sm:flex-col sm:space-x-0">
@@ -261,10 +287,6 @@ export function DemandDetailSheet({
             </>
           ) : (
             <>
-              <p className="text-center text-xs text-muted-foreground">
-                Status atual: {demandStatusLabel(demand.status)}. O briefing só
-                pode ser demandado em planejamento.
-              </p>
               <Button
                 type="button"
                 variant="outline"
@@ -278,5 +300,94 @@ export function DemandDetailSheet({
         </SheetFooter>
       </SheetContent>
     </Sheet>
+  );
+}
+
+/** Onde a demanda está agora: etapa, responsável, prazo e produção. */
+function OperationalSummary({ demand }: { demand: BoardDemand }) {
+  const now = new Date();
+  const overdue =
+    demand.dueDate &&
+    new Date(demand.dueDate) < now &&
+    !["DONE", "CANCELLED", "PUBLISHED"].includes(demand.status);
+
+  return (
+    <section aria-labelledby="andamento-titulo" className="space-y-3">
+      <h3 id="andamento-titulo" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        Andamento
+      </h3>
+      <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border/80 bg-border/70 [&>div]:bg-card [&>div]:px-3.5 [&>div]:py-3">
+        <div>
+          <dt className="text-xs font-medium text-muted-foreground">Etapa</dt>
+          <dd className="mt-1 text-sm font-semibold text-foreground">
+            {demandStatusLabel(demand.status)}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-xs font-medium text-muted-foreground">Prazo</dt>
+          <dd
+            className={cn(
+              "mt-1 text-sm font-semibold",
+              overdue ? "text-destructive" : "text-foreground"
+            )}
+          >
+            {demand.dueDate ? (
+              <>
+                {formatDeadline(demand.dueDate)}
+                <span className="block text-xs font-medium">
+                  {relativeDue(demand.dueDate, now)}
+                </span>
+              </>
+            ) : (
+              "Sem prazo"
+            )}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-xs font-medium text-muted-foreground">Responsável</dt>
+          <dd className="mt-1 flex items-center gap-1.5 text-sm font-semibold">
+            <UserRound className="size-3.5 text-muted-foreground" aria-hidden />
+            {demand.assigneeName ? (
+              <span className="text-foreground">{demand.assigneeName}</span>
+            ) : (
+              <span className="text-warning">Sem responsável</span>
+            )}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-xs font-medium text-muted-foreground">Produção</dt>
+          <dd className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-foreground">
+            <Timer className="size-3.5 text-muted-foreground" aria-hidden />
+            {demand.producingBy ? (
+              <span>
+                <span className="text-success">Rodando</span>
+                <span className="block text-xs font-medium text-muted-foreground">
+                  {demand.producingBy}
+                </span>
+              </span>
+            ) : (
+              <span className="text-muted-foreground">Parada</span>
+            )}
+          </dd>
+        </div>
+      </dl>
+      <div className="flex flex-wrap gap-2">
+        {demand.assigneeId ? (
+          <Button asChild variant="outline" size="sm">
+            <Link href={assigneeHref(demand.assigneeId)}>
+              Fila de {demand.assigneeName?.split(" ")[0]}
+            </Link>
+          </Button>
+        ) : null}
+        {demand.clientId ? (
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/clientes/${demand.clientId}`}>
+              <ExternalLink className="size-3.5" aria-hidden />
+              Quadro de {demand.clientName}
+            </Link>
+          </Button>
+        ) : null}
+      </div>
+    </section>
   );
 }

@@ -32,6 +32,7 @@ export function MetricCard({
   tone = "default",
   variant = "card",
   href,
+  hint,
   className,
 }: {
   label: string;
@@ -41,12 +42,15 @@ export function MetricCard({
   variant?: "card" | "plain";
   /** Número clicável: leva à lista que ele conta. */
   href?: string;
+  /** Explica o que o número conta (tooltip nativo + texto para leitor de tela). */
+  hint?: string;
   className?: string;
 }) {
   const Wrapper = href ? Link : "div";
   return (
     <Wrapper
       href={href as string}
+      title={hint}
       className={cn(
         "min-w-0 px-3.5 py-3",
         variant === "card" &&
@@ -74,6 +78,7 @@ export function MetricCard({
       >
         {value}
       </p>
+      {hint ? <span className="sr-only">{hint}</span> : null}
     </Wrapper>
   );
 }

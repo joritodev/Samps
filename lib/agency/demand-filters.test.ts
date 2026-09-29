@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { demandFilter, demandFilterHref, FLOW_STAGES } from "./demand-filters";
+import { assigneeHref, demandFilter, demandFilterHref, FLOW_STAGES } from "./demand-filters";
 
 const now = new Date("2026-09-29T15:00:00");
 
@@ -16,8 +16,18 @@ describe("demandFilter", () => {
     expect(f?.where.status).toMatchObject({ notIn: ["DONE", "CANCELLED", "PUBLISHED"] });
   });
 
-  it("sem responsável: assigneeId nulo", () => {
-    expect(demandFilter("sem-responsavel", now)?.where).toMatchObject({ assigneeId: null });
+  it("sem responsável: assigneeId nulo, com a mesma regra de aberto", () => {
+    expect(demandFilter("sem-responsavel", now)?.where).toEqual({
+      assigneeId: null,
+      status: { notIn: ["DONE", "CANCELLED", "PUBLISHED"] },
+    });
+  });
+
+  it("ajustes é retorno da revisão, não etapa do fluxo", () => {
+    expect(FLOW_STAGES.map((s) => s.key)).not.toContain("ajustes");
+    expect(demandFilter("ajustes", now)?.where).toEqual({ status: "ADJUSTMENTS" });
+    const producao = FLOW_STAGES.find((s) => s.key === "producao");
+    expect(producao?.statuses).toContain("ADJUSTMENTS");
   });
 
   it("concluídas hoje: a partir da meia-noite local", () => {
@@ -38,5 +48,6 @@ describe("demandFilter", () => {
 
   it("monta o link do quadro geral", () => {
     expect(demandFilterHref("atrasadas")).toBe("/demandas?filtro=atrasadas");
+    expect(assigneeHref("u 1")).toBe("/demandas?responsavel=u%201");
   });
 });

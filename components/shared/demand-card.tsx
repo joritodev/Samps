@@ -43,6 +43,8 @@ export function DemandCard({
   onClick,
   href,
   titleAs: TitleTag = "h3",
+  reason,
+  hidePriority,
 }: {
   demand: DemandCardData;
   showOrigin?: boolean;
@@ -52,13 +54,18 @@ export function DemandCard({
   href?: string;
   /** Nível do título conforme a hierarquia da página. */
   titleAs?: "h2" | "h3" | "h4";
+  /** Por que o card está aqui (ex.: "Atrasada há 2 dias"). */
+  reason?: { label: string; tone: "danger" | "warning" | "neutral" };
+  /** Esconde o chip de prioridade (quando a lista inteira é da mesma). */
+  hidePriority?: boolean;
 }) {
   const originLabel =
     showOrigin && demand.client
       ? `${demand.client.name} · ${
-          demand.origin
+          demand.sector?.name ??
+          (demand.origin
             ? demandOriginLabel(demand.origin)
-            : demandTypeLabel(demand.type)
+            : demandTypeLabel(demand.type))
         }`
       : undefined;
 
@@ -78,12 +85,24 @@ export function DemandCard({
 
   const body = (
     <>
+      {reason ? (
+        <span
+          className={cn(
+            "inline-flex w-fit items-center gap-1.5 text-xs font-semibold",
+            reason.tone === "danger" && "text-destructive",
+            reason.tone === "warning" && "text-warning",
+            reason.tone === "neutral" && "text-muted-foreground"
+          )}
+        >
+          {reason.label}
+        </span>
+      ) : null}
       <div className="space-y-1.5">
         <div className="flex items-start justify-between gap-2">
           <TitleTag className="font-sans text-sm font-medium leading-snug tracking-normal text-foreground">
             {demand.title}
           </TitleTag>
-          {demand.priority && (
+          {demand.priority && !hidePriority && (
             <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-foreground/[0.04] px-2 py-0.5 text-xs font-medium text-muted-foreground dark:bg-foreground/[0.08]">
               <span
                 aria-hidden
@@ -119,7 +138,9 @@ export function DemandCard({
         <Badge variant="secondary">{demandTypeLabel(demand.type)}</Badge>
         {demand.format && <Badge variant="outline">{demand.format}</Badge>}
         <Badge variant="outline">{demandStatusLabel(demand.status)}</Badge>
-        {overdue && <Badge variant="destructive">Atrasada</Badge>}
+        {overdue && reason?.tone !== "danger" && (
+          <Badge variant="destructive">Atrasada</Badge>
+        )}
       </div>
 
       {demand.dueDate || demand.assignee ? (
@@ -168,7 +189,14 @@ export function DemandCard({
 
   if (href) {
     return (
-      <Link href={href} draggable={false} className={cardClassName}>
+      <Link
+        href={href}
+        draggable={false}
+        className={cardClassName}
+        aria-label={
+          reason ? `${demand.title}. ${reason.label}` : demand.title
+        }
+      >
         {body}
       </Link>
     );

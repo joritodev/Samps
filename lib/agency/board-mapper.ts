@@ -16,7 +16,13 @@ export const boardDemandSelect = {
   briefingLockedAt: true,
   sector: { select: { name: true } },
   priority: { select: { name: true } },
-  client: { select: { name: true } },
+  client: { select: { id: true, name: true } },
+  assignee: { select: { id: true, name: true } },
+  workSessions: {
+    where: { status: "ACTIVE" },
+    select: { user: { select: { name: true } } },
+    take: 1,
+  },
 } satisfies Prisma.DemandSelect;
 
 export type BoardDemandRow = Prisma.DemandGetPayload<{
@@ -36,5 +42,9 @@ export function toBoardDemand(demand: BoardDemandRow): BoardDemand {
     publishedUrl: demand.publishedUrl,
     briefingLockedAt: demand.briefingLockedAt?.toISOString() ?? null,
     clientName: demand.client.name,
+    clientId: demand.client.id,
+    assigneeId: demand.assignee?.id ?? null,
+    assigneeName: demand.assignee?.name ?? null,
+    producingBy: demand.workSessions[0]?.user.name ?? null,
   };
 }
