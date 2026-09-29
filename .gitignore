@@ -49,3 +49,7 @@ skills-lock.json
 .superpowers/
 .pull-backup/
 _e.txt
+
+# impeccable: estado local do servidor de detecção/live
+.impeccable/live/
+.impeccable/config.local.json
