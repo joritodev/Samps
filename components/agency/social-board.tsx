@@ -197,7 +197,7 @@ export function SocialBoard({ columns }: { columns: BoardColumn[] }) {
         <div className="min-w-0">
           <p className="text-xs text-muted-foreground">Painel individual</p>
           <h1 className="truncate text-lg font-semibold tracking-tight text-foreground">
-            Meu Painel — Social Media
+            Meu painel · Social Media
           </h1>
         </div>
         <Button variant="outline" size="sm" asChild>

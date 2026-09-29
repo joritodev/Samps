@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   AlertTriangle,
+  ArrowRight,
   Camera,
   FolderKanban,
   Kanban,
@@ -68,11 +69,10 @@ export default async function PainelGestaoPage() {
   ].filter((a) => a.count > 0);
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden p-1 sm:p-2">
+    <div className="flex h-full min-h-0 flex-col overflow-y-auto p-1 sm:p-2 lg:overflow-hidden">
       <header className="flex shrink-0 flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
-          <p className="eyebrow">Central de gestão</p>
-          <h1 className="mt-1 text-2xl font-semibold text-foreground">
+          <h1 className="text-2xl font-semibold text-foreground">
             Painel da Gestão
           </h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
@@ -121,8 +121,8 @@ export default async function PainelGestaoPage() {
         <MetricCard variant="plain" label="Sem resp." value={kpis.unassigned} />
       </Card>
 
-      <div className="mt-3 grid min-h-0 flex-1 gap-3 lg:grid-cols-12">
-        <div className="flex min-h-0 flex-col gap-3 lg:col-span-4">
+      <div className="mt-3 grid gap-3 lg:min-h-0 lg:flex-1 lg:grid-cols-12">
+        <div className="flex flex-col gap-3 lg:col-span-4 lg:min-h-0">
           <Card className="shrink-0">
             <CardHeader className="flex-row items-center justify-between space-y-0 px-4 py-3.5">
               <CardTitle>Carga por setor</CardTitle>
@@ -160,14 +160,14 @@ export default async function PainelGestaoPage() {
             </CardContent>
           </Card>
 
-          <Card className="flex min-h-0 flex-1 flex-col">
+          <Card className="flex flex-col lg:min-h-0 lg:flex-1">
             <CardHeader className="shrink-0 flex-row items-center justify-between space-y-0 px-4 py-3.5">
               <CardTitle>Alertas</CardTitle>
               {alerts.length ? (
                 <Badge variant="warning">{alerts.length}</Badge>
               ) : null}
             </CardHeader>
-            <CardContent className="min-h-0 overflow-y-auto px-2 pb-2 pt-0">
+            <CardContent className="px-2 pb-2 pt-0 lg:min-h-0 lg:overflow-y-auto">
               {alerts.length ? (
                 <ul className="space-y-0.5">
                   {alerts.map((alert) => (
@@ -205,17 +205,18 @@ export default async function PainelGestaoPage() {
           </Card>
         </div>
 
-        <Card className="flex min-h-0 flex-col lg:col-span-8">
+        <Card className="flex flex-col lg:col-span-8 lg:min-h-0">
           <CardHeader className="shrink-0 flex-row items-center justify-between space-y-0 px-4 py-3.5">
             <CardTitle>Prioridades gerais</CardTitle>
             <Link
               href="/demandas"
-              className="text-xs font-medium text-muted-foreground hover:text-foreground"
+              className="inline-flex items-center gap-1 rounded-md text-xs font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              Ver quadro geral →
+              Ver quadro geral
+              <ArrowRight className="size-3.5" aria-hidden />
             </Link>
           </CardHeader>
-          <CardContent className="min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-0">
+          <CardContent className="px-4 pb-4 pt-0 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
             {priorityDemands.length ? (
               <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
                 {priorityDemands.slice(0, 6).map((d) => (

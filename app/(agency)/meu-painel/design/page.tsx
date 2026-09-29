@@ -30,7 +30,7 @@ export default async function DesignPanelPage() {
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden p-4 sm:p-6">
       <SectorBoardView
-        title="Meu painel — Design"
+        title="Meu painel · Design"
         description={
           leaderFullView
             ? "Fila completa do setor"

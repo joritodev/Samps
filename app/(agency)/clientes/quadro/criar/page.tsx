@@ -1,3 +1,4 @@
+import { ChevronLeft } from "lucide-react";
 import { Suspense } from "react";
 import Link from "next/link";
 import { UserStatus, UserType } from "@prisma/client";
@@ -95,7 +96,8 @@ export default async function CriarQuadroPage({
           }
           className="text-xs text-muted-foreground transition-colors hover:text-foreground"
         >
-          ← Clientes
+          <ChevronLeft className="size-3.5" aria-hidden />
+          Clientes
         </Link>
         <h1 className="mt-1 text-2xl font-semibold text-foreground">
           Criar quadro de cliente

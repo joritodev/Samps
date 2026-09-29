@@ -190,7 +190,7 @@ export function SectorCardSheet({
 
           {readOnly ? (
             <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-              Somente leitura — ações de produção ficam no Meu painel do seu
+              Somente leitura. As ações de produção ficam no Meu painel do seu
               setor.
             </p>
           ) : null}
@@ -450,7 +450,7 @@ export function SectorCardSheet({
 
           {isSocialReview && !canReview && (
             <div className="rounded-lg border border-border bg-muted/50 p-3 text-xs text-muted-foreground">
-              Em revisão — aguardando Social Media ou gestão aprovar ou pedir
+              Em revisão, aguardando Social Media ou gestão aprovar ou pedir
               ajuste.
               {card.materialUrl ? (
                 <a

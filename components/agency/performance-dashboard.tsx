@@ -136,7 +136,7 @@ function PeriodDetail({
   return (
     <section className="space-y-3">
       <h2 className="text-sm font-semibold tracking-tight text-foreground">
-        Detalhe — {title}
+        Detalhe: {title}
       </h2>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard label="Concluídas" value={data.completed} tone="primary" />

@@ -48,7 +48,7 @@ export default async function ContratosSettingsPage() {
                     {" · "}
                     {format(c.startDate, "dd/MM/yyyy", { locale: ptBR })}
                     {c.endDate
-                      ? ` → ${format(c.endDate, "dd/MM/yyyy", { locale: ptBR })}`
+                      ? ` até ${format(c.endDate, "dd/MM/yyyy", { locale: ptBR })}`
                       : ""}
                     {c.services.length
                       ? ` · ${c.services.length} serviço(s)`

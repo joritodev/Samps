@@ -9,12 +9,8 @@ export type MetricTone =
   | "warning"
   | "danger";
 
-/** O tom vira um ponto de cor ao lado do rótulo — o card fica neutro. */
-const dotToneClasses: Record<MetricTone, string> = {
-  default: "bg-muted-foreground/40",
-  primary: "bg-cyan",
-  brand: "bg-brand",
-  success: "bg-success",
+/** Só tons de alerta ganham ponto: cor aparece quando carrega significado. */
+const dotToneClasses: Partial<Record<MetricTone, string>> = {
   warning: "bg-warning",
   danger: "bg-destructive",
 };
@@ -53,11 +49,13 @@ export function MetricCard({
       )}
     >
       <p className="flex items-center gap-1.5 truncate text-xs font-medium text-muted-foreground">
-        <span
-          aria-hidden
-          data-slot="metric-dot"
-          className={cn("size-1.5 shrink-0 rounded-full", dotToneClasses[tone])}
-        />
+        {dotToneClasses[tone] ? (
+          <span
+            aria-hidden
+            data-slot="metric-dot"
+            className={cn("size-1.5 shrink-0 rounded-full", dotToneClasses[tone])}
+          />
+        ) : null}
         {label}
       </p>
       <p

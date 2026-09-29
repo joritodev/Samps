@@ -27,7 +27,6 @@ function BoardColumnView({
   return (
     <section className="flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-xl border border-border/60 bg-foreground/[0.025] dark:bg-foreground/[0.03]">
       <header className="flex shrink-0 items-center gap-2 px-3.5 py-3">
-        <span aria-hidden className="size-2 rounded-full bg-cyan/80" />
         <h2 className="min-w-0 flex-1 truncate font-sans text-[13px] font-semibold tracking-normal text-foreground">
           {column.title}
         </h2>

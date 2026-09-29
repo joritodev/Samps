@@ -1,3 +1,4 @@
+import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { AnnouncementsManager } from "@/components/agency/announcements-manager";
 import { requireSettingsSection } from "@/lib/agency/require-settings-section";
@@ -14,7 +15,8 @@ export default async function ConfiguracoesAvisosPage() {
           href="/configuracoes"
           className="text-xs font-medium text-muted-foreground hover:text-foreground"
         >
-          ← Configurações
+          <ChevronLeft className="size-3.5" aria-hidden />
+          Configurações
         </Link>
         <h1 className="mt-2 text-xl font-semibold tracking-tight text-foreground">
           Avisos gerais

@@ -630,7 +630,7 @@ export function ClientDetailView({
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm text-muted-foreground">
-                  O portal exibe apenas entregas e calendário — sem atrasos,
+                  O portal exibe apenas entregas e calendário, sem atrasos,
                   responsáveis internos ou comentários da operação.
                 </p>
                 {canViewAsClient && client.hasBoard ? (

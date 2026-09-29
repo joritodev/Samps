@@ -136,7 +136,7 @@ export function DemandDetailSheet({
         return;
       }
       toast.success(
-        "Briefing concluído. Demanda disponível para o setor — abra Meu painel ou Setores."
+        "Briefing concluído. A demanda já está disponível para o setor em Meu painel e Setores."
       );
       onOpenChange(false);
       router.refresh();

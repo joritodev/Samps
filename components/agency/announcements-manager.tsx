@@ -85,7 +85,7 @@ export function AnnouncementsManager({
         return;
       }
       if (startsAt && new Date(startsAt) > new Date()) {
-        toast.success("Aviso agendado — aparece no mural a partir do início.");
+        toast.success("Aviso agendado. Ele aparece no mural a partir da data de início.");
       } else {
         toast.success("Aviso publicado no mural");
       }
@@ -246,7 +246,7 @@ export function AnnouncementsManager({
                   <p className="text-sm text-muted-foreground">{item.message}</p>
                   <p className="text-xs text-muted-foreground">
                     {formatWhen(item.startsAt)}
-                    {item.endsAt ? ` → ${formatWhen(item.endsAt)}` : " → sem fim"}
+                    {item.endsAt ? ` até ${formatWhen(item.endsAt)}` : ", sem data de fim"}
                     {" · "}
                     {item.authorName}
                   </p>

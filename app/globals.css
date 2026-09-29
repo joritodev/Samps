@@ -147,14 +147,25 @@
   ::selection {
     background-color: hsl(var(--cyan) / 0.22);
   }
+  /* Superfícies nativas do navegador também seguem a paleta. */
+  :root {
+    accent-color: hsl(var(--primary));
+    caret-color: hsl(var(--primary));
+  }
+  a {
+    text-underline-offset: 0.2em;
+  }
+  td,
+  th {
+    font-variant-numeric: tabular-nums;
+  }
 }
 
 @layer utilities {
-  /* Número de KPI / dado: display + tabular. */
+  /* Número de KPI / dado: mesma família da UI (Operate), dígitos tabulares. */
   .num {
-    font-family: var(--font-display), var(--font-sans), system-ui, sans-serif;
     font-variant-numeric: tabular-nums;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.02em;
   }
   /* Rótulo de seção (eyebrow). */
   .eyebrow {

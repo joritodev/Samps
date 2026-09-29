@@ -506,7 +506,7 @@ export function AgendaView({
                   selectedEvents.map((event) => {
                     const p = eventDayParts(event.date);
                     const timeLabel = event.endsAt
-                      ? `${formatClock(event.date)}–${formatClock(event.endsAt)}`
+                      ? `${formatClock(event.date)} - ${formatClock(event.endsAt)}`
                       : p.time;
                     if (event.kind === "meeting") {
                       return (

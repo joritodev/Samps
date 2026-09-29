@@ -21,13 +21,16 @@ describe("MetricCard", () => {
     expect(screen.getByText("12")).toBeTruthy();
   });
 
-  it("uses text-xs on the label and a token-colored dot for the tone", () => {
+  it("uses text-xs on the label and a dot only for alert tones", () => {
     const { rerender } = render(
       <MetricCard label="Produção" value={4} tone="success" />
     );
 
     expect(screen.getByText("Produção").className).toMatch(/text-xs/);
-    expect(dotOf("Produção").className).toMatch(/bg-success/);
+    expect(dotOf("Produção")).toBeNull();
+
+    rerender(<MetricCard label="Ajustes" value={1} tone="warning" />);
+    expect(dotOf("Ajustes").className).toMatch(/bg-warning/);
 
     rerender(<MetricCard label="Atrasadas" value={2} tone="danger" />);
     expect(dotOf("Atrasadas").className).toMatch(/bg-destructive/);

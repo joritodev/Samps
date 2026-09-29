@@ -1,3 +1,4 @@
+import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { UserType } from "@prisma/client";
 import { BoardSettingsForm } from "@/components/board/board-settings-form";
@@ -57,7 +58,8 @@ export default async function QuadroConfiguracoesPage({
           href={`/clientes/${params.id}/quadro`}
           className="text-xs text-muted-foreground transition-colors hover:text-foreground"
         >
-          ← Quadro
+          <ChevronLeft className="size-3.5" aria-hidden />
+          Quadro
         </Link>
         <h1 className="mt-1 text-2xl font-semibold text-foreground">
           Configurações do quadro

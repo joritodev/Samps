@@ -406,22 +406,21 @@ export function TeamView({
                           {member.sectorName ?? "—"}
                         </TableCell>
                         <TableCell className="pr-6 text-right">
-                          <div className="flex flex-col items-end gap-2">
+                          <div className="flex flex-wrap items-center justify-end gap-2">
                             {member.absenceToday ? (
                               <Badge variant="outline" className={ABSENCE_BADGE}>
                                 {member.absenceToday.kindLabel} ·{" "}
                                 {member.absenceToday.rangeLabel}
                               </Badge>
                             ) : (
-                              <span className="text-xs text-muted-foreground">
-                                Disponível
-                              </span>
+                              <span className="text-xs text-muted-foreground">Disponível</span>
                             )}
                             {canManageAbsences &&
                             member.id !== currentUserId ? (
                               <Button
                                 variant="ghost"
                                 size="sm"
+                                className="h-7 px-2"
                                 onClick={() => openAbsence(member.id)}
                               >
                                 Registrar ausência

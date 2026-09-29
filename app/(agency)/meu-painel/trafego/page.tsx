@@ -30,7 +30,7 @@ export default async function TrafegoPanelPage() {
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden p-4 sm:p-6">
       <SectorBoardView
-        title="Meu painel — Tráfego"
+        title="Meu painel · Tráfego"
         description={
           leaderFullView
             ? "Fila completa do setor"

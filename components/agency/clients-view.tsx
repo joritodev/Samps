@@ -390,7 +390,7 @@ export function ClientsView({
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="pl-6">Cliente</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Demandas em aberto</TableHead>
+                  <TableHead className="whitespace-nowrap">Em aberto</TableHead>
                   <TableHead>Quadro</TableHead>
                   <TableHead className="pr-6">Equipe</TableHead>
                 </TableRow>
