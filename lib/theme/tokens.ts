@@ -44,7 +44,7 @@ export const lightSemantic = {
   destructive: "0 72% 51%",
   "destructive-foreground": "0 0% 100%",
   success: "142 71% 36%",
-  warning: "32 95% 44%",
+  warning: "32 95% 34%",
 } as const;
 
 export const darkSemantic = {

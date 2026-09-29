@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Filter, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Filter, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { BoardColumnEmpty } from "@/components/board/board-column-empty";
@@ -20,14 +21,16 @@ import type {
 function BoardColumnView({
   column,
   onOpenCard,
+  filtered,
 }: {
   column: BoardColumn;
   onOpenCard: (demand: BoardDemand) => void;
+  filtered?: boolean;
 }) {
   return (
     <section className="flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-xl border border-border/60 bg-foreground/[0.025] dark:bg-foreground/[0.03]">
       <header className="flex shrink-0 items-center gap-2 px-3.5 py-3">
-        <h2 className="min-w-0 flex-1 truncate font-sans text-[13px] font-semibold tracking-normal text-foreground">
+        <h2 className="min-w-0 flex-1 truncate font-sans text-sm font-semibold tracking-normal text-foreground">
           {column.title}
         </h2>
         <span className="num rounded-full bg-foreground/[0.06] px-2 py-0.5 text-xs font-medium text-muted-foreground">
@@ -40,7 +43,13 @@ function BoardColumnView({
             <DemandCard key={card.id} demand={card} onOpen={onOpenCard} />
           ))
         ) : (
-          <BoardColumnEmpty description="Crie uma demanda ou aguarde novas atribuições." />
+          <BoardColumnEmpty
+            description={
+              filtered
+                ? "Nenhuma demanda deste filtro nesta etapa."
+                : "Crie uma demanda ou aguarde novas atribuições."
+            }
+          />
         )}
       </div>
     </section>
@@ -54,6 +63,8 @@ export function DemandBoard({
   taxonomy,
   clients = [],
   canCreate = false,
+  filterLabel,
+  openDemandId,
 }: {
   title: string;
   subtitle: string;
@@ -61,9 +72,24 @@ export function DemandBoard({
   taxonomy: BoardTaxonomy;
   clients?: TaxonomyOption[];
   canCreate?: boolean;
+  /** Rótulo do recorte vindo de `?filtro=` (links do painel). */
+  filterLabel?: string;
+  /** Abre o detalhe desta demanda ao carregar (`?abrir=`). */
+  openDemandId?: string;
 }) {
   const [selected, setSelected] = useState<BoardDemand | null>(null);
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!openDemandId) return;
+    const target = columns
+      .flatMap((c) => c.cards)
+      .find((card) => card.id === openDemandId);
+    if (target) {
+      setSelected(target);
+      setOpen(true);
+    }
+  }, [openDemandId, columns]);
   const [createOpen, setCreateOpen] = useState(false);
 
   function handleOpenCard(demand: BoardDemand) {
@@ -79,6 +105,16 @@ export function DemandBoard({
             {title}
           </h1>
           <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p>
+          {filterLabel ? (
+            <Link
+              href="/demandas"
+              className="mt-2 inline-flex h-7 items-center gap-1.5 rounded-full border border-border bg-card pl-3 pr-2 text-xs font-medium text-foreground shadow-xs transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label={`Remover filtro ${filterLabel}`}
+            >
+              Filtro: {filterLabel}
+              <X className="size-3.5 text-muted-foreground" aria-hidden />
+            </Link>
+          ) : null}
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
           <Button
@@ -111,6 +147,7 @@ export function DemandBoard({
               <BoardColumnView
                 column={column}
                 onOpenCard={handleOpenCard}
+                filtered={Boolean(filterLabel)}
               />
             </div>
           ))}

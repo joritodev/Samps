@@ -6,6 +6,7 @@ import {
   countDelaysInMonth,
   syncDemandDelays,
 } from "@/lib/services/delay.service";
+import { FLOW_STAGES, OPEN_EXCLUDED } from "@/lib/agency/demand-filters";
 
 export async function getManagementOverview(user: SessionUser) {
   const where = buildContextWhere(user, "management");
@@ -119,6 +120,58 @@ export async function getManagementOverview(user: SessionUser) {
     take: 8,
   });
 
+  const [byStatus, byAssignee, overdueByAssignee] = await Promise.all([
+    db.demand.groupBy({
+      by: ["status"],
+      where: { ...where, status: { notIn: OPEN_EXCLUDED } },
+      _count: { _all: true },
+    }),
+    db.demand.groupBy({
+      by: ["assigneeId"],
+      where: { ...where, assigneeId: { not: null }, status: { notIn: OPEN_EXCLUDED } },
+      _count: { _all: true },
+    }),
+    db.demand.groupBy({
+      by: ["assigneeId"],
+      where: {
+        ...where,
+        assigneeId: { not: null },
+        status: { notIn: OPEN_EXCLUDED },
+        dueDate: { lt: now },
+      },
+      _count: { _all: true },
+    }),
+  ]);
+
+  const flow = FLOW_STAGES.map((stage) => ({
+    key: stage.key,
+    label: stage.label,
+    count: byStatus
+      .filter((g) => (stage.statuses as readonly DemandStatus[]).includes(g.status))
+      .reduce((sum, g) => sum + g._count._all, 0),
+  }));
+
+  const assigneeIds = byAssignee.map((g) => g.assigneeId as string);
+  const people = assigneeIds.length
+    ? await db.user.findMany({
+        where: { id: { in: assigneeIds } },
+        select: { id: true, name: true, avatarUrl: true },
+      })
+    : [];
+  const peopleLoad = byAssignee
+    .map((g) => {
+      const person = people.find((p) => p.id === g.assigneeId);
+      return {
+        id: g.assigneeId as string,
+        name: person?.name ?? "Sem nome",
+        avatarUrl: person?.avatarUrl ?? null,
+        openCount: g._count._all,
+        overdueCount:
+          overdueByAssignee.find((o) => o.assigneeId === g.assigneeId)?._count._all ?? 0,
+      };
+    })
+    .sort((a, b) => b.overdueCount - a.overdueCount || b.openCount - a.openCount);
+
   await syncDemandDelays();
 
   const delaysThisMonth = await countDelaysInMonth(today);
@@ -142,5 +195,7 @@ export async function getManagementOverview(user: SessionUser) {
     },
     sectorStats,
     priorityDemands,
+    flow,
+    peopleLoad,
   };
 }

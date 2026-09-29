@@ -73,7 +73,7 @@ export function SampsLogo({
           <span className="font-display text-base font-bold tracking-tight text-foreground">
             SAMPS
           </span>
-          <span className="text-[10px] font-medium tracking-[0.28em] text-muted-foreground">
+          <span className="text-xs font-medium tracking-[0.24em] text-muted-foreground">
             DIGITAL
           </span>
         </span>

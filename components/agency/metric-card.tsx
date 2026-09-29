@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 export type MetricTone =
@@ -30,6 +31,7 @@ export function MetricCard({
   value,
   tone = "default",
   variant = "card",
+  href,
   className,
 }: {
   label: string;
@@ -37,14 +39,20 @@ export function MetricCard({
   tone?: MetricTone;
   /** `plain` = sem moldura, para faixas de KPI dentro de um único card. */
   variant?: "card" | "plain";
+  /** Número clicável: leva à lista que ele conta. */
+  href?: string;
   className?: string;
 }) {
+  const Wrapper = href ? Link : "div";
   return (
-    <div
+    <Wrapper
+      href={href as string}
       className={cn(
         "min-w-0 px-3.5 py-3",
         variant === "card" &&
           "rounded-lg border border-border/80 bg-card shadow-xs",
+        href &&
+          "group block transition-colors hover:bg-secondary/70 focus-visible:relative focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
         className
       )}
     >
@@ -66,6 +74,6 @@ export function MetricCard({
       >
         {value}
       </p>
-    </div>
+    </Wrapper>
   );
 }

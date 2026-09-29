@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarClock, Timer } from "lucide-react";
@@ -40,11 +41,17 @@ export function DemandCard({
   showOrigin,
   className,
   onClick,
+  href,
+  titleAs: TitleTag = "h3",
 }: {
   demand: DemandCardData;
   showOrigin?: boolean;
   className?: string;
   onClick?: () => void;
+  /** Card vira link (ex.: painel abre a demanda no quadro geral). */
+  href?: string;
+  /** Nível do título conforme a hierarquia da página. */
+  titleAs?: "h2" | "h3" | "h4";
 }) {
   const originLabel =
     showOrigin && demand.client
@@ -63,7 +70,7 @@ export function DemandCard({
 
   const cardClassName = cn(
     "group/card flex flex-col gap-3 rounded-lg border border-border/80 bg-card p-3.5 text-card-foreground shadow-xs transition-[box-shadow,border-color,transform] duration-150 ease-out-soft",
-    onClick &&
+    (onClick || href) &&
       "w-full cursor-pointer text-left hover:-translate-y-px hover:border-foreground/15 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
     overdue && "border-destructive/40",
     className
@@ -73,9 +80,9 @@ export function DemandCard({
     <>
       <div className="space-y-1.5">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="font-sans text-sm font-medium leading-snug tracking-normal text-foreground">
+          <TitleTag className="font-sans text-sm font-medium leading-snug tracking-normal text-foreground">
             {demand.title}
-          </h3>
+          </TitleTag>
           {demand.priority && (
             <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-foreground/[0.04] px-2 py-0.5 text-xs font-medium text-muted-foreground dark:bg-foreground/[0.08]">
               <span
@@ -134,7 +141,7 @@ export function DemandCard({
             <span className="inline-flex min-w-0 items-center gap-1.5">
               <span
                 aria-hidden
-                className="grid size-5 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand/80 to-primary/80 text-[10px] font-semibold leading-none text-white"
+                className="grid size-6 shrink-0 place-items-center rounded-full bg-foreground/[0.08] text-xs font-semibold leading-none text-foreground"
               >
                 {userInitials(demand.assignee.name)}
               </span>
@@ -158,6 +165,14 @@ export function DemandCard({
       )}
     </>
   );
+
+  if (href) {
+    return (
+      <Link href={href} draggable={false} className={cardClassName}>
+        {body}
+      </Link>
+    );
+  }
 
   if (onClick) {
     return (

@@ -63,7 +63,7 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   {
     href: "/painel-gestao",
-    label: "Dashboard",
+    label: "Painel",
     icon: LayoutDashboard,
     userTypes: ["ADMIN", "MANAGEMENT"],
   },
@@ -300,7 +300,7 @@ function SidebarBody({
                 {user.avatarUrl ? (
                   <AvatarImage src={user.avatarUrl} alt="" />
                 ) : null}
-                <AvatarFallback className="bg-gradient-to-br from-brand to-primary text-xs font-semibold text-white">
+                <AvatarFallback className="bg-foreground/[0.08] text-xs font-semibold text-foreground">
                   {initials}
                 </AvatarFallback>
               </Avatar>
