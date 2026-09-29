@@ -269,7 +269,7 @@ export function AgendaView({
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-background">
       <header className="flex shrink-0 items-start justify-between gap-4 border-b border-border bg-background px-6 py-4">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">
+          <h1 className="text-2xl font-semibold text-foreground">
             Agenda
           </h1>
           <p className="mt-0.5 text-sm text-muted-foreground">

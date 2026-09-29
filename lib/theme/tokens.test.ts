@@ -9,9 +9,9 @@ import {
 const HSL_RE = /^\d{1,3}\s+\d{1,3}%\s+\d{1,3}%$/;
 
 describe("sampsBrand", () => {
-  it("exposes the six named brand channels", () => {
+  it("exposes the named brand channels", () => {
     expect(Object.keys(sampsBrand).sort()).toEqual(
-      ["cyan", "ember", "ink", "line", "paper", "surface"].sort()
+      ["cyan", "ember", "ink", "line", "paper", "surface", "teal"].sort()
     );
   });
 
@@ -26,8 +26,9 @@ describe("sampsBrand", () => {
 });
 
 describe("semantic maps", () => {
-  it("maps primary to cyan and brand to ember in light", () => {
-    expect(lightSemantic.primary).toBe(sampsBrand.cyan);
+  it("maps primary to accessible teal, ring to cyan and brand to ember in light", () => {
+    expect(lightSemantic.primary).toBe(sampsBrand.teal);
+    expect(lightSemantic.ring).toBe(sampsBrand.cyan);
     expect(lightSemantic.brand).toBe(sampsBrand.ember);
     expect(lightSemantic.background).toBe(sampsBrand.paper);
     expect(lightSemantic.foreground).toBe(sampsBrand.ink);

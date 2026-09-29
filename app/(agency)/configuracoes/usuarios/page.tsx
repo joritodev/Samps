@@ -16,7 +16,7 @@ export default async function UsuariosSettingsPage() {
           <ChevronLeft className="h-3.5 w-3.5" />
           Configurações
         </Link>
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
+        <h1 className="text-2xl font-semibold text-foreground">
           Usuários
         </h1>
         <p className="mt-0.5 text-sm text-muted-foreground">

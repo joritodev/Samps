@@ -146,7 +146,7 @@ export function CatalogSettings({
         </Link>
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h1 className="text-xl font-semibold tracking-tight text-foreground">
+            <h1 className="text-2xl font-semibold text-foreground">
               {title}
             </h1>
             <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>

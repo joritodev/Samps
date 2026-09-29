@@ -4,24 +4,23 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex h-5 items-center gap-1 whitespace-nowrap rounded-full border px-2 text-xs font-medium leading-none transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
   {
     variants: {
       variant: {
-        default:
-          "border-primary/20 bg-primary/5 text-primary",
+        default: "border-transparent bg-primary/10 text-primary dark:bg-primary/15",
         secondary:
-          "border-border bg-secondary text-secondary-foreground",
+          "border-transparent bg-foreground/[0.06] text-secondary-foreground dark:bg-foreground/10",
         brand:
-          "border-brand/25 bg-brand/10 text-[hsl(16_80%_38%)] dark:text-brand",
+          "border-transparent bg-brand/15 text-[hsl(16_80%_36%)] dark:text-brand",
         destructive:
-          "border-destructive/30 bg-destructive/10 text-destructive",
-        outline: "border-border bg-transparent text-muted-foreground",
+          "border-transparent bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-red-300",
+        outline: "border-border bg-card text-muted-foreground",
         success:
-          "border-green-200 bg-green-50 text-green-700 dark:border-green-500/30 dark:bg-green-500/10 dark:text-green-400",
+          "border-transparent bg-success/10 text-success dark:bg-success/15 dark:text-green-300",
         warning:
-          "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-400",
-        info: "border-primary/20 bg-primary/5 text-primary",
+          "border-transparent bg-warning/10 text-warning dark:bg-warning/15 dark:text-amber-300",
+        info: "border-transparent bg-primary/10 text-primary dark:bg-primary/15",
       },
     },
     defaultVariants: {

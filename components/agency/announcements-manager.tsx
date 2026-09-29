@@ -136,7 +136,7 @@ export function AnnouncementsManager({
 
   return (
     <div className="space-y-8 p-6">
-      <section className="space-y-4 rounded-xl border border-border bg-card p-5">
+      <section className="space-y-4 rounded-xl border border-border/80 bg-card shadow-xs p-5">
         <div>
           <h2 className="text-base font-semibold text-foreground">Novo aviso</h2>
           <p className="text-sm text-muted-foreground">
@@ -229,7 +229,7 @@ export function AnnouncementsManager({
         {items.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nenhum aviso cadastrado.</p>
         ) : (
-          <ul className="divide-y divide-border rounded-xl border border-border bg-card">
+          <ul className="divide-y divide-border rounded-xl border border-border/80 bg-card shadow-xs">
             {items.map((item) => (
               <li
                 key={item.id}

@@ -316,7 +316,7 @@ export function DesignBoard({
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-card">
-      <header className="flex shrink-0 items-center justify-between gap-4 border-b border-border bg-card px-6 py-5">
+      <header className="flex shrink-0 items-center justify-between gap-4 bg-background px-6 pb-3 pt-6">
         <div className="min-w-0">
           <Link
             href="/setores"

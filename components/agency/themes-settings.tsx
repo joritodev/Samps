@@ -76,7 +76,7 @@ export function ThemesSettings() {
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">
-      <header className="shrink-0 border-b border-border bg-card px-6 py-5">
+      <header className="shrink-0 bg-background px-6 pb-3 pt-6">
         <Link
           href="/configuracoes"
           className="mb-2 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
@@ -84,7 +84,7 @@ export function ThemesSettings() {
           <ChevronLeft className="h-3.5 w-3.5" />
           Configurações
         </Link>
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
+        <h1 className="text-2xl font-semibold text-foreground">
           Aparência
         </h1>
         <p className="mt-0.5 text-sm text-muted-foreground">

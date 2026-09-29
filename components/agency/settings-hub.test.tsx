@@ -27,14 +27,14 @@ function renderHub(permissions: string[] = ["settings.access"]) {
 }
 
 describe("SettingsHub flatten", () => {
-  it("renders the header on paper with a border, not Card chrome", () => {
+  it("renders the header on paper without a divider, not Card chrome", () => {
     renderHub();
 
     const header = screen
       .getByRole("heading", { name: "Configurações" })
       .closest("header");
     expect(header?.className).toMatch(/bg-background/);
-    expect(header?.className).toMatch(/border-b/);
+    expect(header?.className).not.toMatch(/border-b/);
     expect(header?.className).not.toMatch(/bg-card/);
     expect(
       screen.getByText("Preferências pessoais e parâmetros do sistema")

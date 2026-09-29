@@ -106,8 +106,8 @@ export function SettingsHub({ permissions }: { permissions: string[] }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">
-      <header className="shrink-0 border-b border-border bg-background px-6 py-5">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
+      <header className="shrink-0 bg-background px-6 pb-3 pt-6">
+        <h1 className="text-2xl font-semibold text-foreground">
           Configurações
         </h1>
         <p className="mt-0.5 text-sm text-muted-foreground">
@@ -122,7 +122,7 @@ export function SettingsHub({ permissions }: { permissions: string[] }) {
             <Link
               key={item.href}
               href={item.href}
-              className="group flex items-start gap-4 rounded-xl border border-border bg-card p-5 transition-colors hover:bg-muted/40"
+              className="group flex items-start gap-4 rounded-xl border border-border/80 bg-card shadow-xs p-5 transition-colors hover:bg-muted/40"
             >
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <Icon className="h-5 w-5" />

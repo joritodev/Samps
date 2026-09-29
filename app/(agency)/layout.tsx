@@ -24,7 +24,7 @@ export default async function AgencyLayout({
 
   return (
     <Providers>
-      <div className="flex h-dvh overflow-hidden bg-background">
+      <div className="flex h-dvh overflow-hidden bg-shell">
         <AgencySidebar
           user={user}
           searchTypes={allowedSearchTypes(user)}
@@ -36,7 +36,9 @@ export default async function AgencyLayout({
           }))}
           birthdays={birthdays}
         />
-        <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-background pt-14 lg:pt-0">
+        {/* Painel principal “inset”: sobe uma camada sobre o shell (ref.: Linear,
+            Attio, sidebar inset do shadcn) — no mobile ocupa a tela toda. */}
+        <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-background pt-14 lg:my-2 lg:mr-2 lg:rounded-xl lg:border lg:border-border/70 lg:pt-0 lg:shadow-sm">
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
             <div className="flex min-h-0 flex-1 flex-col overflow-auto p-4 sm:p-5">
               {children}

@@ -116,13 +116,13 @@ export function AuditLogView({
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">
-      <header className="shrink-0 border-b border-border bg-card px-6 py-5">
+      <header className="shrink-0 bg-background px-6 pb-3 pt-6">
         <div className="flex items-start gap-3">
           <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-muted">
             <History className="h-4 w-4 text-foreground/80" />
           </div>
           <div>
-            <h1 className="text-xl font-semibold tracking-tight text-foreground">
+            <h1 className="text-2xl font-semibold text-foreground">
               Histórico
             </h1>
             <p className="mt-0.5 text-sm text-muted-foreground">
@@ -195,7 +195,7 @@ export function AuditLogView({
             </p>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-xl border border-border bg-card">
+          <div className="overflow-hidden rounded-xl border border-border/80 bg-card shadow-xs">
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">

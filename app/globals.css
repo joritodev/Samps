@@ -5,83 +5,103 @@
 @layer base {
   /* Samps brand — fonte: lib/theme/tokens.ts (manter em sync) */
   :root {
-    --background: 220 20% 97%;
+    /* Shell (sidebar + moldura) fica um tom abaixo; o painel principal e os
+       cards sobem em camadas — profundidade por superfície, não por borda. */
+    --background: 220 20% 98%;
     --foreground: 220 48% 8%;
     --card: 0 0% 100%;
     --card-foreground: 220 48% 8%;
     --popover: 0 0% 100%;
     --popover-foreground: 220 48% 8%;
-    --primary: 188 63% 48%;
+    --primary: 189 85% 31%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 220 16% 94%;
+    --secondary: 220 16% 95%;
     --secondary-foreground: 220 48% 8%;
-    --muted: 220 16% 94%;
-    --muted-foreground: 220 12% 40%;
-    --accent: 220 16% 94%;
+    --muted: 220 16% 95%;
+    --muted-foreground: 220 10% 42%;
+    --accent: 220 16% 95%;
     --accent-foreground: 220 48% 8%;
     --brand: 21 68% 62%;
     --brand-foreground: 0 0% 100%;
+    --cyan: 188 63% 48%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --border: 218 24% 88%;
-    --input: 218 24% 88%;
+    --border: 220 16% 90%;
+    --input: 220 14% 86%;
     --ring: 188 63% 48%;
     --chart-1: 188 63% 48%;
     --chart-2: 21 68% 62%;
     --chart-3: 220 14% 28%;
     --chart-4: 220 10% 55%;
     --chart-5: 0 72% 51%;
-    --radius: 0.625rem;
-    --sidebar: 0 0% 100%;
-    --sidebar-foreground: 220 12% 40%;
-    --sidebar-primary: 188 63% 48%;
+    --radius: 0.75rem;
+    --shell: 220 18% 95%;
+    --sidebar: 220 18% 95%;
+    --sidebar-foreground: 220 10% 38%;
+    --sidebar-primary: 189 85% 31%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 188 55% 95%;
-    --sidebar-accent-foreground: 188 63% 32%;
-    --sidebar-border: 218 24% 88%;
+    --sidebar-accent: 0 0% 100%;
+    --sidebar-accent-foreground: 220 48% 8%;
+    --sidebar-border: 220 16% 88%;
     --sidebar-ring: 188 63% 48%;
     --teal-light: 188 55% 40%;
-    --success: 142 71% 36%;
+    --success: 142 71% 30%;
     --success-foreground: 142 76% 97%;
-    --warning: 32 95% 44%;
+    --warning: 32 95% 38%;
     --warning-foreground: 32 76% 97%;
-    --info: 188 63% 45%;
+    --info: 189 85% 31%;
+
+    /* Elevação em camadas (ref.: Vercel Geist / Amie) — sombras curtas e
+       empilhadas em vez de uma única sombra difusa. */
+    --shadow-color: 220 40% 12%;
+    --shadow-xs: 0 1px 2px 0 hsl(var(--shadow-color) / 0.05);
+    --shadow-sm: 0 1px 2px -1px hsl(var(--shadow-color) / 0.08),
+      0 1px 3px 0 hsl(var(--shadow-color) / 0.05);
+    --shadow-md: 0 1px 1px 0 hsl(var(--shadow-color) / 0.03),
+      0 4px 8px -4px hsl(var(--shadow-color) / 0.08),
+      0 12px 20px -8px hsl(var(--shadow-color) / 0.08);
+    --shadow-lg: 0 1px 1px 0 hsl(var(--shadow-color) / 0.03),
+      0 8px 16px -4px hsl(var(--shadow-color) / 0.08),
+      0 24px 40px -12px hsl(var(--shadow-color) / 0.16);
+    --shadow-highlight: inset 0 1px 0 0 hsl(0 0% 100% / 0.18);
   }
 
   .dark {
-    --background: 220 28% 7%;
+    --background: 222 24% 8.5%;
     --foreground: 210 40% 98%;
-    --card: 220 24% 10%;
+    --card: 222 20% 11%;
     --card-foreground: 210 40% 98%;
-    --popover: 220 24% 10%;
+    --popover: 222 20% 12%;
     --popover-foreground: 210 40% 98%;
     --primary: 188 70% 55%;
     --primary-foreground: 220 28% 8%;
-    --secondary: 220 16% 16%;
+    --secondary: 220 16% 14%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 220 16% 16%;
-    --muted-foreground: 220 12% 65%;
-    --accent: 220 16% 16%;
+    --muted: 220 16% 14%;
+    --muted-foreground: 220 10% 64%;
+    --accent: 220 16% 14%;
     --accent-foreground: 210 40% 98%;
     --brand: 21 75% 65%;
     --brand-foreground: 0 0% 100%;
-    --destructive: 0 62% 45%;
+    --cyan: 188 70% 55%;
+    --destructive: 0 62% 50%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 14% 20%;
-    --input: 220 14% 20%;
+    --border: 220 14% 17%;
+    --input: 220 14% 21%;
     --ring: 188 70% 55%;
     --chart-1: 188 70% 55%;
     --chart-2: 21 75% 65%;
     --chart-3: 220 12% 65%;
     --chart-4: 220 16% 45%;
     --chart-5: 0 62% 45%;
-    --sidebar: 220 24% 10%;
-    --sidebar-foreground: 220 12% 65%;
+    --shell: 222 28% 5.5%;
+    --sidebar: 222 28% 5.5%;
+    --sidebar-foreground: 220 10% 62%;
     --sidebar-primary: 188 70% 55%;
     --sidebar-primary-foreground: 220 28% 8%;
-    --sidebar-accent: 188 40% 16%;
-    --sidebar-accent-foreground: 188 70% 72%;
-    --sidebar-border: 220 14% 20%;
+    --sidebar-accent: 222 20% 12%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 220 14% 14%;
     --sidebar-ring: 188 70% 55%;
     --teal-light: 188 55% 55%;
     --success: 142 60% 45%;
@@ -89,6 +109,18 @@
     --warning: 32 90% 55%;
     --warning-foreground: 32 76% 97%;
     --info: 188 70% 58%;
+
+    --shadow-color: 222 50% 2%;
+    --shadow-xs: 0 1px 2px 0 hsl(var(--shadow-color) / 0.4);
+    --shadow-sm: inset 0 1px 0 0 hsl(0 0% 100% / 0.03),
+      0 1px 2px 0 hsl(var(--shadow-color) / 0.5);
+    --shadow-md: inset 0 1px 0 0 hsl(0 0% 100% / 0.04),
+      0 4px 8px -4px hsl(var(--shadow-color) / 0.5),
+      0 12px 20px -8px hsl(var(--shadow-color) / 0.5);
+    --shadow-lg: inset 0 1px 0 0 hsl(0 0% 100% / 0.05),
+      0 8px 16px -4px hsl(var(--shadow-color) / 0.55),
+      0 24px 40px -12px hsl(var(--shadow-color) / 0.7);
+    --shadow-highlight: inset 0 1px 0 0 hsl(0 0% 100% / 0.12);
   }
 }
 
@@ -96,14 +128,42 @@
   * {
     @apply border-border;
   }
+  html {
+    /* Alternativas do Inter: 'a' de um andar e dígitos abertos — tira a cara
+       de fonte padrão do sistema sem trocar de família. */
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
   body {
-    @apply bg-background font-sans text-foreground antialiased;
+    @apply bg-shell font-sans text-foreground antialiased;
+    text-rendering: optimizeLegibility;
   }
   h1,
   h2,
   h3 {
-    @apply font-semibold tracking-tight text-foreground;
+    @apply font-semibold text-foreground;
     font-family: var(--font-display), var(--font-sans), system-ui, sans-serif;
+    letter-spacing: -0.02em;
+  }
+  ::selection {
+    background-color: hsl(var(--cyan) / 0.22);
+  }
+}
+
+@layer utilities {
+  /* Número de KPI / dado: display + tabular. */
+  .num {
+    font-family: var(--font-display), var(--font-sans), system-ui, sans-serif;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em;
+  }
+  /* Rótulo de seção (eyebrow). */
+  .eyebrow {
+    font-size: 0.75rem;
+    line-height: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
   }
 }
 

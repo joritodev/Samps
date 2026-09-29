@@ -9,7 +9,7 @@ export default async function ConfiguracoesAvisosPage() {
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">
-      <header className="shrink-0 border-b border-border bg-card px-6 py-5">
+      <header className="shrink-0 bg-background px-6 pb-3 pt-6">
         <Link
           href="/configuracoes"
           className="text-xs font-medium text-muted-foreground hover:text-foreground"

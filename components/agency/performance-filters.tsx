@@ -76,7 +76,7 @@ export function PerformanceFilters({
   }
 
   return (
-    <div className="rounded-xl border bg-card p-4">
+    <div className="rounded-xl border border-border/80 bg-card shadow-xs p-4">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <label className="space-y-1.5">
           <span className="text-xs font-medium text-muted-foreground">

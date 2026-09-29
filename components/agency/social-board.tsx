@@ -193,7 +193,7 @@ export function SocialBoard({ columns }: { columns: BoardColumn[] }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-card">
-      <header className="flex shrink-0 items-center justify-between gap-4 border-b border-border bg-card px-6 py-5">
+      <header className="flex shrink-0 items-center justify-between gap-4 bg-background px-6 pb-3 pt-6">
         <div className="min-w-0">
           <p className="text-xs text-muted-foreground">Painel individual</p>
           <h1 className="truncate text-lg font-semibold tracking-tight text-foreground">

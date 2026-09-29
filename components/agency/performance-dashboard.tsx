@@ -78,11 +78,11 @@ function SmallSampleBadge() {
 
 function MiniStat({ label, value }: { label: string; value: number }) {
   return (
-    <div>
-      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+    <div className="min-w-0">
+      <p className="truncate text-xs font-medium text-muted-foreground">
         {label}
       </p>
-      <p className="mt-0.5 text-base font-semibold tabular-nums text-foreground">
+      <p className="num mt-1 text-lg font-semibold leading-none text-foreground">
         {value}
       </p>
     </div>
@@ -106,11 +106,11 @@ function PeriodStripCard({
       onClick={onSelect}
       aria-pressed={selected}
       className={cn(
-        "w-full rounded-xl border px-4 py-3 text-left transition-colors",
+        "w-full rounded-xl border px-4 py-3.5 text-left shadow-xs transition-[border-color,box-shadow,background-color] duration-150",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         selected
-          ? "border-primary bg-primary/5 ring-1 ring-primary/40 dark:bg-primary/10"
-          : "border-border bg-card hover:border-primary/40 hover:bg-muted/40"
+          ? "border-primary/60 bg-card ring-[3px] ring-cyan/20"
+          : "border-border/80 bg-card hover:border-foreground/20 hover:shadow-sm"
       )}
     >
       <p className="text-sm font-semibold tracking-tight text-foreground">
@@ -118,7 +118,7 @@ function PeriodStripCard({
       </p>
       <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <MiniStat label="Concluídas" value={data.completed} />
-        <MiniStat label="Em produção" value={data.inProgress} />
+        <MiniStat label="Produção" value={data.inProgress} />
         <MiniStat label="Atrasadas" value={data.overdue} />
         <MiniStat label="Ajustes" value={data.adjustments} />
       </div>
@@ -159,7 +159,7 @@ function PeriodDetail({
 
 function PeopleTable({ rows }: { rows: UserRow[] }) {
   return (
-    <div className="rounded-xl border bg-card">
+    <div className="overflow-hidden rounded-xl border border-border/80 bg-card shadow-xs">
       <Table>
         <TableHeader>
           <TableRow>
@@ -243,7 +243,7 @@ function ContentTypeTable({ rows }: { rows: ContentTypeStats[] }) {
   const maxN = Math.max(1, ...rows.map((row) => row.n));
 
   return (
-    <div className="rounded-xl border bg-card">
+    <div className="overflow-hidden rounded-xl border border-border/80 bg-card shadow-xs">
       <Table>
         <TableHeader>
           <TableRow>
@@ -411,7 +411,7 @@ export function PerformanceDashboard({
     <div className="h-full min-h-0 space-y-6 overflow-y-auto p-4 sm:p-6">
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">
+          <h1 className="text-2xl font-semibold text-foreground">
             Performance
           </h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
