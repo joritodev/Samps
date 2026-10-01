@@ -181,6 +181,7 @@ export function BoardView({
   const [insightsOpen, setInsightsOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState<CardDetail | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [openingId, setOpeningId] = useState<string | null>(null);
   const [extraSheetOpen, setExtraSheetOpen] = useState(false);
   const [canChangeDeadline, setCanChangeDeadline] = useState(false);
   const [canEditChecklist, setCanEditChecklist] = useState(false);
@@ -191,6 +192,7 @@ export function BoardView({
   const columns = lists.map((l) => ({ id: l.id, title: l.name }));
 
   function openCard(id: string) {
+    setOpeningId(id);
     setSheetOpen(true);
     startTransition(async () => {
       const result = await getCardDetailAction(id);
@@ -264,6 +266,8 @@ export function BoardView({
       <CardDetailSheet
         clientId={clientId}
         card={selectedCard}
+        morphId={openingId}
+        fallbackTitle={[...Object.values(grouped).flat(), ...calendarDemands].find((d) => d.id === openingId)?.title}
         open={sheetOpen}
         onOpenChange={(o) => {
           setSheetOpen(o);

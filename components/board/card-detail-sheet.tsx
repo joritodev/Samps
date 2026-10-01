@@ -1,14 +1,9 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { MorphWindow } from "@/components/ui/morph-window";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -124,7 +119,7 @@ type CardDetail = {
 
 export function CardDetailSheet({
   clientId,
-  card,
+  card: cardProp,
   open,
   onOpenChange,
   canChangeDeadline = false,
@@ -133,6 +128,8 @@ export function CardDetailSheet({
   priorities = [],
   delays = [],
   onOpenDemand,
+  morphId,
+  fallbackTitle,
 }: {
   clientId: string;
   card: CardDetail | null;
@@ -144,7 +141,15 @@ export function CardDetailSheet({
   priorities?: { id: string; name: string }[];
   delays?: DemandDelayRow[];
   onOpenDemand?: (id: string) => void;
+  /** Id da demanda clicada: origem do morph enquanto o detalhe carrega. */
+  morphId?: string | null;
+  /** Título já conhecido pela lista, mostrado enquanto o detalhe carrega. */
+  fallbackTitle?: string;
 }) {
+  // Mantém o último card só para a animação de saída; ao abrir outro, mostra o esqueleto.
+  const lastCard = useRef<CardDetail | null>(null);
+  if (cardProp) lastCard.current = cardProp;
+  const card = cardProp ?? (open ? null : lastCard.current);
   const [pending, startTransition] = useTransition();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -205,27 +210,30 @@ export function CardDetailSheet({
   }, [card, open]);
 
   return (
-    <Sheet
+    <MorphWindow
       open={open}
       onOpenChange={onOpenChange}
+      morphId={card?.id ?? morphId}
+      size="md"
+      loading={!card}
+      title={card?.title ?? fallbackTitle ?? "Demanda"}
+      chips={
+        card ? (
+          <>
+            <Badge variant="outline">{demandStatusLabel(card.status)}</Badge>
+            {card.cardCode && <Badge variant="secondary">{card.cardCode}</Badge>}
+            {card.isContractual && <Badge variant="secondary">Contratual</Badge>}
+            {card.isChecklistItem && card.parentDemand?.title ? (
+              <Badge variant="secondary">
+                Parte de: {card.parentDemand.title}
+              </Badge>
+            ) : null}
+          </>
+        ) : null
+      }
     >
-      <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
         {card ? (
           <>
-            <SheetHeader>
-              <SheetTitle className="text-left pr-8">{card.title}</SheetTitle>
-              <div className="flex flex-wrap gap-1">
-                <Badge variant="outline">{demandStatusLabel(card.status)}</Badge>
-                {card.cardCode && <Badge variant="secondary">{card.cardCode}</Badge>}
-                {card.isContractual && <Badge variant="secondary">Contratual</Badge>}
-                {card.isChecklistItem && card.parentDemand?.title ? (
-                  <Badge variant="secondary">
-                    Parte de: {card.parentDemand.title}
-                  </Badge>
-                ) : null}
-              </div>
-            </SheetHeader>
-
             {canCompleteChecklistChild ? (
               <Button
                 className="mt-3"
@@ -759,7 +767,6 @@ export function CardDetailSheet({
             </Tabs>
           </>
         ) : null}
-      </SheetContent>
-    </Sheet>
+    </MorphWindow>
   );
 }
