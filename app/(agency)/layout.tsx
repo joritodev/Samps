@@ -2,6 +2,7 @@ import { Toaster } from "sonner";
 import { AgencySidebar } from "@/components/agency/agency-sidebar";
 import { LiveAlertsHost } from "@/components/agency/live-alerts-host";
 import { Providers } from "@/components/providers";
+import { MorphOriginTracker } from "@/components/motion/morph-origin-tracker";
 import { getCurrentAgencyUser } from "@/lib/agency/current-user";
 import { clientScopeFilter } from "@/lib/permissions/check";
 import {
@@ -24,6 +25,7 @@ export default async function AgencyLayout({
 
   return (
     <Providers>
+      <MorphOriginTracker />
       <div className="flex h-dvh overflow-hidden bg-shell">
         <AgencySidebar
           user={user}

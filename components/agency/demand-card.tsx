@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Link from "next/link";
-import { CalendarClock, ChevronDown, ExternalLink, Timer, UserRound } from "lucide-react";
+import { CalendarClock, ExternalLink, Timer, UserRound } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -16,14 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { MorphWindow } from "@/components/ui/morph-window";
 import { concluirBriefing } from "@/app/actions/demand";
 import { canDemandBriefing, demandStatusLabel } from "@/lib/agency/labels";
 import type { BoardDemand, BoardTaxonomy } from "@/types/board-ui";
@@ -61,13 +54,17 @@ export function DemandCard({
   return (
     <button
       type="button"
+      data-morph-id={demand.id}
       onClick={() => onOpen(demand)}
       className="group w-full rounded-lg border border-border/80 bg-card p-3.5 text-left shadow-xs transition-[box-shadow,border-color,transform] duration-150 ease-out-soft hover:-translate-y-px hover:border-foreground/15 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <p className="truncate text-xs font-medium text-muted-foreground">
         {demand.clientName}
       </p>
-      <h3 className="mt-1 font-sans text-sm font-medium leading-snug tracking-normal text-foreground">
+      <h3
+        data-morph-title
+        className="mt-1 font-sans text-sm font-medium leading-snug tracking-normal text-foreground"
+      >
         {demand.title}
       </h3>
       <div className="mt-3 flex flex-wrap items-center gap-1.5">
@@ -108,6 +105,10 @@ export function DemandDetailSheet({
   const [sector, setSector] = useState("");
   const [priority, setPriority] = useState("");
   const [pending, startTransition] = useTransition();
+  // A janela precisa da demanda também durante a animação de saída.
+  const lastDemand = useRef<BoardDemand | null>(null);
+  if (demand) lastDemand.current = demand;
+  const shown = demand ?? lastDemand.current;
 
   useEffect(() => {
     if (!demand) return;
@@ -146,165 +147,133 @@ export function DemandDetailSheet({
     });
   }
 
-  if (!demand) return null;
+  if (!shown) return null;
 
-  const canBriefing = canDemandBriefing(
-    demand.status,
-    demand.briefingLockedAt
-  );
+  const canBriefing = canDemandBriefing(shown.status, shown.briefingLockedAt);
+  const overdue =
+    !!shown.dueDate &&
+    new Date(shown.dueDate) < new Date() &&
+    !["DONE", "CANCELLED", "PUBLISHED"].includes(shown.status);
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="right"
-        className="flex w-full flex-col gap-0 p-0 sm:max-w-lg"
-      >
-        <SheetHeader className="space-y-1 border-b border-border px-6 py-6 text-left">
-          <SheetTitle className="pr-8 text-xl font-semibold tracking-tight text-foreground">
-            {demand.title}
-          </SheetTitle>
-          <SheetDescription className="text-sm text-muted-foreground">
-            Demanda #{shortCode(demand.id)} · {demand.clientName} ·{" "}
-            {demandStatusLabel(demand.status)}
-          </SheetDescription>
-        </SheetHeader>
-
-        <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6">
-          <OperationalSummary demand={demand} />
-
-          <details
-            open={canBriefing}
-            className="group rounded-xl border border-border/80 [&_summary::-webkit-details-marker]:hidden"
-          >
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-foreground hover:bg-secondary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-              <span>
-                Briefing e planejamento
-                {!canBriefing ? (
-                  <span className="ml-2 text-xs font-normal text-muted-foreground">
-                    concluído, só leitura
-                  </span>
-                ) : null}
-              </span>
-              <ChevronDown
-                className="size-4 text-muted-foreground transition-transform group-open:rotate-180"
-                aria-hidden
-              />
-            </summary>
-            <div className="space-y-6 px-4 pb-4 pt-1">
-          <section className="space-y-4">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Planejamento
-            </h3>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="sector">Setor responsável</Label>
-                <Select
-                  value={sector}
-                  onValueChange={setSector}
-                  disabled={!canBriefing}
-                >
-                  <SelectTrigger id="sector">
-                    <SelectValue placeholder="Selecione o setor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {taxonomy.sectors.map((option) => (
-                      <SelectItem key={option.id} value={option.id}>
-                        {option.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="priority">Prioridade</Label>
-                <Select
-                  value={priority}
-                  onValueChange={setPriority}
-                  disabled={!canBriefing}
-                >
-                  <SelectTrigger id="priority">
-                    <SelectValue placeholder="Prioridade" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {taxonomy.priorities.map((option) => (
-                      <SelectItem key={option.id} value={option.id}>
-                        {option.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Prazo</Label>
-                <div className="flex h-10 items-center rounded-md border border-border bg-muted px-3 text-sm text-muted-foreground">
-                  {formatDeadline(demand.dueDate) ?? "Sem prazo"}
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section className="space-y-4">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Briefing
-            </h3>
-            <div className="space-y-2">
-              <Label htmlFor="briefing">Descrição do briefing</Label>
-              <Textarea
-                id="briefing"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={6}
-                placeholder="Descreva o briefing da demanda..."
-                className="resize-none text-sm leading-relaxed"
-                disabled={!canBriefing}
-              />
-            </div>
-          </section>
-            </div>
-          </details>
+    <MorphWindow
+      open={open}
+      onOpenChange={onOpenChange}
+      morphId={shown.id}
+      title={shown.title}
+      description={`Demanda de ${shown.clientName}, ${demandStatusLabel(shown.status)}`}
+      eyebrow={
+        <>
+          Demanda #{shortCode(shown.id)} · {shown.clientName}
+        </>
+      }
+      chips={
+        <>
+          <Badge variant="default">{demandStatusLabel(shown.status)}</Badge>
+          {shown.sector ? <Badge variant="secondary">{shown.sector}</Badge> : null}
+          <Badge variant="outline">
+            <span
+              aria-hidden
+              className={cn("size-1.5 rounded-full", priorityDot(shown.priority))}
+            />
+            {shown.priority}
+          </Badge>
+          {overdue ? <Badge variant="destructive">Atrasada</Badge> : null}
+        </>
+      }
+      rail={<OperationalSummary demand={shown} variant="rail" />}
+      footer={
+        canBriefing ? (
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={pending}
+              onClick={() => onOpenChange(false)}
+            >
+              Fechar
+            </Button>
+            <Button type="button" disabled={pending} onClick={handleSubmit}>
+              {pending ? "Demandando..." : "Concluir briefing e demandar"}
+            </Button>
+          </>
+        ) : (
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            Fechar
+          </Button>
+        )
+      }
+    >
+      <div className="space-y-6">
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <h3 className="font-display text-[15px] font-semibold leading-none tracking-[-0.01em] text-foreground">
+            Briefing e planejamento
+          </h3>
+          {!canBriefing ? (
+            <span className="text-xs text-muted-foreground">
+              Concluído: só leitura. O briefing só pode ser demandado em planejamento.
+            </span>
+          ) : null}
         </div>
 
-        <SheetFooter className="mt-auto flex-col gap-2 border-t border-border bg-muted/80 px-6 py-4 sm:flex-col sm:space-x-0">
-          {canBriefing ? (
-            <>
-              <Button
-                type="button"
-                className="w-full"
-                disabled={pending}
-                onClick={handleSubmit}
-              >
-                {pending ? "Demandando..." : "Concluir briefing e demandar"}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                disabled={pending}
-                onClick={() => onOpenChange(false)}
-              >
-                Fechar
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={() => onOpenChange(false)}
-              >
-                Fechar
-              </Button>
-            </>
-          )}
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="sector">Setor responsável</Label>
+            <Select value={sector} onValueChange={setSector} disabled={!canBriefing}>
+              <SelectTrigger id="sector">
+                <SelectValue placeholder="Selecione o setor" />
+              </SelectTrigger>
+              <SelectContent>
+                {taxonomy.sectors.map((option) => (
+                  <SelectItem key={option.id} value={option.id}>
+                    {option.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="priority">Prioridade</Label>
+            <Select value={priority} onValueChange={setPriority} disabled={!canBriefing}>
+              <SelectTrigger id="priority">
+                <SelectValue placeholder="Prioridade" />
+              </SelectTrigger>
+              <SelectContent>
+                {taxonomy.priorities.map((option) => (
+                  <SelectItem key={option.id} value={option.id}>
+                    {option.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="briefing">Descrição do briefing</Label>
+          <Textarea
+            id="briefing"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={8}
+            placeholder="Descreva o briefing da demanda..."
+            className="resize-none text-sm leading-relaxed"
+            disabled={!canBriefing}
+          />
+        </div>
+      </div>
+    </MorphWindow>
   );
 }
 
 /** Onde a demanda está agora: etapa, responsável, prazo e produção. */
-function OperationalSummary({ demand }: { demand: BoardDemand }) {
+function OperationalSummary({
+  demand,
+  variant = "boxed",
+}: {
+  demand: BoardDemand;
+  variant?: "boxed" | "rail";
+}) {
   const now = new Date();
   const overdue =
     demand.dueDate &&
@@ -312,11 +281,20 @@ function OperationalSummary({ demand }: { demand: BoardDemand }) {
     !["DONE", "CANCELLED", "PUBLISHED"].includes(demand.status);
 
   return (
-    <section aria-labelledby="andamento-titulo" className="space-y-3">
-      <h3 id="andamento-titulo" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+    <section aria-labelledby="andamento-titulo" className="space-y-4">
+      <h3
+        id="andamento-titulo"
+        className="text-xs font-semibold uppercase tracking-[0.05em] text-muted-foreground"
+      >
         Andamento
       </h3>
-      <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border/80 bg-border/70 [&>div]:bg-card [&>div]:px-3.5 [&>div]:py-3">
+      <dl
+        className={cn(
+          variant === "rail"
+            ? "grid grid-cols-2 gap-x-4 gap-y-4 md:grid-cols-1"
+            : "grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border/80 bg-border/70 [&>div]:bg-card [&>div]:px-3.5 [&>div]:py-3"
+        )}
+      >
         <div>
           <dt className="text-xs font-medium text-muted-foreground">Etapa</dt>
           <dd className="mt-1 text-sm font-semibold text-foreground">
@@ -371,7 +349,7 @@ function OperationalSummary({ demand }: { demand: BoardDemand }) {
           </dd>
         </div>
       </dl>
-      <div className="flex flex-wrap gap-2">
+      <div className={cn("flex flex-wrap gap-2", variant === "rail" && "md:flex-col md:items-start")}>
         {demand.assigneeId ? (
           <Button asChild variant="outline" size="sm">
             <Link href={assigneeHref(demand.assigneeId)}>

@@ -226,6 +226,15 @@ Faixa única de métricas num card, divididas por linhas finas (grade com 1px de
 ### Demand Card (signature)
 Título, prioridade (ponto + nome), cliente com quadradinho da cor da marca, chips de tipo/formato/status, rodapé com prazo (ícone de calendário, vermelho se atrasada) e responsável com iniciais. Clicável abre o detalhe; no painel é um link para `/demandas?abrir=<id>`. Em "Precisa de você" o card abre com o motivo em Label semibold ("Atrasada há 2 dias" em Perigo; "Sem responsável" ou "Vence amanhã" em Atenção), e o chip de prioridade some quando todos os cards têm a mesma.
 
+### Detail Window (signature)
+O detalhe de uma demanda abre como uma janela centralizada (até 1040×660px; tela cheia abaixo de 768px) que **cresce a partir do card clicado**: a casca anima a geometria do card até a janela, um clone do card some nos primeiros 35%, o título viaja até a barra de título e o conteúdo (chips, lateral "Andamento", documento, rodapé) aparece escalonado. Fechar roda o caminho inverso até o card, no lugar onde ele está agora.
+- **Tempos:** abrir 460ms e fechar 300ms, com `cubic-bezier(0.32, 0.72, 0, 1)` na geometria e no título; fades e revelação com `cubic-bezier(0.22, 1, 0.36, 1)` (out-soft). Fonte única: `lib/motion/morph-geometry.ts` (`MORPH_TIMING`).
+- **Sem origem útil** (card fora da tela, deep link sem card, nenhum clique): fade de 180ms com escala de 0.98.
+- **Movimento reduzido ou sem Web Animations:** fade de 100ms só de opacidade, sem geometria nem clone.
+- **Estrutura:** barra de título (título, código e cliente, chips, fechar), lateral de 248px com o andamento (empilha no celular), documento rolável e rodapé.
+
+**The Continuity Rule.** Movimento só onde mostra de onde algo veio (card → janela). É a exceção declarada aos 150ms de estado: um único gesto por clique, até 460ms, nunca em loop.
+
 ## Do's and Don'ts
 
 ### Do:
@@ -242,3 +251,4 @@ Título, prioridade (ponto + nome), cliente com quadradinho da cor da marca, chi
 - **Don't** colorir número, borda ou fundo de KPI neutro.
 - **Don't** usar travessão (U+2014) em texto de interface; só como marcador de célula vazia.
 - **Don't** usar desfoque ou vidro como decoração.
+- **Don't** animar card → janela sem o card visível na tela; sem origem, use o fade curto.

@@ -161,6 +161,12 @@
   }
 }
 
+/* Card original some enquanto o clone e a janela ocupam o lugar dele (morph). */
+[data-morphing] {
+  opacity: 0;
+  pointer-events: none;
+}
+
 @layer utilities {
   /* Número de KPI / dado: mesma família da UI (Operate), dígitos tabulares. */
   .num {
