@@ -389,6 +389,7 @@ export function BoardCalendar({
                     key={event.id}
                     type="button"
                     onClick={() => onSelect(event.demandId)}
+                    data-morph-id={event.demandId}
                     className={cn(
                       "w-full rounded-xl border p-4 text-left transition-opacity hover:opacity-90",
                       TONE_CARD[event.tone]

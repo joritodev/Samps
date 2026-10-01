@@ -45,6 +45,7 @@ export function DemandCard({
   titleAs: TitleTag = "h3",
   reason,
   hidePriority,
+  morphId,
 }: {
   demand: DemandCardData;
   showOrigin?: boolean;
@@ -58,7 +59,10 @@ export function DemandCard({
   reason?: { label: string; tone: "danger" | "warning" | "neutral" };
   /** Esconde o chip de prioridade (quando a lista inteira é da mesma). */
   hidePriority?: boolean;
+  /** Origem da animação de abertura do detalhe (padrão: id da demanda). */
+  morphId?: string;
 }) {
+  const morphProps = onClick ? { "data-morph-id": morphId ?? demand.id } : {};
   const originLabel =
     showOrigin && demand.client
       ? `${demand.client.name} · ${
@@ -99,7 +103,7 @@ export function DemandCard({
       ) : null}
       <div className="space-y-1.5">
         <div className="flex items-start justify-between gap-2">
-          <TitleTag className="font-sans text-sm font-medium leading-snug tracking-normal text-foreground">
+          <TitleTag data-morph-title className="font-sans text-sm font-medium leading-snug tracking-normal text-foreground">
             {demand.title}
           </TitleTag>
           {demand.priority && !hidePriority && (
@@ -209,6 +213,7 @@ export function DemandCard({
         draggable={false}
         onClick={onClick}
         className={cardClassName}
+        {...morphProps}
       >
         {body}
       </button>
