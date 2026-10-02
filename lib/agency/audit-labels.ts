@@ -35,6 +35,10 @@ export const AUDIT_ACTION_LABEL: Record<AuditAction, string> = {
   GOAL_CREATED: "Meta criada",
   GOAL_UPDATED: "Meta atualizada",
   GOAL_DELETED: "Meta apagada",
+  OBJECTIVE_CREATED: "Objetivo criado",
+  OBJECTIVE_UPDATED: "Objetivo atualizado",
+  OBJECTIVE_DELETED: "Objetivo apagado",
+  KEY_RESULT_CHECKED_IN: "Check-in de resultado-chave",
   LOGIN: "Login",
   LOGIN_FAILED: "Falha de login",
   OTHER: "Outro",
@@ -49,6 +53,8 @@ export const ENTITY_TYPE_LABEL: Record<string, string> = {
   ClientBoard: "Quadro",
   ClientPortal: "Portal",
   Goal: "Meta",
+  Objective: "Objetivo",
+  KeyResult: "Resultado-chave",
 };
 
 export function auditActionLabel(action: AuditAction) {

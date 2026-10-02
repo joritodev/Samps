@@ -218,6 +218,10 @@ enum AuditAction {
   GOAL_CREATED
   GOAL_UPDATED
   GOAL_DELETED
+  OBJECTIVE_CREATED
+  OBJECTIVE_UPDATED
+  OBJECTIVE_DELETED
+  KEY_RESULT_CHECKED_IN
   LOGIN
   LOGIN_FAILED
   OTHER
@@ -344,6 +348,10 @@ model User {
   agendaMeetings         AgendaMeeting[]          @relation("AgendaMeetingAuthor")
   goalsAbout             Goal[]                   @relation("GoalUser")
   goalsCreated           Goal[]                   @relation("GoalCreator")
+  objectivesOwned        Objective[]              @relation("ObjectiveOwner")
+  objectivesAbout        Objective[]              @relation("ObjectiveUser")
+  objectivesCreated      Objective[]              @relation("ObjectiveCreator")
+  checkInsAuthored       KeyResultCheckIn[]       @relation("CheckInAuthor")
 
   @@index([userType])
   @@index([status])
@@ -393,6 +401,93 @@ model Goal {
   @@index([scope, sectorId])
   @@index([userId])
   @@index([startsOn, endsOn])
+}
+
+enum ObjectiveStatus {
+  ACTIVE
+  DONE
+  CANCELLED
+}
+
+enum KeyResultKind {
+  KPI
+  MANUAL
+}
+
+enum Confidence {
+  ON_TRACK
+  AT_RISK
+  OFF_TRACK
+}
+
+/// Objetivo (OKR) da agência, de um setor ou de uma pessoa, com resultados-chave.
+/// O pai precisa ter escopo mais amplo (agência > setor > pessoa).
+model Objective {
+  id          String          @id @default(cuid())
+  title       String
+  description String?
+  ownerId     String
+  scope       GoalScope
+  sectorId    String?
+  userId      String?
+  parentId    String?
+  startsOn    DateTime
+  endsOn      DateTime
+  status      ObjectiveStatus @default(ACTIVE)
+  createdById String
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  owner      User        @relation("ObjectiveOwner", fields: [ownerId], references: [id])
+  sector     Sector?     @relation(fields: [sectorId], references: [id], onDelete: Cascade)
+  user       User?       @relation("ObjectiveUser", fields: [userId], references: [id], onDelete: Cascade)
+  createdBy  User        @relation("ObjectiveCreator", fields: [createdById], references: [id])
+  parent     Objective?  @relation("ObjectiveTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children   Objective[] @relation("ObjectiveTree")
+  keyResults KeyResult[]
+
+  @@index([scope, sectorId])
+  @@index([userId])
+  @@index([ownerId])
+  @@index([parentId])
+  @@index([startsOn, endsOn])
+}
+
+/// Resultado-chave. `KPI` calcula o valor atual de um indicador; `MANUAL`
+/// usa o último check-in (`currentValue`). Percentual em razão de 0 a 1.
+model KeyResult {
+  id           String        @id @default(cuid())
+  objectiveId  String
+  title        String
+  kind         KeyResultKind
+  metric       KpiMetric?
+  unit         String?
+  startValue   Float         @default(0)
+  targetValue  Float
+  currentValue Float?
+  sortOrder    Int           @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  objective Objective          @relation(fields: [objectiveId], references: [id], onDelete: Cascade)
+  checkIns  KeyResultCheckIn[]
+
+  @@index([objectiveId, sortOrder])
+}
+
+model KeyResultCheckIn {
+  id          String     @id @default(cuid())
+  keyResultId String
+  authorId    String
+  value       Float
+  confidence  Confidence
+  note        String?
+  createdAt   DateTime   @default(now())
+
+  keyResult KeyResult @relation(fields: [keyResultId], references: [id], onDelete: Cascade)
+  author    User      @relation("CheckInAuthor", fields: [authorId], references: [id])
+
+  @@index([keyResultId, createdAt])
 }
 
 model Announcement {
@@ -555,6 +650,7 @@ model Sector {
   designBoards   ClientBoard[]      @relation("BoardDesignSector")
   videoBoards    ClientBoard[]      @relation("BoardVideoSector")
   goals          Goal[]
+  objectives     Objective[]
 }
 
 model ContentType {

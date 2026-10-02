@@ -21,6 +21,7 @@ import {
   presetPeriod,
   type GoalScope,
 } from "@/lib/agency/goals";
+import { kpiFromField, kpiToField } from "@/lib/agency/kpi-input";
 import { KPI_CATALOG, KPI_KEYS, type KpiKey } from "@/lib/agency/performance-summary";
 import { dayKey } from "@/lib/agency/sp-calendar";
 import type { GoalView } from "@/lib/services/goals.service";
@@ -29,17 +30,6 @@ type Option = { id: string; name: string };
 
 const SELECT_CLASS =
   "flex h-10 w-full rounded-lg border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
-
-/** Valor no formulário: percentual em 0–100, o resto como está. */
-function toField(metric: KpiKey, target: number) {
-  const value = KPI_CATALOG[metric].unit === "percent" ? target * 100 : target;
-  return String(Math.round(value * 100) / 100);
-}
-
-function fromField(metric: KpiKey, text: string) {
-  const value = Number(text.replace(",", "."));
-  return KPI_CATALOG[metric].unit === "percent" ? value / 100 : value;
-}
 
 export function GoalForm({
   open,
@@ -72,7 +62,7 @@ export function GoalForm({
       setScope(initial.scope);
       setSectorId(initial.sectorId ?? "");
       setUserId(initial.userId ?? "");
-      setTarget(toField(initial.metric, initial.target));
+      setTarget(kpiToField(initial.metric, initial.target));
       setMargin(String(Math.round(initial.warnMargin * 100)));
       setStartsOn(dayKey(new Date(initial.startsOn)));
       setEndsOn(dayKey(new Date(initial.endsOn)));
@@ -104,7 +94,7 @@ export function GoalForm({
         scope,
         sectorId: scope === "SECTOR" ? sectorId : null,
         userId: scope === "USER" ? userId : null,
-        target: fromField(metric, target),
+        target: kpiFromField(metric, target),
         warnMargin: Number(margin.replace(",", ".")) / 100,
         startsOn,
         endsOn,
