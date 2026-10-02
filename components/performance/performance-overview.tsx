@@ -1,10 +1,12 @@
 import { AttentionPanel } from "@/components/performance/attention-panel";
 import { DailyChart } from "@/components/performance/daily-chart";
+import { GoalsStrip } from "@/components/performance/goals-strip";
 import { HeadlineCard } from "@/components/performance/headline-card";
 import { KpiTile } from "@/components/performance/kpi-tile";
 import { RankBars } from "@/components/performance/rank-bars";
 import { formatDuration } from "@/lib/agency/performance-format";
 import type { PerformanceSummary } from "@/lib/agency/performance-summary";
+import type { GoalView } from "@/lib/services/goals.service";
 import type { ContentTypeStats } from "@/lib/services/performance.service";
 
 const MAIN_KPIS = [
@@ -18,9 +20,11 @@ const MAIN_KPIS = [
 export function PerformanceOverview({
   summary,
   byContentType,
+  goals,
 }: {
   summary: PerformanceSummary;
   byContentType: ContentTypeStats[];
+  goals: GoalView[];
 }) {
   const { indicators } = summary;
   const maxDeliveries = Math.max(1, ...summary.topDeliverers.map((d) => d.deliveries));
@@ -36,6 +40,8 @@ export function PerformanceOverview({
           <KpiTile key={key} kpi={indicators[key]} />
         ))}
       </div>
+
+      <GoalsStrip goals={goals} />
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
         <section className="rounded-xl border border-border/80 bg-card p-4 shadow-xs">

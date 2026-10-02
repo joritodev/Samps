@@ -25,6 +25,7 @@ export const PERMISSION_CODES = [
   "reports.view",
   "roles.manage",
   "boards.manage_lists",
+  "goals.manage",
 ] as const;
 
 export type PermissionCode = (typeof PERMISSION_CODES)[number];
@@ -56,4 +57,5 @@ export const PERMISSION_LABELS: Record<PermissionCode, string> = {
   "reports.view": "Acessar relatórios",
   "roles.manage": "Gerenciar funções e permissões",
   "boards.manage_lists": "Gerenciar colunas do quadro",
+  "goals.manage": "Gerenciar metas e OKRs",
 };

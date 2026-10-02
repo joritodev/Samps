@@ -1,5 +1,6 @@
 import { PerformanceFilters } from "@/components/performance/performance-filters";
 import { PerformanceOverview } from "@/components/performance/performance-overview";
+import { goalsForScope } from "./_goals";
 import { getPerformanceReport } from "@/lib/services/performance.service";
 import { getPerformanceSummary } from "@/lib/services/performance-summary.service";
 import { loadPerformanceContext, type PerformanceSearchParams } from "./_context";
@@ -9,9 +10,9 @@ export default async function PerformancePage({
 }: {
   searchParams: PerformanceSearchParams;
 }) {
-  const { range, scope, filters } = await loadPerformanceContext(searchParams);
+  const { user, range, scope, filters } = await loadPerformanceContext(searchParams);
 
-  const [summary, report] = await Promise.all([
+  const [summary, report, goals] = await Promise.all([
     getPerformanceSummary({ scope, range }),
     getPerformanceReport({
       from: range.from,
@@ -20,12 +21,13 @@ export default async function PerformancePage({
       sectorId: scope.sectorId,
       clientId: scope.clientId,
     }),
+    goalsForScope(user, scope),
   ]);
 
   return (
     <div className="space-y-4">
       <PerformanceFilters {...filters} />
-      <PerformanceOverview summary={summary} byContentType={report.byContentType} />
+      <PerformanceOverview summary={summary} byContentType={report.byContentType} goals={goals} />
     </div>
   );
 }
