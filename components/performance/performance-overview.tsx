@@ -3,10 +3,12 @@ import { DailyChart } from "@/components/performance/daily-chart";
 import { GoalsStrip } from "@/components/performance/goals-strip";
 import { HeadlineCard } from "@/components/performance/headline-card";
 import { KpiTile } from "@/components/performance/kpi-tile";
+import { ObjectivesStrip } from "@/components/performance/objectives-strip";
 import { RankBars } from "@/components/performance/rank-bars";
 import { formatDuration } from "@/lib/agency/performance-format";
 import type { PerformanceSummary } from "@/lib/agency/performance-summary";
 import type { GoalView } from "@/lib/services/goals.service";
+import type { ObjectiveView } from "@/lib/services/okr.service";
 import type { ContentTypeStats } from "@/lib/services/performance.service";
 
 const MAIN_KPIS = [
@@ -21,10 +23,12 @@ export function PerformanceOverview({
   summary,
   byContentType,
   goals,
+  objectives,
 }: {
   summary: PerformanceSummary;
   byContentType: ContentTypeStats[];
   goals: GoalView[];
+  objectives: ObjectiveView[];
 }) {
   const { indicators } = summary;
   const maxDeliveries = Math.max(1, ...summary.topDeliverers.map((d) => d.deliveries));
@@ -40,6 +44,8 @@ export function PerformanceOverview({
           <KpiTile key={key} kpi={indicators[key]} />
         ))}
       </div>
+
+      <ObjectivesStrip objectives={objectives} />
 
       <GoalsStrip goals={goals} />
 

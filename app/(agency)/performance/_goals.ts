@@ -1,5 +1,6 @@
 import type { SummaryScope } from "@/lib/services/performance-summary.service";
 import { evaluateGoals, listGoalsForUser } from "@/lib/services/goals.service";
+import { evaluateObjectives, listObjectivesForUser } from "@/lib/services/okr.service";
 import type { SessionUser } from "@/types/auth";
 
 /**
@@ -16,4 +17,12 @@ export async function goalsForScope(user: SessionUser, scope: SummaryScope) {
     return g.userId === user.id && scope.userId === user.id;
   });
   return evaluateGoals(relevant, now);
+}
+
+/** Objetivos da agência em andamento, para o painel executivo (sem filtro de cliente). */
+export async function agencyObjectives(user: SessionUser, scope: SummaryScope) {
+  if (scope.clientId || scope.sectorId || scope.userId) return [];
+  const rows = await listObjectivesForUser(user, { period: "atual" });
+  const agency = rows.filter((o) => o.scope === "AGENCY" && o.status === "ACTIVE");
+  return evaluateObjectives(agency, user);
 }
