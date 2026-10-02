@@ -87,7 +87,7 @@ export function ContractScopeFields({
               href="/configuracoes/tipos"
               className="font-medium text-foreground underline-offset-2 hover:underline"
             >
-              Configurações → Tipos
+              Configurações {">"} Tipos
             </Link>
           </p>
         ) : (

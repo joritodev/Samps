@@ -6,6 +6,7 @@ import { clientScopeFilter, requireAuth } from "@/lib/permissions/check";
 import { buildDemandVisibilityWhere } from "@/lib/permissions/demand-visibility";
 import { listLedSectorIds } from "@/lib/permissions/led-sectors";
 import { hasPermission } from "@/lib/permissions/resolve";
+import { demandFilter } from "@/lib/agency/demand-filters";
 import type { BoardColumn, BoardDemand } from "@/types/board-ui";
 
 /** Colunas do Kanban global — por status operacional, não por entregável. */
@@ -46,7 +47,8 @@ function groupIntoStatusColumns(demands: BoardDemand[]): BoardColumn[] {
       cards: demands.filter(
         (d) =>
           d.status === DemandStatus.IN_REVIEW ||
-          d.status === DemandStatus.APPROVED
+          d.status === DemandStatus.APPROVED ||
+          d.status === DemandStatus.SCHEDULED
       ),
     },
     {
@@ -62,7 +64,13 @@ function groupIntoStatusColumns(demands: BoardDemand[]): BoardColumn[] {
   ];
 }
 
-export default async function DemandasPage() {
+export default async function DemandasPage({
+  searchParams,
+}: {
+  searchParams: { filtro?: string; abrir?: string; responsavel?: string };
+}) {
+  const filter = demandFilter(searchParams.filtro);
+  const assigneeId = searchParams.responsavel || null;
   const user = await requireAuth();
   const canCreate = hasPermission(user.permissions, "demands.create");
   const scope = clientScopeFilter(user);
@@ -98,8 +106,12 @@ export default async function DemandasPage() {
   try {
     const visibility = buildDemandVisibilityWhere(user, { ledSectorIds });
     const where: Prisma.DemandWhereInput = {
-      ...visibility,
-      isChecklistItem: false,
+      AND: [
+        visibility,
+        { isChecklistItem: false },
+        ...(filter ? [filter.where] : []),
+        ...(assigneeId ? [{ assigneeId }] : []),
+      ],
     };
 
     const rows = await db.demand.findMany({
@@ -114,6 +126,13 @@ export default async function DemandasPage() {
   }
 
   const columns = groupIntoStatusColumns(demands);
+  const assignee = assigneeId
+    ? await db.user.findUnique({ where: { id: assigneeId }, select: { name: true } })
+    : null;
+  const filterLabel =
+    [filter?.label, assignee ? `Responsável: ${assignee.name}` : null]
+      .filter(Boolean)
+      .join(" · ") || undefined;
 
   const subtitle = isGestao
     ? "Visão global da operação"
@@ -129,6 +148,8 @@ export default async function DemandasPage() {
       taxonomy={{ sectors, priorities }}
       clients={clients}
       canCreate={canCreate}
+      filterLabel={filterLabel}
+      openDemandId={searchParams.abrir}
     />
   );
 }

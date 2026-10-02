@@ -12,7 +12,7 @@ export default async function SocialPanelPage() {
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden p-4 sm:p-6">
       <SectorBoardView
-        title="Meu painel — Social Media"
+        title="Meu painel · Social Media"
         description="Demandas, revisões e publicações dos seus clientes"
         columns={data.columns}
         grouped={data.grouped as never}

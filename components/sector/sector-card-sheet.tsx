@@ -1,12 +1,7 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { MorphWindow } from "@/components/ui/morph-window";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -70,7 +65,7 @@ export type SectorCardDetail = {
 };
 
 export function SectorCardSheet({
-  card,
+  card: cardProp,
   open,
   onOpenChange,
   currentUserId,
@@ -91,6 +86,10 @@ export function SectorCardSheet({
   readOnly?: boolean;
   sectorUsers: { id: string; name: string }[];
 }) {
+  // Mantém o último card para a animação de saída (o pai zera `selected` ao fechar).
+  const lastCard = useRef<SectorCardDetail | null>(null);
+  if (cardProp) lastCard.current = cardProp;
+  const card = cardProp ?? lastCard.current;
   const [pending, startTransition] = useTransition();
   const [materialUrl, setMaterialUrl] = useState("");
   const [publishedUrl, setPublishedUrl] = useState("");
@@ -164,22 +163,26 @@ export function SectorCardSheet({
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
-        <SheetHeader>
-          <SheetTitle className="pr-8 text-left">{card.title}</SheetTitle>
-          <div className="flex flex-wrap gap-1">
-            <Badge variant="outline">{card.status}</Badge>
-            {card.format && <Badge variant="secondary">{card.format}</Badge>}
-            {card.isChecklistItem && card.parentDemand?.title ? (
-              <Badge variant="secondary">
-                Parte de: {card.parentDemand.title}
-              </Badge>
-            ) : null}
-          </div>
-        </SheetHeader>
-
-        <div className="mt-4 space-y-4 text-sm">
+    <MorphWindow
+      open={open}
+      onOpenChange={onOpenChange}
+      morphId={card.id}
+      size="md"
+      title={card.title}
+      eyebrow={card.client?.name}
+      chips={
+        <>
+          <Badge variant="outline">{card.status}</Badge>
+          {card.format && <Badge variant="secondary">{card.format}</Badge>}
+          {card.isChecklistItem && card.parentDemand?.title ? (
+            <Badge variant="secondary">
+              Parte de: {card.parentDemand.title}
+            </Badge>
+          ) : null}
+        </>
+      }
+    >
+        <div className="space-y-4 text-sm">
           <p>
             <strong>Cliente:</strong> {card.client?.name}
           </p>
@@ -190,7 +193,7 @@ export function SectorCardSheet({
 
           {readOnly ? (
             <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-              Somente leitura — ações de produção ficam no Meu painel do seu
+              Somente leitura. As ações de produção ficam no Meu painel do seu
               setor.
             </p>
           ) : null}
@@ -450,7 +453,7 @@ export function SectorCardSheet({
 
           {isSocialReview && !canReview && (
             <div className="rounded-lg border border-border bg-muted/50 p-3 text-xs text-muted-foreground">
-              Em revisão — aguardando Social Media ou gestão aprovar ou pedir
+              Em revisão, aguardando Social Media ou gestão aprovar ou pedir
               ajuste.
               {card.materialUrl ? (
                 <a
@@ -536,7 +539,6 @@ export function SectorCardSheet({
             )}
           </div>
         </div>
-      </SheetContent>
-    </Sheet>
+    </MorphWindow>
   );
 }

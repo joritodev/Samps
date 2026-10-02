@@ -22,7 +22,7 @@ export default async function CaptacoesPage() {
         statusLabel: SHOOT_STATUS_LABEL[shoot.status],
         meta: [
           shoot.startTime && shoot.endTime
-            ? `${shoot.startTime}–${shoot.endTime}`
+            ? `${shoot.startTime} - ${shoot.endTime}`
             : shoot.startTime,
           shoot.location,
           shoot.participants.length

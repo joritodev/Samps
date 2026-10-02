@@ -1,0 +1,490 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-29T20:24:09.738635Z",
+  "title": "Design System: Samps OS",
+  "extensions": {
+    "colorMeta": {
+      "teal-profundo": {
+        "role": "primary",
+        "displayName": "Teal Profundo",
+        "canonical": "#0C7E92",
+        "tonalRamp": [
+          "#063D47",
+          "#0A6676",
+          "#0E8EA5",
+          "#11B7D4",
+          "#39D4EF",
+          "#7BE2F4",
+          "#B8F0F9",
+          "#E7FAFD"
+        ]
+      },
+      "ciano-lente": {
+        "role": "secondary",
+        "displayName": "Ciano Lente",
+        "canonical": "#2DB3C8",
+        "tonalRamp": [
+          "#0E383E",
+          "#175D68",
+          "#218292",
+          "#2AA8BB",
+          "#50C5D8",
+          "#8AD9E5",
+          "#C1EAF1",
+          "#EAF8FA"
+        ]
+      },
+      "brasa": {
+        "role": "tertiary",
+        "displayName": "Brasa",
+        "canonical": "#E08A5C",
+        "tonalRamp": [
+          "#401E0C",
+          "#6B3314",
+          "#96471D",
+          "#C15B25",
+          "#DD7E4B",
+          "#E8A987",
+          "#F3D1BF",
+          "#FBF0EA"
+        ]
+      },
+      "tinta": {
+        "role": "neutral",
+        "displayName": "Tinta",
+        "canonical": "#0B111E",
+        "tonalRamp": [
+          "#152038",
+          "#22355D",
+          "#304A83",
+          "#3E5FA8",
+          "#6282C6",
+          "#97ABD9",
+          "#C7D2EA",
+          "#ECF0F8"
+        ]
+      },
+      "papel": {
+        "role": "neutral",
+        "displayName": "Papel",
+        "canonical": "#F9FAFB",
+        "tonalRamp": [
+          "#1F262E",
+          "#33404C",
+          "#47596B",
+          "#5C738A",
+          "#7E94A9",
+          "#A9B8C6",
+          "#D1D9E0",
+          "#F0F2F5"
+        ]
+      },
+      "superficie": {
+        "role": "neutral",
+        "displayName": "Superfície",
+        "canonical": "#FFFFFF",
+        "tonalRamp": [
+          "#262626",
+          "#404040",
+          "#595959",
+          "#737373",
+          "#949494",
+          "#B8B8B8",
+          "#D9D9D9",
+          "#F2F2F2"
+        ]
+      },
+      "moldura": {
+        "role": "neutral",
+        "displayName": "Moldura",
+        "canonical": "#F0F1F5",
+        "tonalRamp": [
+          "#1F222E",
+          "#33384D",
+          "#474F6B",
+          "#5C658A",
+          "#7E87A9",
+          "#A9AFC6",
+          "#D1D4E0",
+          "#F0F1F5"
+        ]
+      },
+      "linha": {
+        "role": "neutral",
+        "displayName": "Linha",
+        "canonical": "#E1E4EA",
+        "tonalRamp": [
+          "#20242D",
+          "#353C4B",
+          "#4A5469",
+          "#5F6C87",
+          "#818EA7",
+          "#ABB3C4",
+          "#D2D7DF",
+          "#F0F2F4"
+        ]
+      },
+      "linha-campo": {
+        "role": "neutral",
+        "displayName": "Linha de Campo",
+        "canonical": "#D6DAE0",
+        "tonalRamp": [
+          "#21252C",
+          "#373E49",
+          "#4D5766",
+          "#637083",
+          "#8591A3",
+          "#AEB6C2",
+          "#D3D8DE",
+          "#F0F2F4"
+        ]
+      },
+      "grafite-suave": {
+        "role": "neutral",
+        "displayName": "Grafite Suave",
+        "canonical": "#606876",
+        "tonalRamp": [
+          "#22252A",
+          "#393E46",
+          "#505762",
+          "#67707F",
+          "#89919F",
+          "#B0B6BF",
+          "#D5D8DD",
+          "#F1F2F4"
+        ]
+      },
+      "sucesso": {
+        "role": "semantic",
+        "displayName": "Sucesso",
+        "canonical": "#16833E",
+        "tonalRamp": [
+          "#0B421F",
+          "#126D34",
+          "#1A9948",
+          "#21C45D",
+          "#48E080",
+          "#85EAAA",
+          "#BEF4D2",
+          "#E9FBF0"
+        ]
+      },
+      "atencao": {
+        "role": "semantic",
+        "displayName": "Atenção",
+        "canonical": "#A95C04",
+        "tonalRamp": [
+          "#4B2902",
+          "#7C4403",
+          "#AE5F05",
+          "#E07A06",
+          "#F99B2E",
+          "#FBBC74",
+          "#FDDBB4",
+          "#FEF3E6"
+        ]
+      },
+      "perigo": {
+        "role": "semantic",
+        "displayName": "Perigo",
+        "canonical": "#DC2828",
+        "tonalRamp": [
+          "#420B0B",
+          "#6E1212",
+          "#9A1919",
+          "#C52020",
+          "#E14747",
+          "#EB8484",
+          "#F4BDBD",
+          "#FBE9E9"
+        ]
+      },
+      "noite-moldura": {
+        "role": "neutral",
+        "displayName": "Noite Moldura",
+        "canonical": "#0A0C12",
+        "tonalRamp": [
+          "#1B2131",
+          "#2E3752",
+          "#404C73",
+          "#526294",
+          "#7585B2",
+          "#A3ADCC",
+          "#CED3E4",
+          "#EFF0F6"
+        ]
+      },
+      "noite-painel": {
+        "role": "neutral",
+        "displayName": "Noite Painel",
+        "canonical": "#10141B",
+        "tonalRamp": [
+          "#1C2430",
+          "#2F3B50",
+          "#425370",
+          "#556B90",
+          "#798CAF",
+          "#A5B3CA",
+          "#CFD6E3",
+          "#EFF1F6"
+        ]
+      },
+      "noite-superficie": {
+        "role": "neutral",
+        "displayName": "Noite Superfície",
+        "canonical": "#161A22",
+        "tonalRamp": [
+          "#1E242E",
+          "#323B4D",
+          "#46536C",
+          "#5A6B8B",
+          "#7D8CAB",
+          "#A8B2C7",
+          "#D1D6E1",
+          "#F0F1F5"
+        ]
+      },
+      "noite-linha": {
+        "role": "neutral",
+        "displayName": "Noite Linha",
+        "canonical": "#252931",
+        "tonalRamp": [
+          "#21242C",
+          "#373D49",
+          "#4D5566",
+          "#636D83",
+          "#858FA3",
+          "#AEB4C2",
+          "#D3D7DE",
+          "#F0F2F4"
+        ]
+      },
+      "noite-ciano": {
+        "role": "neutral",
+        "displayName": "Noite Ciano",
+        "canonical": "#3CC7DD",
+        "tonalRamp": [
+          "#0B3A41",
+          "#13606D",
+          "#1B8798",
+          "#22ADC3",
+          "#49CBDF",
+          "#85DCEA",
+          "#BEECF4",
+          "#E9F9FB"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Título de página, um por tela."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Título de card e seção."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Texto de UI."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Rótulos, chips, metadados; piso de 12px."
+      },
+      "data": {
+        "displayName": "Data",
+        "purpose": "Números de KPI, tabulares."
+      }
+    },
+    "shadows": [
+      {
+        "name": "repouso",
+        "value": "0 1px 2px 0 hsl(220 40% 12% / .05)",
+        "purpose": "Botão outline, campo, card de demanda."
+      },
+      {
+        "name": "card",
+        "value": "0 1px 2px -1px hsl(220 40% 12% / .08), 0 1px 3px 0 hsl(220 40% 12% / .05)",
+        "purpose": "Cards, painel inset, item ativo."
+      },
+      {
+        "name": "flutuante",
+        "value": "0 1px 1px hsl(220 40% 12% / .03), 0 4px 8px -4px hsl(220 40% 12% / .08), 0 12px 20px -8px hsl(220 40% 12% / .08)",
+        "purpose": "Hover de card, menus, popovers."
+      },
+      {
+        "name": "modal",
+        "value": "0 1px 1px hsl(220 40% 12% / .03), 0 8px 16px -4px hsl(220 40% 12% / .08), 0 24px 40px -12px hsl(220 40% 12% / .16)",
+        "purpose": "Dialog e sheet."
+      },
+      {
+        "name": "brilho-botao",
+        "value": "inset 0 1px 0 hsl(0 0% 100% / .18)",
+        "purpose": "Topo de botões cheios."
+      }
+    ],
+    "motion": [
+      {
+        "name": "out-soft",
+        "value": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Hover e lift de cards e botões."
+      },
+      {
+        "name": "duracao-estado",
+        "value": "150ms",
+        "purpose": "Transições de estado (cor, sombra, 1px de deslocamento)."
+      },
+      {
+        "name": "morph-open",
+        "value": "460ms cubic-bezier(0.32, 0.72, 0, 1)",
+        "purpose": "Card cresce até virar a janela de detalhe (geometria e título)."
+      },
+      {
+        "name": "morph-close",
+        "value": "300ms cubic-bezier(0.32, 0.72, 0, 1)",
+        "purpose": "Janela volta ao card; também usada para fechar no meio da abertura (reverse)."
+      },
+      {
+        "name": "morph-fallback",
+        "value": "180ms (fade + scale 0.98); 100ms só opacidade com movimento reduzido",
+        "purpose": "Sem card visível, sem Web Animations ou prefers-reduced-motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Ação principal da tela; uma por área.",
+      "html": "<button class=\"ds-btn-primary\">Nova demanda</button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;height:36px;padding:0 14px;border:0;border-radius:9px;background:hsl(var(--primary,189 85% 31%));color:#fff;font:500 14px Inter,system-ui,sans-serif;box-shadow:inset 0 1px 0 hsl(0 0% 100%/.18),0 1px 2px hsl(220 40% 12%/.05);transition:background-color .15s,transform .15s;cursor:pointer}.ds-btn-primary:hover{background:hsl(var(--primary,189 85% 31%)/.9)}.ds-btn-primary:active{transform:translateY(1px)}.ds-btn-primary:focus-visible{outline:none;box-shadow:0 0 0 2px #fff,0 0 0 4px #2DB3C8}"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Ação secundária ao lado da primária.",
+      "html": "<button class=\"ds-btn-outline\">Filtros</button>",
+      "css": ".ds-btn-outline{display:inline-flex;align-items:center;height:36px;padding:0 14px;border:1px solid #D6DAE0;border-radius:9px;background:#fff;color:#0B111E;font:500 14px Inter,system-ui,sans-serif;box-shadow:0 1px 2px hsl(220 40% 12%/.05);transition:border-color .15s,background-color .15s,transform .15s;cursor:pointer}.ds-btn-outline:hover{border-color:rgba(11,17,30,.2);background:#F0F2F4}.ds-btn-outline:active{transform:translateY(1px)}.ds-btn-outline:focus-visible{outline:none;box-shadow:0 0 0 2px #fff,0 0 0 4px #2DB3C8}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Campo de formulário; foco em teal com halo ciano.",
+      "html": "<input class=\"ds-input\" placeholder=\"voce@empresa.com\">",
+      "css": ".ds-input{height:40px;width:260px;padding:8px 12px;border:1px solid #D6DAE0;border-radius:9px;background:#fff;color:#0B111E;font:400 14px Inter,system-ui,sans-serif;box-shadow:0 1px 2px hsl(220 40% 12%/.05);transition:border-color .15s,box-shadow .15s}.ds-input::placeholder{color:rgba(96,104,118,.8)}.ds-input:hover{border-color:rgba(11,17,30,.2)}.ds-input:focus-visible{outline:none;border-color:#0C7E92;box-shadow:0 0 0 3px rgba(45,179,200,.25)}"
+    },
+    {
+      "name": "Priority Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Pílula com ponto na cor da prioridade.",
+      "html": "<span class=\"ds-chip\"><i class=\"ds-dot\"></i>Alta</span>",
+      "css": ".ds-chip{display:inline-flex;align-items:center;gap:6px;height:20px;padding:0 8px;border:1px solid #E1E4EA;border-radius:9999px;background:#fff;color:#606876;font:500 12px Inter,system-ui,sans-serif}.ds-dot{width:6px;height:6px;border-radius:9999px;background:#E08A5C}"
+    },
+    {
+      "name": "Nav Item (active)",
+      "kind": "nav",
+      "refersTo": "nav-item-active",
+      "description": "Item ativo da sidebar: superfície elevada sobre a moldura.",
+      "html": "<div class=\"ds-nav\"><a class=\"ds-nav-item ds-active\" href=\"#\">Demandas</a><a class=\"ds-nav-item\" href=\"#\">Agenda</a></div>",
+      "css": ".ds-nav{display:flex;flex-direction:column;gap:2px;width:220px;padding:8px;background:#F0F1F5;border-radius:12px}.ds-nav-item{display:flex;align-items:center;height:36px;padding:0 10px;border-radius:9px;color:#606876;font:500 14px Inter,system-ui,sans-serif;text-decoration:none;transition:background-color .15s,color .15s}.ds-nav-item:hover{background:rgba(11,17,30,.05);color:#0B111E}.ds-active{background:#fff;color:#0B111E;box-shadow:0 0 0 1px rgba(225,228,234,.6),0 1px 2px -1px hsl(220 40% 12%/.08),0 1px 3px hsl(220 40% 12%/.05)}"
+    },
+    {
+      "name": "Demand Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Card clicável do Kanban e do painel.",
+      "html": "<button class=\"ds-card\"><span class=\"ds-card-client\">Bella Clinic</span><strong class=\"ds-card-title\">Reel bastidores da clínica</strong><span class=\"ds-card-meta\">Vídeo · 30 set</span></button>",
+      "css": ".ds-card{display:flex;flex-direction:column;gap:4px;width:260px;padding:14px;text-align:left;border:1px solid rgba(225,228,234,.8);border-radius:12px;background:#fff;box-shadow:0 1px 2px hsl(220 40% 12%/.05);transition:box-shadow .15s,border-color .15s,transform .15s;cursor:pointer}.ds-card:hover{transform:translateY(-1px);border-color:rgba(11,17,30,.15);box-shadow:0 1px 1px hsl(220 40% 12%/.03),0 4px 8px -4px hsl(220 40% 12%/.08),0 12px 20px -8px hsl(220 40% 12%/.08)}.ds-card:focus-visible{outline:none;box-shadow:0 0 0 2px #fff,0 0 0 4px #2DB3C8}.ds-card-client{font:500 12px Inter,system-ui,sans-serif;color:#606876}.ds-card-title{font:500 14px Inter,system-ui,sans-serif;color:#0B111E}.ds-card-meta{font:400 12px Inter,system-ui,sans-serif;color:#606876}"
+    },
+    {
+      "name": "KPI Strip",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "Faixa única de métricas com hairlines; cor só em alerta.",
+      "html": "<div class=\"ds-kpi\"><div><p>Em aberto</p><b>21</b></div><div><p><i></i>Atrasadas</p><b class=\"ds-danger\">3</b></div><div><p>Produção</p><b>4</b></div></div>",
+      "css": ".ds-kpi{display:grid;grid-template-columns:repeat(3,120px);gap:1px;background:rgba(225,228,234,.7);border:1px solid rgba(225,228,234,.8);border-radius:14px;overflow:hidden;font-family:Inter,system-ui,sans-serif}.ds-kpi>div{background:#fff;padding:12px 14px}.ds-kpi p{display:flex;align-items:center;gap:6px;margin:0;font-size:12px;font-weight:500;color:#606876}.ds-kpi i{width:6px;height:6px;border-radius:9999px;background:#DC2828}.ds-kpi b{display:block;margin-top:4px;font-size:24px;font-weight:600;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:#0B111E}.ds-kpi .ds-danger{color:#DC2828}"
+    }
+  ],
+  "narrative": {
+    "northStar": "A Mesa de Operação",
+    "overview": "O Samps OS é uma bancada de trabalho organizada. A moldura (sidebar e fundo) fica um tom abaixo; o painel de conteúdo sobe uma camada; cards e controles sobem mais uma. A profundidade vem das superfícies em camadas e de sombras curtas, não de bordas pesadas. Tudo o que a gestão e a produção precisam está à mão, na mesma densidade de ferramenta de mesa.\n\nA cor é instrumento, não enfeite: o Teal Profundo marca a ação principal, o Ciano Lente marca foco e seleção, e o vermelho/âmbar aparecem só quando há alerta. O resto é tinta, papel e linha. A marca (câmera em gradiente Brasa → Ciano) vive no logo e em detalhes de identidade, nunca como fundo de área.\n\nOs componentes são táteis e confiantes: o botão afunda 1px ao clicar, o card sobe 1px no hover, o campo acende a borda em teal ao focar. Respondem ao gesto sem teatro.",
+    "keyCharacteristics": [
+      "Três camadas de superfície: moldura → painel → card.",
+      "Sombras curtas empilhadas (anel + queda + ambiente), recalibradas no escuro.",
+      "Uma cor de ação (Teal Profundo); cor semântica só com significado.",
+      "Pílulas para rótulos; cantos de 9–14px em controles e cards.",
+      "Inter com alternativas (a de um andar, dígitos abertos); números tabulares."
+    ],
+    "rules": [
+      {
+        "name": "The One Action Rule",
+        "body": "O Teal Profundo marca a ação principal da tela e o estado ativo. Se aparece em mais de um botão cheio por área, um deles está errado.",
+        "section": "colors"
+      },
+      {
+        "name": "The Meaningful Color Rule",
+        "body": "Número, ponto ou fundo colorido só quando a cor diz algo (atraso, atenção, prioridade, cliente). Contagem neutra fica em tinta.",
+        "section": "colors"
+      },
+      {
+        "name": "The No Eyebrow Rule",
+        "body": "Título de página não leva rótulo em caixa alta acima. O título se sustenta sozinho.",
+        "section": "typography"
+      },
+      {
+        "name": "The Data Is Not Display Rule",
+        "body": "Números e dados usam Inter tabular, nunca a fonte de título.",
+        "section": "typography"
+      },
+      {
+        "name": "The Short Shadow Rule",
+        "body": "Sombra tem deslocamento e desfoque curtos e cor tingida da tinta. Nada de halo colorido sem deslocamento nem sombra preta difusa.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Continuity Rule",
+        "body": "Movimento só onde mostra de onde algo veio (card → janela). É a exceção declarada aos 150ms de estado: um único gesto por clique, até 460ms, nunca em loop.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "**Do** usar Teal Profundo (#0C7E92) para o botão primário e Ciano Lente (#2DB3C8) só para foco, seleção e marca.",
+      "**Do** manter texto funcional em 12px ou mais e contraste de 4,5:1.",
+      "**Do** usar as sombras dos tokens (`shadow-xs/sm/md/lg`) em vez de valores soltos.",
+      "**Do** traduzir todo código de enum antes de mostrar (`demandTypeLabel`, `demandOriginLabel`, `demandStatusLabel`).",
+      "**Do** usar ícones do lucide-react no lugar de setas ou símbolos digitados."
+    ],
+    "donts": [
+      "**Don't** pôr rótulo em caixa alta acima do título da página.",
+      "**Don't** colocar card dentro de card; agrupe com divisórias ou espaço.",
+      "**Don't** usar texto branco sobre Ciano Lente ou Brasa; avatares de iniciais são neutros (tinta sobre tinta a 8%).",
+      "**Don't** colorir número, borda ou fundo de KPI neutro.",
+      "**Don't** usar travessão (U+2014) em texto de interface; só como marcador de célula vazia.",
+      "**Don't** usar desfoque ou vidro como decoração.",
+      "**Don't** animar card → janela sem o card visível na tela; sem origem, use o fade curto."
+    ]
+  }
+}

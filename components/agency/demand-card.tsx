@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { CalendarClock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -14,26 +15,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { MorphWindow } from "@/components/ui/morph-window";
 import { concluirBriefing } from "@/app/actions/demand";
 import { canDemandBriefing, demandStatusLabel } from "@/lib/agency/labels";
 import type { BoardDemand, BoardTaxonomy } from "@/types/board-ui";
-
-function formatDeadline(iso: string | null) {
-  if (!iso) return null;
-  return new Date(iso).toLocaleDateString("pt-BR");
-}
-
-function shortCode(id: string) {
-  return id.replace(/-/g, "").slice(0, 6).toUpperCase();
-}
+import { cn } from "@/lib/utils";
+import {
+  DemandChips,
+  DemandSummary,
+  formatDeadline,
+  priorityDot,
+  shortCode,
+} from "@/components/agency/demand-summary";
 
 export function DemandCard({
   demand,
@@ -47,26 +40,35 @@ export function DemandCard({
   return (
     <button
       type="button"
+      data-morph-id={demand.id}
       onClick={() => onOpen(demand)}
-      className="w-full rounded-lg border border-border bg-card p-4 text-left transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="group w-full rounded-lg border border-border/80 bg-card p-3.5 text-left shadow-xs transition-[box-shadow,border-color,transform] duration-150 ease-out-soft hover:-translate-y-px hover:border-foreground/15 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
-      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+      <p className="truncate text-xs font-medium text-muted-foreground">
         {demand.clientName}
       </p>
-      <h3 className="mt-1 text-sm font-medium leading-snug tracking-tight text-foreground">
+      <h3
+        data-morph-title
+        className="mt-1 font-sans text-sm font-medium leading-snug tracking-normal text-foreground"
+      >
         {demand.title}
       </h3>
       <div className="mt-3 flex flex-wrap items-center gap-1.5">
         {demand.sector ? (
-          <Badge variant="outline" className="text-xs font-medium">
-            {demand.sector}
-          </Badge>
+          <Badge variant="secondary">{demand.sector}</Badge>
         ) : null}
-        <Badge variant="outline" className="text-xs font-medium">
+        <Badge variant="outline">
+          <span
+            aria-hidden
+            className={cn("size-1.5 rounded-full", priorityDot(demand.priority))}
+          />
           {demand.priority}
         </Badge>
         {deadline ? (
-          <span className="text-xs text-muted-foreground">{deadline}</span>
+          <span className="ml-auto inline-flex items-center gap-1 text-xs tabular-nums text-muted-foreground">
+            <CalendarClock className="size-3.5" aria-hidden />
+            {deadline}
+          </span>
         ) : null}
       </div>
     </button>
@@ -89,6 +91,10 @@ export function DemandDetailSheet({
   const [sector, setSector] = useState("");
   const [priority, setPriority] = useState("");
   const [pending, startTransition] = useTransition();
+  // A janela precisa da demanda também durante a animação de saída.
+  const lastDemand = useRef<BoardDemand | null>(null);
+  if (demand) lastDemand.current = demand;
+  const shown = demand ?? lastDemand.current;
 
   useEffect(() => {
     if (!demand) return;
@@ -120,147 +126,111 @@ export function DemandDetailSheet({
         return;
       }
       toast.success(
-        "Briefing concluído. Demanda disponível para o setor — abra Meu painel ou Setores."
+        "Briefing concluído. A demanda já está disponível para o setor em Meu painel e Setores."
       );
       onOpenChange(false);
       router.refresh();
     });
   }
 
-  if (!demand) return null;
+  if (!shown) return null;
 
-  const canBriefing = canDemandBriefing(
-    demand.status,
-    demand.briefingLockedAt
-  );
+  const canBriefing = canDemandBriefing(shown.status, shown.briefingLockedAt);
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="right"
-        className="flex w-full flex-col gap-0 p-0 sm:max-w-lg"
-      >
-        <SheetHeader className="space-y-1 border-b border-border px-6 py-6 text-left">
-          <SheetTitle className="pr-8 text-xl font-semibold tracking-tight text-foreground">
-            {demand.title}
-          </SheetTitle>
-          <SheetDescription className="text-sm text-muted-foreground">
-            Demanda #{shortCode(demand.id)} · {demand.clientName} ·{" "}
-            {demandStatusLabel(demand.status)}
-          </SheetDescription>
-        </SheetHeader>
-
-        <div className="flex-1 space-y-8 overflow-y-auto px-6 py-6">
-          <section className="space-y-4">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Planejamento
-            </h3>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="sector">Setor responsável</Label>
-                <Select
-                  value={sector}
-                  onValueChange={setSector}
-                  disabled={!canBriefing}
-                >
-                  <SelectTrigger id="sector">
-                    <SelectValue placeholder="Selecione o setor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {taxonomy.sectors.map((option) => (
-                      <SelectItem key={option.id} value={option.id}>
-                        {option.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="priority">Prioridade</Label>
-                <Select
-                  value={priority}
-                  onValueChange={setPriority}
-                  disabled={!canBriefing}
-                >
-                  <SelectTrigger id="priority">
-                    <SelectValue placeholder="Prioridade" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {taxonomy.priorities.map((option) => (
-                      <SelectItem key={option.id} value={option.id}>
-                        {option.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Prazo</Label>
-                <div className="flex h-10 items-center rounded-md border border-border bg-muted px-3 text-sm text-muted-foreground">
-                  {formatDeadline(demand.dueDate) ?? "Sem prazo"}
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section className="space-y-4">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Briefing
-            </h3>
-            <div className="space-y-2">
-              <Label htmlFor="briefing">Descrição do briefing</Label>
-              <Textarea
-                id="briefing"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={6}
-                placeholder="Descreva o briefing da demanda..."
-                className="resize-none text-sm leading-relaxed"
-                disabled={!canBriefing}
-              />
-            </div>
-          </section>
+    <MorphWindow
+      open={open}
+      onOpenChange={onOpenChange}
+      morphId={shown.id}
+      title={shown.title}
+      description={`Demanda de ${shown.clientName}, ${demandStatusLabel(shown.status)}`}
+      eyebrow={
+        <>
+          Demanda #{shortCode(shown.id)} · {shown.clientName}
+        </>
+      }
+      chips={<DemandChips demand={shown} />}
+      rail={<DemandSummary demand={shown} variant="rail" />}
+      footer={
+        canBriefing ? (
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={pending}
+              onClick={() => onOpenChange(false)}
+            >
+              Fechar
+            </Button>
+            <Button type="button" disabled={pending} onClick={handleSubmit}>
+              {pending ? "Demandando..." : "Concluir briefing e demandar"}
+            </Button>
+          </>
+        ) : (
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            Fechar
+          </Button>
+        )
+      }
+    >
+      <div className="space-y-6">
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <h3 className="font-display text-[15px] font-semibold leading-none tracking-[-0.01em] text-foreground">
+            Briefing e planejamento
+          </h3>
+          {!canBriefing ? (
+            <span className="text-xs text-muted-foreground">
+              Concluído: só leitura. O briefing só pode ser demandado em planejamento.
+            </span>
+          ) : null}
         </div>
 
-        <SheetFooter className="mt-auto flex-col gap-2 border-t border-border bg-muted/80 px-6 py-4 sm:flex-col sm:space-x-0">
-          {canBriefing ? (
-            <>
-              <Button
-                type="button"
-                className="w-full"
-                disabled={pending}
-                onClick={handleSubmit}
-              >
-                {pending ? "Demandando..." : "Concluir briefing e demandar"}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                disabled={pending}
-                onClick={() => onOpenChange(false)}
-              >
-                Fechar
-              </Button>
-            </>
-          ) : (
-            <>
-              <p className="text-center text-xs text-muted-foreground">
-                Status atual: {demandStatusLabel(demand.status)}. O briefing só
-                pode ser demandado em planejamento.
-              </p>
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={() => onOpenChange(false)}
-              >
-                Fechar
-              </Button>
-            </>
-          )}
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="sector">Setor responsável</Label>
+            <Select value={sector} onValueChange={setSector} disabled={!canBriefing}>
+              <SelectTrigger id="sector">
+                <SelectValue placeholder="Selecione o setor" />
+              </SelectTrigger>
+              <SelectContent>
+                {taxonomy.sectors.map((option) => (
+                  <SelectItem key={option.id} value={option.id}>
+                    {option.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="priority">Prioridade</Label>
+            <Select value={priority} onValueChange={setPriority} disabled={!canBriefing}>
+              <SelectTrigger id="priority">
+                <SelectValue placeholder="Prioridade" />
+              </SelectTrigger>
+              <SelectContent>
+                {taxonomy.priorities.map((option) => (
+                  <SelectItem key={option.id} value={option.id}>
+                    {option.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="briefing">Descrição do briefing</Label>
+          <Textarea
+            id="briefing"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={8}
+            placeholder="Descreva o briefing da demanda..."
+            className="resize-none text-sm leading-relaxed"
+            disabled={!canBriefing}
+          />
+        </div>
+      </div>
+    </MorphWindow>
   );
 }

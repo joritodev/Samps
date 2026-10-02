@@ -63,7 +63,7 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   {
     href: "/painel-gestao",
-    label: "Dashboard",
+    label: "Painel",
     icon: LayoutDashboard,
     userTypes: ["ADMIN", "MANAGEMENT"],
   },
@@ -193,35 +193,30 @@ function SidebarBody({
 
   function linkClass(active: boolean) {
     return cn(
-      "group flex min-h-10 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors",
-      "hover:bg-secondary hover:text-foreground",
+      "group relative flex min-h-9 items-center gap-2.5 rounded-md px-2.5 py-2 text-sm font-medium text-sidebar-foreground transition-[background-color,color,box-shadow] duration-150",
+      "hover:bg-foreground/[0.05] hover:text-foreground",
       active &&
-        "bg-[hsl(var(--sidebar-accent))] font-semibold text-[hsl(var(--sidebar-accent-foreground))]"
+        "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm ring-1 ring-border/60 hover:bg-sidebar-accent"
     );
   }
 
   return (
-    <div className="flex h-full w-full flex-col border-r border-border bg-card">
-      <div className="border-b border-border px-5 py-5">
+    <div className="flex h-full w-full flex-col bg-sidebar">
+      <div className="flex items-center justify-between gap-1 pb-3 pl-4 pr-2 pt-4">
         <SampsLogo />
-        <p className="mt-3 text-xs text-muted-foreground">
-          Diagnóstico + Planejamento + Método
-        </p>
-      </div>
-
-      <div className="space-y-2 px-3 pt-4">
-        <div className="flex h-9 items-center justify-center gap-1">
+        <div className="flex items-center">
           <MuralPopover announcements={announcements} birthdays={birthdays} />
           <SessionMuteButton />
           <NotificationBell />
         </div>
+      </div>
+
+      <div className="px-3">
         <GlobalSearch types={searchTypes} compact />
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 py-4">
-        <p className="mb-2 px-3 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-          Central de Gestão
-        </p>
+        <p className="eyebrow mb-1.5 px-2.5">Central de Gestão</p>
         <ul className="space-y-0.5">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -232,13 +227,14 @@ function SidebarBody({
                 <Link
                   href={item.href}
                   onClick={onNavigate}
+                  aria-current={active ? "page" : undefined}
                   className={linkClass(active)}
                 >
                   <Icon
                     className={cn(
-                      "h-4 w-4 shrink-0 text-muted-foreground transition-colors",
+                      "h-4 w-4 shrink-0 text-muted-foreground/80 transition-colors",
                       "group-hover:text-foreground",
-                      active && "text-primary"
+                      active && "text-primary dark:text-cyan"
                     )}
                   />
                   {item.label}
@@ -249,7 +245,7 @@ function SidebarBody({
         </ul>
       </nav>
 
-      <div className="space-y-3 border-t border-border p-4">
+      <div className="space-y-2 border-t border-sidebar-border px-3 pb-3 pt-3">
         <ul className="space-y-0.5">
           {footerItems.map((item) => {
             const Icon = item.icon;
@@ -260,13 +256,14 @@ function SidebarBody({
                 <Link
                   href={item.href}
                   onClick={onNavigate}
+                  aria-current={active ? "page" : undefined}
                   className={linkClass(active)}
                 >
                   <Icon
                     className={cn(
-                      "h-4 w-4 shrink-0 text-muted-foreground transition-colors",
+                      "h-4 w-4 shrink-0 text-muted-foreground/80 transition-colors",
                       "group-hover:text-foreground",
-                      active && "text-primary"
+                      active && "text-primary dark:text-cyan"
                     )}
                   />
                   {item.label}
@@ -276,16 +273,16 @@ function SidebarBody({
           })}
 
           <li>
-            <div className="flex min-h-10 items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground">
+            <div className="flex min-h-9 items-center justify-between gap-3 rounded-md px-2.5 py-1 text-sm font-medium text-sidebar-foreground">
               <span>Tema</span>
               {mounted ? (
                 <AnimatedThemeToggler
                   theme={theme}
                   onThemeChange={setTheme}
-                  className="inline-flex size-10 items-center justify-center rounded-lg border border-border bg-secondary/80 text-foreground transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
               ) : (
-                <span className="inline-flex size-10 rounded-lg border border-border bg-secondary/80" />
+                <span className="inline-flex size-9 rounded-md" />
               )}
             </div>
           </li>
@@ -296,21 +293,21 @@ function SidebarBody({
             <button
               type="button"
               className={cn(
-                "flex min-h-11 w-full items-center gap-3 rounded-lg border border-border bg-secondary/80 px-3 py-2.5 text-left transition-colors",
-                "hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                "flex min-h-11 w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left transition-colors",
+                "hover:bg-foreground/[0.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 pathname.startsWith("/perfil") && "ring-2 ring-primary/20"
               )}
             >
-              <Avatar className="h-8 w-8 border border-border">
+              <Avatar className="h-8 w-8 ring-2 ring-card">
                 {user.avatarUrl ? (
                   <AvatarImage src={user.avatarUrl} alt="" />
                 ) : null}
-                <AvatarFallback className="bg-primary text-[10px] font-medium text-primary-foreground">
+                <AvatarFallback className="bg-foreground/[0.08] text-xs font-semibold text-foreground">
                   {initials}
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-foreground">
+                <p className="truncate text-sm font-semibold text-foreground">
                   {user.name}
                 </p>
                 <p className="truncate text-xs text-muted-foreground">

@@ -16,8 +16,8 @@ export type SectorListItem = {
 export function SectorsListView({ sectors }: { sectors: SectorListItem[] }) {
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">
-      <header className="shrink-0 border-b border-border bg-card px-6 py-5">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
+      <header className="shrink-0 bg-background px-6 pb-3 pt-6">
+        <h1 className="text-2xl font-semibold text-foreground">
           Setores
         </h1>
         <p className="mt-0.5 text-sm text-muted-foreground">

@@ -10,6 +10,11 @@ export type BoardDemand = {
   publishedUrl: string | null;
   briefingLockedAt: string | null;
   clientName: string;
+  clientId?: string;
+  assigneeId?: string | null;
+  assigneeName?: string | null;
+  /** Nome de quem está com o cronômetro rodando agora, se houver. */
+  producingBy?: string | null;
 };
 
 export type BoardColumn = {

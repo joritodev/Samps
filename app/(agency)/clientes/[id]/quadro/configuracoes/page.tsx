@@ -1,7 +1,9 @@
+import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { UserType } from "@prisma/client";
 import { BoardSettingsForm } from "@/components/board/board-settings-form";
 import { Button } from "@/components/ui/button";
+import { parseAppearance } from "@/lib/board/appearance";
 import { db } from "@/lib/db";
 import { getActiveBoardByClientId } from "@/lib/services/board.service";
 import { requireClientAccess } from "@/lib/permissions/check";
@@ -52,14 +54,15 @@ export default async function QuadroConfiguracoesPage({
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">
-      <header className="shrink-0 border-b border-border bg-card px-6 py-5">
+      <header className="shrink-0 bg-background px-6 pb-3 pt-6">
         <Link
           href={`/clientes/${params.id}/quadro`}
           className="text-xs text-muted-foreground transition-colors hover:text-foreground"
         >
-          ← Quadro
+          <ChevronLeft className="size-3.5" aria-hidden />
+          Quadro
         </Link>
-        <h1 className="mt-1 text-xl font-semibold tracking-tight text-foreground">
+        <h1 className="mt-1 text-2xl font-semibold text-foreground">
           Configurações do quadro
         </h1>
         <p className="mt-0.5 text-sm text-muted-foreground">
@@ -87,6 +90,9 @@ export default async function QuadroConfiguracoesPage({
           externalUsers={externalUsers}
           canManageLists={canManageLists}
           canEditBoard={canEditBoard}
+          appearance={parseAppearance(board.config)}
+          clientName={board.client.name}
+          brandColor={board.client.brandColor}
         />
       </div>
     </div>

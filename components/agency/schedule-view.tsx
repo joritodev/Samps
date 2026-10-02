@@ -70,8 +70,8 @@ export function ScheduleView({
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">
-      <header className="shrink-0 border-b border-border bg-background px-6 py-5">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
+      <header className="shrink-0 bg-background px-6 pb-3 pt-6">
+        <h1 className="text-2xl font-semibold text-foreground">
           {title}
         </h1>
         <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>
@@ -93,7 +93,7 @@ export function ScheduleView({
             </TabsList>
 
             <TabsContent value="lista">
-              <div className="overflow-hidden rounded-xl border border-border bg-card">
+              <div className="overflow-hidden rounded-xl border border-border/80 bg-card shadow-xs">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border text-left text-xs uppercase tracking-wider text-muted-foreground">
@@ -141,7 +141,7 @@ export function ScheduleView({
 
             <TabsContent value="calendario">
               <div className="flex flex-col gap-4 xl:flex-row">
-                <section className="min-w-0 flex-1 rounded-xl border border-border bg-card p-4">
+                <section className="min-w-0 flex-1 rounded-xl border border-border/80 bg-card shadow-xs p-4">
                   <div className="mb-3 flex items-center justify-between">
                     <div className="flex items-center gap-1">
                       <Button
@@ -235,7 +235,7 @@ export function ScheduleView({
                   </div>
                 </section>
 
-                <aside className="w-full shrink-0 rounded-xl border border-border bg-card p-4 xl:w-72">
+                <aside className="w-full shrink-0 rounded-xl border border-border/80 bg-card shadow-xs p-4 xl:w-72">
                   <h2 className="text-sm font-semibold text-foreground">
                     {format(selectedDay, "d 'de' MMMM", { locale: ptBR })}
                   </h2>

@@ -1,6 +1,8 @@
 import {
   DemandStatus,
   UserType,
+  type DemandOrigin,
+  type DemandType,
   type ProjectStatus,
   type ShootStatus,
 } from "@prisma/client";
@@ -54,6 +56,37 @@ export const DEMAND_STATUS_LABEL: Record<DemandStatus, string> = {
 
 export function demandStatusLabel(status: string) {
   return DEMAND_STATUS_LABEL[status as DemandStatus] ?? status;
+}
+
+export const DEMAND_TYPE_LABEL: Record<DemandType, string> = {
+  FEED: "Feed",
+  STORY: "Story",
+  REEL: "Reel",
+  VIDEO: "Vídeo",
+  DESIGN: "Design",
+  COPY: "Copy",
+  FOLLOW_UP: "Follow-up",
+  EXTRA: "Extra",
+  PROJECT_TASK: "Tarefa de projeto",
+  OTHER: "Outro",
+};
+
+export function demandTypeLabel(type: string) {
+  return DEMAND_TYPE_LABEL[type as DemandType] ?? type;
+}
+
+export const DEMAND_ORIGIN_LABEL: Record<DemandOrigin, string> = {
+  CLIENT_BOARD: "Quadro do cliente",
+  SOCIAL_PANEL: "Social",
+  DESIGN_BOARD: "Design",
+  VIDEO_BOARD: "Vídeo",
+  MANAGEMENT: "Gestão",
+  PROJECT: "Projeto",
+  EXTRA: "Extra",
+};
+
+export function demandOriginLabel(origin: string) {
+  return DEMAND_ORIGIN_LABEL[origin as DemandOrigin] ?? origin;
 }
 
 /** Status em que o briefing ainda pode ser concluído e demandado. */

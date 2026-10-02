@@ -7,6 +7,12 @@ afterEach(() => {
   cleanup();
 });
 
+function dotOf(label: string) {
+  return screen
+    .getByText(label)
+    .querySelector('[data-slot="metric-dot"]') as HTMLElement;
+}
+
 describe("MetricCard", () => {
   it("renders the label and value", () => {
     render(<MetricCard label="Em aberto" value={12} />);
@@ -15,38 +21,39 @@ describe("MetricCard", () => {
     expect(screen.getByText("12")).toBeTruthy();
   });
 
-  it("uses text-xs on the label and token tone classes", () => {
+  it("uses text-xs on the label and a dot only for alert tones", () => {
     const { rerender } = render(
       <MetricCard label="Produção" value={4} tone="success" />
     );
 
     expect(screen.getByText("Produção").className).toMatch(/text-xs/);
-    expect(screen.getByText("Produção").parentElement?.className).toMatch(
-      /border-success/
-    );
+    expect(dotOf("Produção")).toBeNull();
+
+    rerender(<MetricCard label="Ajustes" value={1} tone="warning" />);
+    expect(dotOf("Ajustes").className).toMatch(/bg-warning/);
 
     rerender(<MetricCard label="Atrasadas" value={2} tone="danger" />);
-    expect(screen.getByText("Atrasadas").parentElement?.className).toMatch(
-      /border-destructive/
-    );
-    expect(screen.getByText("Atrasadas").parentElement?.className).not.toMatch(
-      /emerald|amber|violet/
-    );
+    expect(dotOf("Atrasadas").className).toMatch(/bg-destructive/);
+    expect(dotOf("Atrasadas").className).not.toMatch(/emerald|amber|violet/);
   });
 
-  it("tints the value with the matching semantic tone", () => {
+  it("colors the value only for alert tones", () => {
     const { rerender } = render(
       <MetricCard label="Atrasadas" value={2} tone="danger" />
     );
     expect(screen.getByText("2").className).toMatch(/text-destructive/);
 
     rerender(<MetricCard label="Em aberto" value={12} tone="primary" />);
-    expect(screen.getByText("12").className).toMatch(/text-primary/);
-
-    rerender(<MetricCard label="Produção" value={4} tone="success" />);
-    expect(screen.getByText("4").className).toMatch(/text-success/);
+    expect(screen.getByText("12").className).toMatch(/text-foreground/);
 
     rerender(<MetricCard label="Hoje" value={1} />);
     expect(screen.getByText("1").className).toMatch(/text-foreground/);
+  });
+
+  it("drops the frame in the plain variant", () => {
+    render(<MetricCard label="Hoje" value={1} variant="plain" />);
+    expect(screen.getByText("Hoje").parentElement?.className).not.toMatch(
+      /border/
+    );
   });
 });

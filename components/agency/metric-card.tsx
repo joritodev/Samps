@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 export type MetricTone =
@@ -9,20 +10,18 @@ export type MetricTone =
   | "warning"
   | "danger";
 
-const toneClasses: Record<MetricTone, string> = {
-  default: "border-border bg-card",
-  primary: "border-primary/35 bg-primary/5",
-  brand: "border-brand/35 bg-brand/5",
-  success: "border-success/35 bg-success/5",
-  warning: "border-warning/35 bg-warning/5",
-  danger: "border-destructive/35 bg-destructive/5",
+/** Só tons de alerta ganham ponto: cor aparece quando carrega significado. */
+const dotToneClasses: Partial<Record<MetricTone, string>> = {
+  warning: "bg-warning",
+  danger: "bg-destructive",
 };
 
+/** Só alerta (perigo/atenção) colore o número; o resto fica em tinta. */
 const valueToneClasses: Record<MetricTone, string> = {
   default: "text-foreground",
-  primary: "text-primary",
-  brand: "text-brand",
-  success: "text-success",
+  primary: "text-foreground",
+  brand: "text-foreground",
+  success: "text-foreground",
   warning: "text-warning",
   danger: "text-destructive",
 };
@@ -31,32 +30,55 @@ export function MetricCard({
   label,
   value,
   tone = "default",
+  variant = "card",
+  href,
+  hint,
   className,
 }: {
   label: string;
   value: ReactNode;
   tone?: MetricTone;
+  /** `plain` = sem moldura, para faixas de KPI dentro de um único card. */
+  variant?: "card" | "plain";
+  /** Número clicável: leva à lista que ele conta. */
+  href?: string;
+  /** Explica o que o número conta (tooltip nativo + texto para leitor de tela). */
+  hint?: string;
   className?: string;
 }) {
+  const Wrapper = href ? Link : "div";
   return (
-    <div
+    <Wrapper
+      href={href as string}
+      title={hint}
       className={cn(
-        "rounded-lg border px-3 py-2.5",
-        toneClasses[tone],
+        "min-w-0 px-3.5 py-3",
+        variant === "card" &&
+          "rounded-lg border border-border/80 bg-card shadow-xs",
+        href &&
+          "group block transition-colors hover:bg-secondary/70 focus-visible:relative focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
         className
       )}
     >
-      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+      <p className="flex items-center gap-1.5 truncate text-xs font-medium text-muted-foreground">
+        {dotToneClasses[tone] ? (
+          <span
+            aria-hidden
+            data-slot="metric-dot"
+            className={cn("size-1.5 shrink-0 rounded-full", dotToneClasses[tone])}
+          />
+        ) : null}
         {label}
       </p>
       <p
         className={cn(
-          "mt-0.5 text-xl font-semibold tabular-nums tracking-tight",
+          "num mt-1 text-2xl font-semibold leading-none",
           valueToneClasses[tone]
         )}
       >
         {value}
       </p>
-    </div>
+      {hint ? <span className="sr-only">{hint}</span> : null}
+    </Wrapper>
   );
 }

@@ -130,7 +130,7 @@ export function GlobalSearch({
     <>
       <Button
         variant="outline"
-        className="h-9 w-full min-w-0 justify-start overflow-hidden border-border bg-secondary/60 px-3 text-muted-foreground"
+        className="h-9 w-full min-w-0 justify-start overflow-hidden bg-card px-3 font-normal text-muted-foreground hover:text-foreground"
         onClick={() => setOpen(true)}
       >
         <Search className="mr-2 h-4 w-4 shrink-0" />
@@ -138,7 +138,7 @@ export function GlobalSearch({
           Pesquisar
         </span>
         {!compact ? (
-          <kbd className="shrink-0 rounded border border-border bg-background px-1.5 text-[10px] font-medium">
+          <kbd className="shrink-0 rounded border border-border bg-muted px-1.5 font-sans text-xs font-medium">
             ⌘K
           </kbd>
         ) : null}

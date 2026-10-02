@@ -216,7 +216,7 @@ export function LoginView({
             Bem-vindo à Samps
           </p>
           <p className="mt-3 text-pretty text-sm leading-relaxed text-muted-foreground">
-            Sua central de operação criativa — demandas, setores, agenda e
+            Sua central de operação criativa: demandas, setores, agenda e
             performance em um só lugar, com método e resultado.
           </p>
         </div>

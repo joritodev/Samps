@@ -1,3 +1,4 @@
+import { ChevronLeft } from "lucide-react";
 import { Suspense } from "react";
 import Link from "next/link";
 import { UserStatus, UserType } from "@prisma/client";
@@ -86,7 +87,7 @@ export default async function CriarQuadroPage({
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">
-      <header className="shrink-0 border-b border-border bg-card px-6 py-5">
+      <header className="shrink-0 bg-background px-6 pb-3 pt-6">
         <Link
           href={
             existingClient
@@ -95,9 +96,10 @@ export default async function CriarQuadroPage({
           }
           className="text-xs text-muted-foreground transition-colors hover:text-foreground"
         >
-          ← Clientes
+          <ChevronLeft className="size-3.5" aria-hidden />
+          Clientes
         </Link>
-        <h1 className="mt-1 text-xl font-semibold tracking-tight text-foreground">
+        <h1 className="mt-1 text-2xl font-semibold text-foreground">
           Criar quadro de cliente
         </h1>
         <p className="mt-0.5 text-sm text-muted-foreground">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { toast } from "sonner";
@@ -8,14 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { MorphWindow } from "@/components/ui/morph-window";
+import { DemandChips, DemandSummary, shortCode } from "@/components/agency/demand-summary";
 import { BoardColumnEmpty } from "@/components/board/board-column-empty";
 import { DemandCard } from "@/components/agency/demand-card";
 import { assumirDemanda, concluirProducao } from "@/app/actions/designer";
@@ -23,10 +17,6 @@ import { aprovarDemanda, solicitarAjuste } from "@/app/actions/review";
 import type { BoardColumn, BoardDemand } from "@/types/board-ui";
 
 type SheetMode = "claim" | "deliver" | "review" | null;
-
-function shortCode(id: string) {
-  return id.replace(/-/g, "").slice(0, 6).toUpperCase();
-}
 
 function DesignColumn({
   column,
@@ -86,6 +76,9 @@ function DesignDemandSheet({
   const [materialUrl, setMaterialUrl] = useState("");
   const [adjustmentReason, setAdjustmentReason] = useState("");
   const [pending, startTransition] = useTransition();
+  // O pai zera demanda/modo ao fechar; a janela precisa deles na saída animada.
+  const last = useRef<{ demand: BoardDemand; mode: SheetMode } | null>(null);
+  if (demand && mode) last.current = { demand, mode };
 
   useEffect(() => {
     if (!demand) return;
@@ -155,37 +148,88 @@ function DesignDemandSheet({
     });
   }
 
-  if (!demand || !mode) return null;
+  const shown = demand && mode ? { demand, mode } : last.current;
+  if (!shown) return null;
+  const sd = shown.demand;
+  const sm = shown.mode;
 
   const canSubmitDeliver = materialUrl.trim().length > 0;
   const canRequestAdjustment = adjustmentReason.trim().length > 0;
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="right"
-        className="flex w-full flex-col gap-0 p-0 sm:max-w-lg"
-      >
-        <SheetHeader className="space-y-1 border-b border-border px-6 py-5 text-left">
-          <SheetTitle className="pr-8 text-xl font-semibold tracking-tight text-foreground">
-            {demand.title}
-          </SheetTitle>
-          <SheetDescription className="text-sm text-muted-foreground">
-            Demanda #{shortCode(demand.id)} · {demand.clientName}
-          </SheetDescription>
-        </SheetHeader>
+    <MorphWindow
+      open={open}
+      onOpenChange={onOpenChange}
+      morphId={sd.id}
+      size="md"
+      title={sd.title}
+      description={`Demanda de ${sd.clientName}`}
+      eyebrow={
+        <>
+          Demanda #{shortCode(sd.id)} · {sd.clientName}
+        </>
+      }
+      chips={<DemandChips demand={sd} />}
+      rail={<DemandSummary demand={sd} variant="rail" />}
+      footer={
+        <>
 
-        <div className="flex-1 space-y-8 overflow-y-auto px-6 py-6">
+          {sm === "claim" && (
+            <Button
+              type="button"
+              disabled={pending}
+              onClick={handleAssumir}
+            >
+              {pending ? "Assumindo..." : "Assumir demanda"}
+            </Button>
+          )}
+
+          {sm === "deliver" && (
+            <Button
+              type="button"
+              disabled={pending || !canSubmitDeliver}
+              onClick={handleConcluir}
+            >
+              {pending
+                ? "Enviando..."
+                : "Concluir produção e enviar para revisão"}
+            </Button>
+          )}
+
+          {sm === "review" && (
+            <>
+              <Button
+                type="button"
+                className="bg-success text-white hover:bg-success/90"
+                disabled={pending}
+                onClick={handleAprovar}
+              >
+                {pending ? "Aprovando..." : "Aprovar material"}
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                disabled={pending || !canRequestAdjustment}
+                onClick={handleSolicitarAjuste}
+              >
+                {pending ? "Enviando..." : "Solicitar ajuste"}
+              </Button>
+            </>
+          )}
+                </>
+      }
+    >
+      <div className="space-y-8">
           <section className="space-y-2">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Briefing
             </h3>
             <div className="whitespace-pre-wrap rounded-lg border border-border bg-muted p-4 text-sm leading-relaxed text-foreground">
-              {demand.description?.trim() || "Sem briefing preenchido."}
+              {sd.description?.trim() || "Sem briefing preenchido."}
             </div>
           </section>
 
-          {mode === "deliver" && (
+          {sm === "deliver" && (
             <section className="space-y-4">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Entrega do material
@@ -207,21 +251,21 @@ function DesignDemandSheet({
             </section>
           )}
 
-          {mode === "review" && (
+          {sm === "review" && (
             <>
               <section className="space-y-3">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Material entregue
                 </h3>
-                {demand.materialUrl ? (
+                {sd.materialUrl ? (
                   <a
-                    href={demand.materialUrl}
+                    href={sd.materialUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 rounded-lg border border-teal-200 bg-teal-50 px-4 py-3 text-sm font-medium text-teal-800 transition-colors hover:bg-teal-100"
                   >
                     <ExternalLink className="h-4 w-4 shrink-0" />
-                    <span className="truncate">{demand.materialUrl}</span>
+                    <span className="truncate">{sd.materialUrl}</span>
                   </a>
                 ) : (
                   <p className="rounded-lg border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">
@@ -243,57 +287,8 @@ function DesignDemandSheet({
               </section>
             </>
           )}
-        </div>
-
-        <SheetFooter className="mt-auto gap-2 border-t border-border bg-muted/80 px-6 py-4 sm:flex-col sm:space-x-0">
-          {mode === "claim" && (
-            <Button
-              type="button"
-              className="w-full"
-              disabled={pending}
-              onClick={handleAssumir}
-            >
-              {pending ? "Assumindo..." : "Assumir demanda"}
-            </Button>
-          )}
-
-          {mode === "deliver" && (
-            <Button
-              type="button"
-              className="w-full"
-              disabled={pending || !canSubmitDeliver}
-              onClick={handleConcluir}
-            >
-              {pending
-                ? "Enviando..."
-                : "Concluir produção e enviar para revisão"}
-            </Button>
-          )}
-
-          {mode === "review" && (
-            <>
-              <Button
-                type="button"
-                className="w-full bg-emerald-600 text-white hover:bg-emerald-700"
-                disabled={pending}
-                onClick={handleAprovar}
-              >
-                {pending ? "Aprovando..." : "Aprovar material"}
-              </Button>
-              <Button
-                type="button"
-                variant="destructive"
-                className="w-full"
-                disabled={pending || !canRequestAdjustment}
-                onClick={handleSolicitarAjuste}
-              >
-                {pending ? "Enviando..." : "Solicitar ajuste"}
-              </Button>
-            </>
-          )}
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+      </div>
+    </MorphWindow>
   );
 }
 
@@ -316,7 +311,7 @@ export function DesignBoard({
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-card">
-      <header className="flex shrink-0 items-center justify-between gap-4 border-b border-border bg-card px-6 py-5">
+      <header className="flex shrink-0 items-center justify-between gap-4 bg-background px-6 pb-3 pt-6">
         <div className="min-w-0">
           <Link
             href="/setores"

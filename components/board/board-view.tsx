@@ -4,6 +4,7 @@ import { Suspense, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { BoardHeader, BoardInsights } from "@/components/board/board-header";
+import { coverCss, type BoardAppearance } from "@/lib/board/appearance";
 import { BoardFilters } from "@/components/board/board-filters";
 import { BoardKanban } from "@/components/board/board-kanban";
 import { BoardCalendar } from "@/components/board/board-calendar";
@@ -138,6 +139,7 @@ export function BoardView({
   clientName,
   logoUrl,
   brandColor,
+  appearance,
   contractStatus,
   competences,
   currentCompetenceId,
@@ -155,6 +157,7 @@ export function BoardView({
   clientName: string;
   logoUrl?: string | null;
   brandColor?: string | null;
+  appearance?: BoardAppearance;
   contractStatus?: string;
   socialName?: string;
   managerName?: string;
@@ -181,6 +184,7 @@ export function BoardView({
   const [insightsOpen, setInsightsOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState<CardDetail | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [openingId, setOpeningId] = useState<string | null>(null);
   const [extraSheetOpen, setExtraSheetOpen] = useState(false);
   const [canChangeDeadline, setCanChangeDeadline] = useState(false);
   const [canEditChecklist, setCanEditChecklist] = useState(false);
@@ -191,6 +195,7 @@ export function BoardView({
   const columns = lists.map((l) => ({ id: l.id, title: l.name }));
 
   function openCard(id: string) {
+    setOpeningId(id);
     setSheetOpen(true);
     startTransition(async () => {
       const result = await getCardDetailAction(id);
@@ -210,7 +215,32 @@ export function BoardView({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-card">
+    <div
+      data-board-accent={appearance?.accent ?? undefined}
+      className="flex h-full min-h-0 flex-col bg-card"
+    >
+      {appearance?.coverImage ? (
+        <div
+          data-board-cover="image"
+          className="h-14 shrink-0 overflow-hidden border-b border-border sm:h-20 lg:h-24"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={appearance.coverImage.url}
+            alt=""
+            width={appearance.coverImage.w}
+            height={appearance.coverImage.h}
+            className="size-full object-cover"
+          />
+        </div>
+      ) : appearance?.cover ? (
+        <div
+          aria-hidden
+          data-board-cover={appearance.cover}
+          className="h-14 shrink-0 border-b border-border sm:h-20 lg:h-24"
+          style={{ background: coverCss(appearance.cover) }}
+        />
+      ) : null}
       <Suspense
         fallback={
           <div className="shrink-0 border-b border-border px-6 py-4 text-sm text-muted-foreground">
@@ -264,6 +294,8 @@ export function BoardView({
       <CardDetailSheet
         clientId={clientId}
         card={selectedCard}
+        morphId={openingId}
+        fallbackTitle={[...Object.values(grouped).flat(), ...calendarDemands].find((d) => d.id === openingId)?.title}
         open={sheetOpen}
         onOpenChange={(o) => {
           setSheetOpen(o);

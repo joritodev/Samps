@@ -330,9 +330,9 @@ export function TeamView({
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">
-      <header className="flex shrink-0 flex-wrap items-center justify-between gap-4 border-b border-border bg-background px-6 py-5">
+      <header className="flex shrink-0 flex-wrap items-center justify-between gap-4 bg-background px-6 pb-3 pt-6">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">
+          <h1 className="text-2xl font-semibold text-foreground">
             Equipe
           </h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
@@ -374,7 +374,7 @@ export function TeamView({
                 hint="Convide alguém para começar."
               />
             ) : (
-              <div className="overflow-x-auto rounded-xl border border-border bg-card">
+              <div className="overflow-x-auto rounded-xl border border-border/80 bg-card shadow-xs">
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">
@@ -406,22 +406,21 @@ export function TeamView({
                           {member.sectorName ?? "—"}
                         </TableCell>
                         <TableCell className="pr-6 text-right">
-                          <div className="flex flex-col items-end gap-2">
+                          <div className="flex flex-wrap items-center justify-end gap-2">
                             {member.absenceToday ? (
                               <Badge variant="outline" className={ABSENCE_BADGE}>
                                 {member.absenceToday.kindLabel} ·{" "}
                                 {member.absenceToday.rangeLabel}
                               </Badge>
                             ) : (
-                              <span className="text-xs text-muted-foreground">
-                                Disponível
-                              </span>
+                              <span className="text-xs text-muted-foreground">Disponível</span>
                             )}
                             {canManageAbsences &&
                             member.id !== currentUserId ? (
                               <Button
                                 variant="ghost"
                                 size="sm"
+                                className="h-7 px-2"
                                 onClick={() => openAbsence(member.id)}
                               >
                                 Registrar ausência
@@ -444,7 +443,7 @@ export function TeamView({
                 hint="Registre uma folga ou férias para o time ver."
               />
             ) : (
-              <div className="overflow-x-auto rounded-xl border border-border bg-card">
+              <div className="overflow-x-auto rounded-xl border border-border/80 bg-card shadow-xs">
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">
@@ -499,7 +498,7 @@ export function TeamView({
                 hint="Todos os convites enviados já foram aceitos."
               />
             ) : (
-              <div className="overflow-x-auto rounded-xl border border-border bg-card">
+              <div className="overflow-x-auto rounded-xl border border-border/80 bg-card shadow-xs">
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">

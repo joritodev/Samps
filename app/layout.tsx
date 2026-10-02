@@ -17,7 +17,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: "Samps OS",
-  description: "Plataforma de gestão operacional — Samps Digital",
+  description: "Plataforma de gestão operacional da Samps Digital",
 };
 
 export default function RootLayout({

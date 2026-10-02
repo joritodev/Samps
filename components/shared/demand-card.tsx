@@ -1,8 +1,14 @@
+import Link from "next/link";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { CalendarClock, Timer } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import {
+  demandOriginLabel,
+  demandStatusLabel,
+  demandTypeLabel,
+} from "@/lib/agency/labels";
+import { cn, userInitials } from "@/lib/utils";
 
 type DemandCardData = {
   id: string;
@@ -30,34 +36,42 @@ type DemandCardData = {
   } | null;
 };
 
-const statusLabels: Record<string, string> = {
-  BACKLOG: "Backlog",
-  PENDING_PLANNING: "Pendente planejamento",
-  OPEN: "Aberta",
-  AVAILABLE: "Disponível",
-  DEMANDED: "Demandada",
-  IN_PRODUCTION: "Em produção",
-  IN_REVIEW: "Em revisão",
-  ADJUSTMENTS: "Ajustes",
-  DONE: "Concluída",
-  CANCELLED: "Cancelada",
-  PUBLISHED: "Publicada",
-};
-
 export function DemandCard({
   demand,
   showOrigin,
   className,
   onClick,
+  href,
+  titleAs: TitleTag = "h3",
+  reason,
+  hidePriority,
+  morphId,
 }: {
   demand: DemandCardData;
   showOrigin?: boolean;
   className?: string;
   onClick?: () => void;
+  /** Card vira link (ex.: painel abre a demanda no quadro geral). */
+  href?: string;
+  /** Nível do título conforme a hierarquia da página. */
+  titleAs?: "h2" | "h3" | "h4";
+  /** Por que o card está aqui (ex.: "Atrasada há 2 dias"). */
+  reason?: { label: string; tone: "danger" | "warning" | "neutral" };
+  /** Esconde o chip de prioridade (quando a lista inteira é da mesma). */
+  hidePriority?: boolean;
+  /** Origem da animação de abertura do detalhe (padrão: id da demanda). */
+  morphId?: string;
 }) {
-  const originLabel = showOrigin && demand.client
-    ? `${demand.client.name} — ${demand.origin ?? demand.type}`
-    : undefined;
+  const morphProps = onClick ? { "data-morph-id": morphId ?? demand.id } : {};
+  const originLabel =
+    showOrigin && demand.client
+      ? `${demand.client.name} · ${
+          demand.sector?.name ??
+          (demand.origin
+            ? demandOriginLabel(demand.origin)
+            : demandTypeLabel(demand.type))
+        }`
+      : undefined;
 
   const overdue =
     demand.dueDate &&
@@ -66,66 +80,131 @@ export function DemandCard({
     demand.status !== "CANCELLED";
 
   const cardClassName = cn(
-    "rounded-xl border-border/60 shadow-soft transition-shadow",
-    onClick &&
-      "w-full cursor-pointer text-left hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-    overdue && "border-destructive/50",
+    "group/card flex flex-col gap-3 rounded-lg border border-border/80 bg-card p-3.5 text-card-foreground shadow-xs transition-[box-shadow,border-color,transform] duration-150 ease-out-soft",
+    (onClick || href) &&
+      "w-full cursor-pointer text-left hover:-translate-y-px hover:border-foreground/15 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+    overdue && "border-destructive/40",
     className
   );
 
   const body = (
     <>
-      <CardHeader className="pb-2">
+      {reason ? (
+        <span
+          className={cn(
+            "inline-flex w-fit items-center gap-1.5 text-xs font-semibold",
+            reason.tone === "danger" && "text-destructive",
+            reason.tone === "warning" && "text-warning",
+            reason.tone === "neutral" && "text-muted-foreground"
+          )}
+        >
+          {reason.label}
+        </span>
+      ) : null}
+      <div className="space-y-1.5">
         <div className="flex items-start justify-between gap-2">
-          <CardTitle className="text-sm font-medium leading-snug text-foreground">
+          <TitleTag data-morph-title className="font-sans text-sm font-medium leading-snug tracking-normal text-foreground">
             {demand.title}
-          </CardTitle>
-          {demand.priority && (
-            <Badge
-              variant="outline"
-              style={{ borderColor: demand.priority.color, color: demand.priority.color }}
-              className="shrink-0 text-xs"
-            >
+          </TitleTag>
+          {demand.priority && !hidePriority && (
+            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-foreground/[0.04] px-2 py-0.5 text-xs font-medium text-muted-foreground dark:bg-foreground/[0.08]">
+              <span
+                aria-hidden
+                className="size-1.5 rounded-full"
+                style={{ backgroundColor: demand.priority.color }}
+              />
               {demand.priority.name}
-            </Badge>
+            </span>
           )}
         </div>
         {originLabel && (
-          <p className="text-xs text-muted-foreground">{originLabel}</p>
+          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            {demand.client?.brandColor ? (
+              <span
+                aria-hidden
+                className="size-2 rounded-[3px]"
+                style={{ backgroundColor: demand.client.brandColor }}
+              />
+            ) : null}
+            {originLabel}
+          </p>
         )}
         {demand.isChecklistItem && demand.parentDemand?.title ? (
-          <Badge variant="secondary" className="mt-1 text-xs font-normal">
+          <Badge variant="secondary" className="h-auto py-0.5 font-normal">
             {demand.linkedChecklistItem?.checklist.title
               ? `Parte de: ${demand.parentDemand.title} · ${demand.linkedChecklistItem.checklist.title}`
               : `Parte de: ${demand.parentDemand.title}`}
           </Badge>
         ) : null}
-      </CardHeader>
-      <CardContent className="space-y-2 text-xs text-muted-foreground">
-        <div className="flex flex-wrap gap-1">
-          <Badge variant="secondary">{demand.type}</Badge>
-          {demand.format && <Badge variant="outline">{demand.format}</Badge>}
-          <Badge variant="outline">{statusLabels[demand.status] ?? demand.status}</Badge>
-          {overdue && <Badge variant="destructive">Atrasada</Badge>}
-        </div>
-        <div className="flex justify-between">
-          {demand.dueDate && (
-            <span>Prazo: {format(new Date(demand.dueDate), "dd/MM", { locale: ptBR })}</span>
-          )}
-          {demand.assignee && <span>{demand.assignee.name}</span>}
-        </div>
-        {demand.timerPreview && (
-          <div className="rounded-md border border-amber-500/25 bg-amber-500/10 px-2 py-1 text-xs text-amber-950 dark:border-amber-400/25 dark:bg-amber-400/10 dark:text-amber-200">
-            <p>Executor: {demand.timerPreview.executor.name}</p>
-            <p>
-              {demand.timerPreview.status === "PAUSED" ? "Pausada" : "Em execução"} há:{" "}
-              <span className="tabular-nums">{demand.timerPreview.elapsedLabel}</span>
-            </p>
-          </div>
+      </div>
+
+      <div className="flex flex-wrap gap-1">
+        <Badge variant="secondary">{demandTypeLabel(demand.type)}</Badge>
+        {demand.format && <Badge variant="outline">{demand.format}</Badge>}
+        <Badge variant="outline">{demandStatusLabel(demand.status)}</Badge>
+        {overdue && reason?.tone !== "danger" && (
+          <Badge variant="destructive">Atrasada</Badge>
         )}
-      </CardContent>
+      </div>
+
+      {demand.dueDate || demand.assignee ? (
+        <div className="flex items-center justify-between gap-2 border-t border-border/70 pt-2.5 text-xs text-muted-foreground">
+          {demand.dueDate ? (
+            <span
+              className={cn(
+                "inline-flex items-center gap-1 tabular-nums",
+                overdue && "font-medium text-destructive"
+              )}
+            >
+              <CalendarClock className="size-3.5" aria-hidden />
+              {format(new Date(demand.dueDate), "dd MMM", { locale: ptBR })}
+            </span>
+          ) : (
+            <span />
+          )}
+          {demand.assignee && (
+            <span className="inline-flex min-w-0 items-center gap-1.5">
+              <span
+                aria-hidden
+                className="grid size-6 shrink-0 place-items-center rounded-full bg-foreground/[0.08] text-xs font-semibold leading-none text-foreground"
+              >
+                {userInitials(demand.assignee.name)}
+              </span>
+              <span className="truncate">{demand.assignee.name}</span>
+            </span>
+          )}
+        </div>
+      ) : null}
+
+      {demand.timerPreview && (
+        <div className="flex items-center gap-2 rounded-md bg-warning/10 px-2 py-1.5 text-xs text-amber-900 dark:text-amber-200">
+          <Timer className="size-3.5 shrink-0" aria-hidden />
+          <span className="min-w-0 flex-1 truncate">
+            {demand.timerPreview.executor.name} ·{" "}
+            {demand.timerPreview.status === "PAUSED" ? "Pausada" : "Em execução"} há
+          </span>
+          <span className="font-medium tabular-nums">
+            {demand.timerPreview.elapsedLabel}
+          </span>
+        </div>
+      )}
     </>
   );
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        draggable={false}
+        className={cardClassName}
+        aria-label={
+          reason ? `${demand.title}. ${reason.label}` : demand.title
+        }
+      >
+        {body}
+      </Link>
+    );
+  }
 
   if (onClick) {
     return (
@@ -133,12 +212,13 @@ export function DemandCard({
         type="button"
         draggable={false}
         onClick={onClick}
-        className={cn("border bg-card text-card-foreground", cardClassName)}
+        className={cardClassName}
+        {...morphProps}
       >
         {body}
       </button>
     );
   }
 
-  return <Card className={cardClassName}>{body}</Card>;
+  return <div className={cardClassName}>{body}</div>;
 }

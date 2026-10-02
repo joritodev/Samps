@@ -20,7 +20,7 @@ export default async function ContratosSettingsPage() {
           <ChevronLeft className="h-3.5 w-3.5" />
           Configurações
         </Link>
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
+        <h1 className="text-2xl font-semibold text-foreground">
           Contratos
         </h1>
         <p className="mt-0.5 text-sm text-muted-foreground">
@@ -48,7 +48,7 @@ export default async function ContratosSettingsPage() {
                     {" · "}
                     {format(c.startDate, "dd/MM/yyyy", { locale: ptBR })}
                     {c.endDate
-                      ? ` → ${format(c.endDate, "dd/MM/yyyy", { locale: ptBR })}`
+                      ? ` até ${format(c.endDate, "dd/MM/yyyy", { locale: ptBR })}`
                       : ""}
                     {c.services.length
                       ? ` · ${c.services.length} serviço(s)`

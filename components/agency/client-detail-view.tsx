@@ -166,7 +166,7 @@ export function ClientDetailView({
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">
-      <header className="shrink-0 border-b border-border bg-card px-6 py-5">
+      <header className="shrink-0 bg-background px-6 pb-3 pt-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex min-w-0 items-start gap-4">
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-muted text-base font-semibold text-foreground/80 ring-1 ring-border">
@@ -630,7 +630,7 @@ export function ClientDetailView({
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm text-muted-foreground">
-                  O portal exibe apenas entregas e calendário — sem atrasos,
+                  O portal exibe apenas entregas e calendário, sem atrasos,
                   responsáveis internos ou comentários da operação.
                 </p>
                 {canViewAsClient && client.hasBoard ? (

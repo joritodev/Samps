@@ -85,7 +85,7 @@ export function RolesSettings({
           <ChevronLeft className="h-3.5 w-3.5" />
           Configurações
         </Link>
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
+        <h1 className="text-2xl font-semibold text-foreground">
           Funções e permissões
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">

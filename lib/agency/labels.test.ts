@@ -9,7 +9,23 @@ import {
   canRequestAdjustment,
   canReviewDemand,
   DEMAND_ACTION_DENIED,
+  demandOriginLabel,
+  demandStatusLabel,
+  demandTypeLabel,
 } from "./labels";
+
+describe("rótulos de enum na UI", () => {
+  it("traduz tipo, origem e status sem vazar o código do enum", () => {
+    expect(demandTypeLabel("STORY")).toBe("Story");
+    expect(demandOriginLabel("SOCIAL_PANEL")).toBe("Social");
+    expect(demandStatusLabel("SCHEDULED")).toBe("Agendada");
+  });
+
+  it("devolve o valor original quando não conhece o código", () => {
+    expect(demandTypeLabel("NOVO")).toBe("NOVO");
+    expect(demandOriginLabel("NOVO")).toBe("NOVO");
+  });
+});
 
 describe("regras de acao por status", () => {
   it("permite demandar somente em planejamento", () => {

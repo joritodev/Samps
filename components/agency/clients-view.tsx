@@ -339,9 +339,9 @@ export function ClientsView({
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">
-      <header className="flex shrink-0 flex-wrap items-center justify-between gap-4 border-b border-border bg-background px-6 py-5">
+      <header className="flex shrink-0 flex-wrap items-center justify-between gap-4 bg-background px-6 pb-3 pt-6">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">
+          <h1 className="text-2xl font-semibold text-foreground">
             Clientes
           </h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
@@ -384,13 +384,13 @@ export function ClientsView({
             ) : null}
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-border bg-card">
+          <div className="overflow-x-auto rounded-xl border border-border/80 bg-card shadow-xs">
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="pl-6">Cliente</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Demandas em aberto</TableHead>
+                  <TableHead className="whitespace-nowrap">Em aberto</TableHead>
                   <TableHead>Quadro</TableHead>
                   <TableHead className="pr-6">Equipe</TableHead>
                 </TableRow>

@@ -47,8 +47,8 @@ export function SearchResults({
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">
-      <header className="shrink-0 border-b border-border bg-card px-6 py-5">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
+      <header className="shrink-0 bg-background px-6 pb-3 pt-6">
+        <h1 className="text-2xl font-semibold text-foreground">
           Pesquisa
         </h1>
         <form
@@ -106,7 +106,7 @@ export function SearchResults({
                 <h2 className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   {SEARCH_TYPE_LABEL[group.type]}
                 </h2>
-                <div className="overflow-hidden rounded-xl border border-border bg-card">
+                <div className="overflow-hidden rounded-xl border border-border/80 bg-card shadow-xs">
                   {group.items.map((hit) => (
                     <Link
                       key={`${hit.type}-${hit.id}`}

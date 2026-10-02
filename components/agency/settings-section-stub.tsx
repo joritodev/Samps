@@ -14,7 +14,7 @@ export function SettingsSectionStub({ title }: { title: string }) {
           <ChevronLeft className="h-3.5 w-3.5" />
           Configurações
         </Link>
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
+        <h1 className="text-2xl font-semibold text-foreground">
           {title}
         </h1>
       </header>

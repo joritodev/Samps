@@ -187,7 +187,7 @@ export function BoardWizard({
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value || undefined)}
       >
-        <option value="">— Nenhum —</option>
+        <option value="">Nenhum</option>
         {users.map((u) => (
           <option key={u.id} value={u.id}>
             {u.name}

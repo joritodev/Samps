@@ -85,7 +85,7 @@ export function AnnouncementsManager({
         return;
       }
       if (startsAt && new Date(startsAt) > new Date()) {
-        toast.success("Aviso agendado — aparece no mural a partir do início.");
+        toast.success("Aviso agendado. Ele aparece no mural a partir da data de início.");
       } else {
         toast.success("Aviso publicado no mural");
       }
@@ -136,7 +136,7 @@ export function AnnouncementsManager({
 
   return (
     <div className="space-y-8 p-6">
-      <section className="space-y-4 rounded-xl border border-border bg-card p-5">
+      <section className="space-y-4 rounded-xl border border-border/80 bg-card shadow-xs p-5">
         <div>
           <h2 className="text-base font-semibold text-foreground">Novo aviso</h2>
           <p className="text-sm text-muted-foreground">
@@ -229,7 +229,7 @@ export function AnnouncementsManager({
         {items.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nenhum aviso cadastrado.</p>
         ) : (
-          <ul className="divide-y divide-border rounded-xl border border-border bg-card">
+          <ul className="divide-y divide-border rounded-xl border border-border/80 bg-card shadow-xs">
             {items.map((item) => (
               <li
                 key={item.id}
@@ -246,7 +246,7 @@ export function AnnouncementsManager({
                   <p className="text-sm text-muted-foreground">{item.message}</p>
                   <p className="text-xs text-muted-foreground">
                     {formatWhen(item.startsAt)}
-                    {item.endsAt ? ` → ${formatWhen(item.endsAt)}` : " → sem fim"}
+                    {item.endsAt ? ` até ${formatWhen(item.endsAt)}` : ", sem data de fim"}
                     {" · "}
                     {item.authorName}
                   </p>
