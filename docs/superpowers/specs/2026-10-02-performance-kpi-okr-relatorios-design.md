@@ -20,7 +20,7 @@ A página Performance repete os mesmos números, não compara com nada e não di
 - **Escopo:** agência inteira, um setor ou uma pessoa.
 - **Período:** atual e o anterior de mesma duração (semana contra semana, trimestre contra trimestre, intervalo livre contra o intervalo imediatamente anterior).
 - **Indicadores** (catálogo `KPI_CATALOG`): ver seção 2.
-- **Variação:** valor atual, valor anterior, diferença e direção (melhor, pior, igual). "Melhor" depende do indicador (mais entregas é melhor, mais atrasadas é pior).
+- **Variação:** `OVERDUE`, `ADJUSTMENTS` e `UNASSIGNED_OPEN` são fotos de "agora" (o banco não guarda histórico de status), então **não comparam** com o período anterior; mostram só o valor atual. Os demais comparam. Valor atual, valor anterior, diferença e direção (melhor, pior, igual). "Melhor" depende do indicador (mais entregas é melhor, mais atrasadas é pior).
 - **Destaques:** atrasadas por setor, demandas sem responsável, ajustes, quem mais entregou, tipo de conteúdo mais lento.
 - **Frase de leitura:** gerada por regras ("Semana 18% melhor que a anterior…"), nunca por IA.
 - **Série diária** para o gráfico (atual contra anterior).
@@ -33,7 +33,7 @@ A página Performance repete os mesmos números, não compara com nada e não di
 |---|---|
 | `COMPLETED` | demandas com `productionCompletedAt` no período |
 | `ON_TIME_RATE` | entregues até o prazo / entregues com prazo |
-| `OVERDUE` | abertas com prazo vencido (instantâneo na data final) |
+| `OVERDUE` | abertas com prazo vencido, agora (sem comparação) |
 | `REWORK_RATE` | entregas que passaram por Ajuste / entregues |
 | `ADJUSTMENTS` | demandas em Ajuste |
 | `WORKED_HOURS` | soma de `WorkSession.totalActiveSeconds` |
