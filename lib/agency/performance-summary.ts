@@ -42,7 +42,11 @@ export type DateRange = { from: Date; to: Date };
  * Período atual (alinhado a dias de São Paulo) e o anterior, de mesma
  * duração, logo antes dele.
  */
-export function resolveComparisonRanges(range: DateRange): {
+export function resolveComparisonRanges(
+  range: DateRange,
+  /** Período de comparação escolhido (ex.: o dia útil anterior). Padrão: o de mesma duração logo antes. */
+  previousOverride?: DateRange
+): {
   current: DateRange;
   previous: DateRange;
   days: number;
@@ -51,12 +55,13 @@ export function resolveComparisonRanges(range: DateRange): {
   const toStart = startOfDayMs(dayKey(range.to));
   const days = Math.max(1, Math.round((toStart - fromMs) / DAY_MS) + 1);
   const toMs = fromMs + days * DAY_MS - 1;
+  const prevFrom = previousOverride ? startOfDayMs(dayKey(previousOverride.from)) : fromMs - days * DAY_MS;
   return {
     days,
     current: { from: new Date(fromMs), to: new Date(toMs) },
     previous: {
-      from: new Date(fromMs - days * DAY_MS),
-      to: new Date(fromMs - 1),
+      from: new Date(prevFrom),
+      to: new Date(prevFrom + days * DAY_MS - 1),
     },
   };
 }
@@ -247,12 +252,13 @@ export function buildHeadline(
 
 export function buildPerformanceSummary(input: {
   range: DateRange;
+  previousRange?: DateRange;
   /** Entregas concluídas em qualquer um dos dois períodos. */
   rows: DeliveryRow[];
   workedSeconds: { current: number; previous: number };
   snapshot: Snapshot;
 }): PerformanceSummary {
-  const ranges = resolveComparisonRanges(input.range);
+  const ranges = resolveComparisonRanges(input.range, input.previousRange);
   const curRows = input.rows.filter((r) => inRange(r.completedAt, ranges.current));
   const prevRows = input.rows.filter((r) => inRange(r.completedAt, ranges.previous));
   const cur = windowOf(curRows);

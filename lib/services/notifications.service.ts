@@ -48,7 +48,10 @@ export type DeliveryPrefKey =
   | "soundNotifications";
 
 export type NotificationPrefs = Record<NotificationPrefGroup, boolean> &
-  Record<DeliveryPrefKey, boolean>;
+  Record<DeliveryPrefKey, boolean> & {
+    /** Recebe por e-mail o resumo de líder (diário) ou de gestão (semanal). */
+    emailReports: boolean;
+  };
 
 export const DEFAULT_NOTIFICATION_PREFS: NotificationPrefs = {
   DEADLINE: true,
@@ -60,6 +63,7 @@ export const DEFAULT_NOTIFICATION_PREFS: NotificationPrefs = {
   soundAnnouncements: false,
   toastNotifications: true,
   soundNotifications: false,
+  emailReports: true,
 };
 
 function groupForType(type: NotificationType): NotificationPrefGroup {
@@ -98,6 +102,7 @@ export function parseNotificationPrefs(
     soundAnnouncements: obj.soundAnnouncements === true,
     toastNotifications: obj.toastNotifications !== false,
     soundNotifications: obj.soundNotifications === true,
+    emailReports: obj.emailReports !== false,
   };
 }
 

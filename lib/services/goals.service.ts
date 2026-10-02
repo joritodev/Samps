@@ -98,6 +98,26 @@ export async function listGoalsForUser(
   return rows.filter((g) => canViewGoal(g, viewer));
 }
 
+/**
+ * Metas vigentes da agência (e do setor, se pedido). Uso interno de rotinas do
+ * sistema (e-mails); não filtra por pessoa.
+ */
+export async function listRunningGoals(
+  scope: { sectorId?: string },
+  now: Date = new Date()
+): Promise<GoalRow[]> {
+  return db.goal.findMany({
+    where: {
+      active: true,
+      startsOn: { lte: now },
+      endsOn: { gte: now },
+      OR: [{ scope: "AGENCY" }, ...(scope.sectorId ? [{ scope: "SECTOR" as const, sectorId: scope.sectorId }] : [])],
+    },
+    include: withNames,
+    orderBy: [{ scope: "asc" }, { createdAt: "asc" }],
+  });
+}
+
 function scopeOf(goal: Pick<Goal, "scope" | "sectorId" | "userId">): SummaryScope {
   if (goal.scope === "SECTOR") return { sectorId: goal.sectorId ?? undefined };
   if (goal.scope === "USER") return { userId: goal.userId ?? undefined };

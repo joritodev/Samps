@@ -167,6 +167,26 @@ export async function listObjectivesForUser(
   return rows.filter((o) => canViewObjective(o, { id: user.id, sectorId, canManage: manage }));
 }
 
+/**
+ * Objetivos em andamento da agência (e do setor, se pedido) que cruzam `now`.
+ * Uso interno de rotinas do sistema (e-mails); não filtra por pessoa.
+ */
+export async function listRunningObjectives(
+  scope: { sectorId?: string },
+  now: Date = new Date()
+): Promise<ObjectiveRow[]> {
+  return db.objective.findMany({
+    where: {
+      status: "ACTIVE",
+      startsOn: { lte: now },
+      endsOn: { gte: now },
+      OR: [{ scope: "AGENCY" }, ...(scope.sectorId ? [{ scope: "SECTOR" as const, sectorId: scope.sectorId }] : [])],
+    },
+    include: includeAll,
+    orderBy: [{ scope: "asc" }, { createdAt: "asc" }],
+  });
+}
+
 function scopeOf(o: Pick<Objective, "scope" | "sectorId" | "userId">): SummaryScope {
   if (o.scope === "SECTOR") return { sectorId: o.sectorId ?? undefined };
   if (o.scope === "USER") return { userId: o.userId ?? undefined };
@@ -174,12 +194,19 @@ function scopeOf(o: Pick<Objective, "scope" | "sectorId" | "userId">): SummarySc
 }
 
 /** Valor atual dos resultados-chave KPI e progresso/confiança de tudo. */
+/** Quem olha: define só se o botão de check-in aparece. */
+export type ObjectiveViewer = { id: string; canManage: boolean };
+
+export function objectiveViewer(user: SessionUser): ObjectiveViewer {
+  return { id: user.id, canManage: canManage(user) };
+}
+
 export async function evaluateObjectives(
   rows: ObjectiveRow[],
-  user: SessionUser,
+  viewer: ObjectiveViewer,
   now: Date = new Date()
 ): Promise<ObjectiveView[]> {
-  const manage = canManage(user);
+  const manage = viewer.canManage;
   const evaluated = rows.slice(0, MAX_EVALUATED_OBJECTIVES);
   const summaries = new Map<string, Promise<Awaited<ReturnType<typeof getPerformanceSummary>>>>();
 
@@ -256,7 +283,7 @@ export async function evaluateObjectives(
         status: o.status as ObjectiveStatus,
         progress: objectiveProgress(keyResults.map((k) => k.progress)),
         confidence: worstConfidence(keyResults.map((k) => k.confidence)),
-        canCheckIn: manage || o.ownerId === user.id,
+        canCheckIn: manage || o.ownerId === viewer.id,
         keyResults,
       };
     })

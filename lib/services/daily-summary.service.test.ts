@@ -15,7 +15,11 @@ vi.mock("@/lib/db", () => ({ db }));
 vi.mock("@/lib/permissions/led-sectors", () => ({ listLedSectorIds }));
 vi.mock("@/lib/services/performance-summary.service", () => ({ getPerformanceSummary }));
 vi.mock("@/lib/services/goals.service", () => ({ listGoalsForUser, evaluateGoals }));
-vi.mock("@/lib/services/okr.service", () => ({ listObjectivesForUser, evaluateObjectives }));
+vi.mock("@/lib/services/okr.service", () => ({
+  listObjectivesForUser,
+  evaluateObjectives,
+  objectiveViewer: (u: { id: string }) => ({ id: u.id, canManage: false }),
+}));
 
 import { dismissDailySummary, getDailySummaryForModal } from "./daily-summary.service";
 
@@ -71,6 +75,8 @@ describe("getDailySummaryForModal: conteúdo", () => {
     const call = getPerformanceSummary.mock.calls[0][0];
     expect(call.scope).toEqual({ userId: "d1" });
     expect(call.range.from.toISOString()).toBe("2026-10-06T03:00:00.000Z");
+    // Compara com o dia útil anterior ao dia mostrado (terça, e não domingo).
+    expect(call.previousRange.from.toISOString()).toBe("2026-10-05T03:00:00.000Z");
     expect(content).toMatchObject({
       greeting: "Bom dia, Ana!", dayLabel: "ontem", completed: 4, onTimeRate: 1, workedHours: 5.2, dueToday: 2, overdue: 1, adjustments: 1,
     });
@@ -83,7 +89,9 @@ describe("getDailySummaryForModal: conteúdo", () => {
     getPerformanceSummary.mockResolvedValue(summary({ COMPLETED: { value: 1, previous: 0 } }));
     const content = await getDailySummaryForModal(designer, new Date("2026-10-05T12:00:00Z"));
     expect(content?.dayLabel).toBe("na sexta");
-    expect(getPerformanceSummary.mock.calls[0][0].range.from.toISOString()).toBe("2026-10-02T03:00:00.000Z");
+    const call = getPerformanceSummary.mock.calls[0][0];
+    expect(call.range.from.toISOString()).toBe("2026-10-02T03:00:00.000Z");
+    expect(call.previousRange.from.toISOString()).toBe("2026-10-01T03:00:00.000Z"); // quinta
   });
   it("só metas e objetivos já bastam para mostrar", async () => {
     evaluateGoals.mockResolvedValue([{ id: "g" }]);

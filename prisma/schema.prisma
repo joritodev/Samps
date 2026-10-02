@@ -349,6 +349,7 @@ model User {
   goalsAbout             Goal[]                   @relation("GoalUser")
   goalsCreated           Goal[]                   @relation("GoalCreator")
   reportsSeen            ReportSeen[]             @relation("ReportSeenUser")
+  reportDeliveries       ReportDelivery[]         @relation("ReportDeliveryUser")
   objectivesOwned        Objective[]              @relation("ObjectiveOwner")
   objectivesAbout        Objective[]              @relation("ObjectiveUser")
   objectivesCreated      Objective[]              @relation("ObjectiveCreator")
@@ -501,6 +502,33 @@ model ReportSeen {
   user User @relation("ReportSeenUser", fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, day])
+}
+
+enum ReportKind {
+  LEADER_DAILY
+  MANAGEMENT_WEEKLY
+}
+
+enum DeliveryStatus {
+  SENT
+  FAILED
+  SKIPPED
+}
+
+/// Registro de cada e-mail de resumo: garante um envio por pessoa e período.
+model ReportDelivery {
+  id        String         @id @default(cuid())
+  userId    String
+  kind      ReportKind
+  periodKey String
+  status    DeliveryStatus
+  error     String?
+  createdAt DateTime       @default(now())
+
+  user User @relation("ReportDeliveryUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, kind, periodKey])
+  @@index([createdAt])
 }
 
 model Announcement {
