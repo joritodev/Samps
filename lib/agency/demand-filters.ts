@@ -7,6 +7,12 @@ export const OPEN_EXCLUDED: DemandStatus[] = [
   DemandStatus.PUBLISHED,
 ];
 
+/** Já passaram da produção; só pedem ação se o prazo venceu. */
+export const READY_STATUSES: DemandStatus[] = [
+  DemandStatus.APPROVED,
+  DemandStatus.SCHEDULED,
+];
+
 /**
  * Etapas do ciclo da demanda, na ordem em que o trabalho anda.
  * Ajuste não é etapa: é retorno da Revisão e conta dentro de Produção

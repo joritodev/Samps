@@ -6,7 +6,11 @@ import {
   countDelaysInMonth,
   syncDemandDelays,
 } from "@/lib/services/delay.service";
-import { FLOW_STAGES, OPEN_EXCLUDED } from "@/lib/agency/demand-filters";
+import {
+  FLOW_STAGES,
+  OPEN_EXCLUDED,
+  READY_STATUSES,
+} from "@/lib/agency/demand-filters";
 import { attentionLabel, rankByAttention } from "@/lib/agency/attention";
 
 /** Cargos que produzem demanda (entram em "Carga por pessoa"). */
@@ -17,9 +21,6 @@ const PRODUCTION_TYPES: UserType[] = [
   UserType.VIDEO_EDITOR,
   UserType.OTHER,
 ];
-
-/** Já passaram da produção; só pedem ação da gestão se o prazo venceu. */
-const READY_STATUSES: DemandStatus[] = [DemandStatus.APPROVED, DemandStatus.SCHEDULED];
 
 export async function getManagementOverview(user: SessionUser) {
   const where = buildContextWhere(user, "management");
