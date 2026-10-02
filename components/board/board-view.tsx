@@ -4,6 +4,7 @@ import { Suspense, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { BoardHeader, BoardInsights } from "@/components/board/board-header";
+import { coverCss, type BoardAppearance } from "@/lib/board/appearance";
 import { BoardFilters } from "@/components/board/board-filters";
 import { BoardKanban } from "@/components/board/board-kanban";
 import { BoardCalendar } from "@/components/board/board-calendar";
@@ -138,6 +139,7 @@ export function BoardView({
   clientName,
   logoUrl,
   brandColor,
+  appearance,
   contractStatus,
   competences,
   currentCompetenceId,
@@ -155,6 +157,7 @@ export function BoardView({
   clientName: string;
   logoUrl?: string | null;
   brandColor?: string | null;
+  appearance?: BoardAppearance;
   contractStatus?: string;
   socialName?: string;
   managerName?: string;
@@ -212,7 +215,18 @@ export function BoardView({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-card">
+    <div
+      data-board-accent={appearance?.accent ?? undefined}
+      className="flex h-full min-h-0 flex-col bg-card"
+    >
+      {appearance?.cover ? (
+        <div
+          aria-hidden
+          data-board-cover={appearance.cover}
+          className="h-14 shrink-0 border-b border-border sm:h-20"
+          style={{ background: coverCss(appearance.cover) }}
+        />
+      ) : null}
       <Suspense
         fallback={
           <div className="shrink-0 border-b border-border px-6 py-4 text-sm text-muted-foreground">

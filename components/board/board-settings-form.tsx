@@ -18,6 +18,8 @@ import {
   updateBoardSettingsAction,
   updatePortalSettingsAction,
 } from "@/lib/actions/board.actions";
+import { BoardAppearanceForm } from "@/components/board/board-appearance-form";
+import type { BoardAppearance } from "@/lib/board/appearance";
 import { toast } from "sonner";
 
 type ListRow = { id: string; name: string; active: boolean };
@@ -38,6 +40,7 @@ type BoardSettingsProps = {
   externalUsers: { id: string; name: string; email: string }[];
   canManageLists: boolean;
   canEditBoard: boolean;
+  appearance: BoardAppearance;
 };
 
 export function BoardSettingsForm({
@@ -50,6 +53,7 @@ export function BoardSettingsForm({
   externalUsers,
   canManageLists,
   canEditBoard,
+  appearance,
 }: BoardSettingsProps) {
   const [pending, startTransition] = useTransition();
   const [portalName, setPortalName] = useState(portal.displayName);
@@ -122,6 +126,18 @@ export function BoardSettingsForm({
               >
                 Salvar
               </Button>
+            </CardContent>
+          </Card>
+          <Card className="mt-4 rounded-xl shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-base">Aparência</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <BoardAppearanceForm
+                boardId={boardId}
+                clientId={clientId}
+                initial={appearance}
+              />
             </CardContent>
           </Card>
         </TabsContent>

@@ -1,4 +1,5 @@
 import { NoBoardView, BoardView } from "@/components/board/board-view";
+import { parseAppearance } from "@/lib/board/appearance";
 import { db } from "@/lib/db";
 import {
   getActiveBoardByClientId,
@@ -95,6 +96,7 @@ export default async function ClienteQuadroPage({
       clientName={board.client.name}
       logoUrl={board.client.logoUrl}
       brandColor={board.client.brandColor}
+      appearance={parseAppearance(board.config)}
       contractStatus={board.contract?.status}
       socialName={undefined}
       managerName={undefined}

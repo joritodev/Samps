@@ -3,6 +3,7 @@ import Link from "next/link";
 import { UserType } from "@prisma/client";
 import { BoardSettingsForm } from "@/components/board/board-settings-form";
 import { Button } from "@/components/ui/button";
+import { parseAppearance } from "@/lib/board/appearance";
 import { db } from "@/lib/db";
 import { getActiveBoardByClientId } from "@/lib/services/board.service";
 import { requireClientAccess } from "@/lib/permissions/check";
@@ -89,6 +90,7 @@ export default async function QuadroConfiguracoesPage({
           externalUsers={externalUsers}
           canManageLists={canManageLists}
           canEditBoard={canEditBoard}
+          appearance={parseAppearance(board.config)}
         />
       </div>
     </div>

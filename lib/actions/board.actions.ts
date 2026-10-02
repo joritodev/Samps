@@ -15,6 +15,7 @@ import {
   reorderBoardLists,
   unarchiveBoardList,
 } from "@/lib/services/board.service";
+import { sanitizeAppearance } from "@/lib/board/appearance";
 import type { BoardWizardInput } from "@/types/board";
 
 export async function createBoardAction(input: BoardWizardInput) {
@@ -213,4 +214,36 @@ export async function unarchiveBoardListAction(
       error: e instanceof Error ? e.message : "Erro ao restaurar coluna",
     };
   }
+}
+
+/** Cor de destaque e capa do quadro: só chaves do conjunto fechado. */
+export async function updateBoardAppearanceAction(
+  boardId: string,
+  clientId: string,
+  input: { accent: string | null; cover: string | null }
+) {
+  const user = await requireClientAccess(clientId);
+  if (!hasPermission(user.permissions, "clients.edit")) {
+    return { error: "Sem permissão" };
+  }
+  const appearance = sanitizeAppearance(input);
+  if (!appearance) return { error: "Opção de aparência inválida" };
+
+  const board = await db.clientBoard.findFirst({
+    where: { id: boardId, clientId },
+    select: { config: true },
+  });
+  if (!board) return { error: "Quadro não encontrado" };
+
+  const current =
+    board.config && typeof board.config === "object" && !Array.isArray(board.config)
+      ? (board.config as Record<string, unknown>)
+      : {};
+  await db.clientBoard.update({
+    where: { id: boardId },
+    data: { config: { ...current, appearance } },
+  });
+  revalidatePath(`/clientes/${clientId}/quadro`);
+  revalidatePath(`/clientes/${clientId}/quadro/configuracoes`);
+  return { success: true };
 }
