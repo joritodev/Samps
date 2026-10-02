@@ -15,17 +15,24 @@ describe("preferências", () => {
     expect(parseDensity("compact")).toBe("compact");
     expect(parseDensity("x")).toBe("comfortable");
   });
+  it("tema do cookie fora do catálogo é ignorado", () => {
+    expect(readPreferences('samps-theme=x"]{display:none').theme).toBeNull();
+    expect(readPreferences("samps-theme=samps").theme).toBeNull();
+  });
   it("lê do cookie", () => {
-    expect(readPreferences("a=1; samps-accent=azul; samps-density=compact")).toEqual({
+    expect(readPreferences("a=1; samps-theme=rosa; samps-accent=azul; samps-density=compact")).toEqual({
+      theme: "rosa",
       accent: "azul",
       density: "compact",
     });
-    expect(readPreferences("")).toEqual({ accent: null, density: "comfortable" });
+    expect(readPreferences("")).toEqual({ theme: null, accent: null, density: "comfortable" });
   });
   it("script de boot é sintaticamente válido e só lista chaves do conjunto", () => {
     expect(() => new Function(PREFERENCES_BOOT_SCRIPT)).not.toThrow();
     expect(PREFERENCES_BOOT_SCRIPT).toContain('"violeta"');
     expect(PREFERENCES_BOOT_SCRIPT).not.toContain('"teal"');
+    expect(PREFERENCES_BOOT_SCRIPT).toContain('"lavanda"');
+    expect(PREFERENCES_BOOT_SCRIPT).not.toContain('"samps"');
   });
 });
 
@@ -46,8 +53,8 @@ const hsl = (v: string) => v.trim().split(/[\s%]+/).filter(Boolean).map(Number) 
 
 describe("contraste das cores de destaque", () => {
   const css = readFileSync("app/globals.css", "utf8");
-  const light = Array.from(css.matchAll(/^\[data-accent="(\w+)"\][^{]*\{ --primary: ([^;]+);/gm));
-  const dark = Array.from(css.matchAll(/^\.dark \[data-accent="(\w+)"\][^{]*\{ --primary: ([^;]+);/gm));
+  const light = Array.from(css.matchAll(/^html\[data-accent="(\w+)"\][^{]*\{ --primary: ([^;]+);/gm));
+  const dark = Array.from(css.matchAll(/^html\.dark\[data-accent="(\w+)"\][^{]*\{ --primary: ([^;]+);/gm));
   const lightFg = hslToLum(...hsl("0 0% 100%"));
   const darkFg = hslToLum(...hsl("220 28% 8%"));
 

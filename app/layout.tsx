@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
+// themes.css ANTES de globals.css: acento pessoal (globals) vence o tema em empate.
+import "./themes.css";
 import "./globals.css";
 import { PREFERENCES_BOOT_SCRIPT } from "@/lib/theme/preferences";
 
