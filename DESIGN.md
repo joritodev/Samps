@@ -146,6 +146,14 @@ Neutros frios calibrados com uma cor de ação e um acento quente de marca.
 ### Semantic
 - **Sucesso** (#16833E), **Atenção** (#A95C04), **Perigo** (#DC2828): só para estado real (entregue, ajuste pendente, atrasada). Em fundo, sempre em tinta de 10–15%.
 
+### Themes (personalização)
+O padrão é **Samps** (Teal Profundo acima). Cada pessoa pode escolher, por dispositivo, um de 8 temas (Samps, Rosa, Coral, Areia, Verde, Azul, Lavanda, Grafite). Um tema é um matiz mais o modo claro/escuro e troca **só a moldura**: neutros tingidos (fundo, cards, bordas, menu) e a cor de destaque. Gerado por `lib/theme/palette.ts` para `app/themes.css` (`npm run themes:gen`), nunca editado à mão.
+- **Semânticas fixas:** perigo, aviso, sucesso, info, laranja da marca e cores de dado (setor, cliente) não mudam com o tema.
+- **Tintura contida:** saturação dos neutros ≤ 30% (claro) e ≤ 26% (escuro); Rosa e Coral usam menos, para o vermelho de atraso não se misturar ao fundo.
+- **Alerta nunca só por cor:** o motivo no card ("Atrasada há 2 dias") leva ícone e texto.
+- **Precedência:** cor do quadro (`data-board-accent`) > cor de destaque pessoal (`data-accent`) > cor do tema (`data-theme`) > Samps.
+- **Contraste por teste:** `lib/theme/themes-contrast.test.ts` valida todos os pares em todos os temas e modos; se um matiz não fechar, sai do catálogo (o teste não é afrouxado).
+
 ### Named Rules
 **The One Action Rule.** O Teal Profundo marca a ação principal da tela e o estado ativo. Se aparece em mais de um botão cheio por área, um deles está errado.
 

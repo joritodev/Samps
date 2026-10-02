@@ -5,6 +5,7 @@ import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { startThemeViewTransition } from "@/lib/theme/view-transition";
+import { ThemePicker } from "@/components/agency/theme-picker";
 import { BOARD_ACCENTS } from "@/lib/board/appearance";
 import {
   applyPreferences,
@@ -59,17 +60,24 @@ export function ThemesSettings() {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
+  const [colorTheme, setColorTheme] = useState<string | null>(null);
   const [accent, setAccent] = useState<string | null>(null);
   const [density, setDensity] = useState<DensityId>("comfortable");
 
   useEffect(() => {
     setMounted(true);
     const prefs = readPreferences(document.cookie);
+    setColorTheme(prefs.theme);
     setAccent(prefs.accent);
     setDensity(prefs.density);
   }, []);
 
-  function savePrefs(next: { accent: string | null; density: DensityId }) {
+  function savePrefs(next: {
+    theme: string | null;
+    accent: string | null;
+    density: DensityId;
+  }) {
+    setColorTheme(next.theme);
     setAccent(next.accent);
     setDensity(next.density);
     applyPreferences(next);
@@ -106,11 +114,11 @@ export function ThemesSettings() {
           Aparência
         </h1>
         <p className="mt-0.5 text-sm text-muted-foreground">
-          Modo, cor de destaque e densidade. Valem só neste dispositivo.
+          Modo, tema, cor de destaque e densidade. Valem só neste dispositivo.
         </p>
       </header>
 
-      <div className="mx-auto w-full max-w-2xl space-y-10 p-6">
+      <div className="mx-auto w-full max-w-3xl space-y-10 p-6">
         <section>
           <div className="grid grid-cols-2 gap-4">
             {(
@@ -142,6 +150,23 @@ export function ThemesSettings() {
           </div>
         </section>
 
+        <section aria-labelledby="theme-title" className="space-y-3">
+          <div>
+            <h2 id="theme-title" className="text-sm font-semibold text-foreground">
+              Tema
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Paleta completa em claro e escuro. A cor de destaque abaixo, se
+              escolhida, sobrepõe a do tema.
+            </p>
+          </div>
+          <ThemePicker
+            value={colorTheme}
+            ready={mounted}
+            onChange={(id) => savePrefs({ theme: id, accent, density })}
+          />
+        </section>
+
         <section aria-labelledby="accent-title" className="space-y-3">
           <div>
             <h2 id="accent-title" className="text-sm font-semibold text-foreground">
@@ -149,12 +174,13 @@ export function ThemesSettings() {
             </h2>
             <p className="text-xs text-muted-foreground">
               Botões, abas e foco. Quadros que têm cor própria mantêm a deles, e
-              alertas de atraso continuam vermelhos.
+              alertas de atraso continuam vermelhos. Com um tema ativo, vale a
+              cor do tema até você escolher outra aqui.
             </p>
           </div>
           <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Cor de destaque">
-            {BOARD_ACCENTS.map((a) => {
-              const selected = mounted && (accent ?? "teal") === a.id;
+            {BOARD_ACCENTS.filter((a) => !(colorTheme && a.id === "teal")).map((a) => {
+              const selected = mounted && (accent ?? (colorTheme ? null : "teal")) === a.id;
               return (
                 <button
                   key={a.id}
@@ -163,7 +189,7 @@ export function ThemesSettings() {
                   aria-checked={selected}
                   aria-label={a.label}
                   title={a.label}
-                  onClick={() => savePrefs({ accent: a.id === "teal" ? null : a.id, density })}
+                  onClick={() => savePrefs({ theme: colorTheme, accent: a.id === "teal" ? null : a.id, density })}
                   className={cn(
                     "grid size-9 place-items-center rounded-full border border-border text-white outline-none transition-shadow focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                     selected && "ring-2 ring-foreground ring-offset-2 ring-offset-background"
@@ -175,6 +201,15 @@ export function ThemesSettings() {
               );
             })}
           </div>
+          {colorTheme && accent ? (
+            <button
+              type="button"
+              onClick={() => savePrefs({ theme: colorTheme, accent: null, density })}
+              className="rounded-md text-xs font-medium text-muted-foreground underline underline-offset-4 outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              Usar a cor do tema
+            </button>
+          ) : null}
         </section>
 
         <section aria-labelledby="density-title" className="space-y-3">
@@ -200,7 +235,7 @@ export function ThemesSettings() {
                   type="button"
                   role="radio"
                   aria-checked={selected}
-                  onClick={() => savePrefs({ accent, density: o.id })}
+                  onClick={() => savePrefs({ theme: colorTheme, accent, density: o.id })}
                   className={cn(
                     "rounded-xl p-3 text-left outline-none transition-shadow focus-visible:ring-2 focus-visible:ring-ring",
                     selected

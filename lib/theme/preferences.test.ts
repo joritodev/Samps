@@ -15,17 +15,24 @@ describe("preferências", () => {
     expect(parseDensity("compact")).toBe("compact");
     expect(parseDensity("x")).toBe("comfortable");
   });
+  it("tema do cookie fora do catálogo é ignorado", () => {
+    expect(readPreferences('samps-theme=x"]{display:none').theme).toBeNull();
+    expect(readPreferences("samps-theme=samps").theme).toBeNull();
+  });
   it("lê do cookie", () => {
-    expect(readPreferences("a=1; samps-accent=azul; samps-density=compact")).toEqual({
+    expect(readPreferences("a=1; samps-theme=rosa; samps-accent=azul; samps-density=compact")).toEqual({
+      theme: "rosa",
       accent: "azul",
       density: "compact",
     });
-    expect(readPreferences("")).toEqual({ accent: null, density: "comfortable" });
+    expect(readPreferences("")).toEqual({ theme: null, accent: null, density: "comfortable" });
   });
   it("script de boot é sintaticamente válido e só lista chaves do conjunto", () => {
     expect(() => new Function(PREFERENCES_BOOT_SCRIPT)).not.toThrow();
     expect(PREFERENCES_BOOT_SCRIPT).toContain('"violeta"');
     expect(PREFERENCES_BOOT_SCRIPT).not.toContain('"teal"');
+    expect(PREFERENCES_BOOT_SCRIPT).toContain('"lavanda"');
+    expect(PREFERENCES_BOOT_SCRIPT).not.toContain('"samps"');
   });
 });
 
