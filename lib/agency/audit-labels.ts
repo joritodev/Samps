@@ -32,6 +32,9 @@ export const AUDIT_ACTION_LABEL: Record<AuditAction, string> = {
   WORK_SESSION_RESUMED: "Cronômetro retomado",
   WORK_SESSION_COMPLETED: "Cronômetro finalizado",
   PRIORITY_RECALCULATED: "Prioridades recalculadas",
+  GOAL_CREATED: "Meta criada",
+  GOAL_UPDATED: "Meta atualizada",
+  GOAL_DELETED: "Meta apagada",
   LOGIN: "Login",
   LOGIN_FAILED: "Falha de login",
   OTHER: "Outro",
@@ -45,6 +48,7 @@ export const ENTITY_TYPE_LABEL: Record<string, string> = {
   Shoot: "Captação",
   ClientBoard: "Quadro",
   ClientPortal: "Portal",
+  Goal: "Meta",
 };
 
 export function auditActionLabel(action: AuditAction) {

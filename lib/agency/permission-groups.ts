@@ -42,6 +42,7 @@ export const PERMISSION_GROUPS: { label: string; codes: PermissionCode[] }[] = [
       "timers.view",
       "reports.view",
       "history.view",
+      "goals.manage",
     ],
   },
   {
