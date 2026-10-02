@@ -55,6 +55,16 @@ describe("resolveComparisonRanges", () => {
     expect(previous.from.toISOString()).toBe("2025-12-29T03:00:00.000Z");
   });
 
+  it("aceita outro período de comparação (ex.: o dia útil anterior)", () => {
+    const { current, previous } = resolveComparisonRanges(
+      { from: new Date("2026-10-05T15:00:00Z"), to: new Date("2026-10-05T15:00:00Z") },
+      { from: new Date("2026-10-02T15:00:00Z"), to: new Date("2026-10-02T15:00:00Z") }
+    );
+    expect(current.from.toISOString()).toBe("2026-10-05T03:00:00.000Z");
+    expect(previous.from.toISOString()).toBe("2026-10-02T03:00:00.000Z");
+    expect(previous.to.toISOString()).toBe("2026-10-03T02:59:59.999Z");
+  });
+
   it("um único dia compara com o dia anterior", () => {
     const { days, previous } = resolveComparisonRanges({
       from: new Date("2026-10-02T15:00:00Z"),

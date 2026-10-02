@@ -74,6 +74,7 @@ export async function updateNotificationPrefsAction(input: {
   soundAnnouncements: boolean;
   toastNotifications: boolean;
   soundNotifications: boolean;
+  emailReports: boolean;
 }) {
   const user = await requireAuth();
   try {

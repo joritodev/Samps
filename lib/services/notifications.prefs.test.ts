@@ -24,4 +24,11 @@ describe("parseNotificationPrefs delivery", () => {
     expect(p.soundAnnouncements).toBe(true);
     expect(p.ASSIGNMENT).toBe(true);
   });
+
+  it("resumos por e-mail: ligado por padrão, só desliga com false explícito", () => {
+    expect(parseNotificationPrefs(null).emailReports).toBe(true);
+    expect(parseNotificationPrefs({}).emailReports).toBe(true);
+    expect(parseNotificationPrefs({ emailReports: "nao" }).emailReports).toBe(true);
+    expect(parseNotificationPrefs({ emailReports: false }).emailReports).toBe(false);
+  });
 });

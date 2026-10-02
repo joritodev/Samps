@@ -17,6 +17,7 @@ import {
   deleteGoal,
   evaluateGoals,
   listGoalsForUser,
+  listRunningGoals,
   setGoalActive,
   updateGoal,
 } from "./goals.service";
@@ -187,5 +188,17 @@ describe("evaluateGoals", () => {
     const scopes = getPerformanceSummary.mock.calls.map((c) => c[0].scope);
     expect(scopes).toContainEqual({ sectorId: "s1" });
     expect(scopes).toContainEqual({ userId: "u1" });
+  });
+});
+
+describe("listRunningGoals", () => {
+  it("agência e, se pedido, o setor; só ativas que cruzam hoje", async () => {
+    const now = new Date("2026-10-15T12:00:00Z");
+    await listRunningGoals({ sectorId: "s1" }, now);
+    const where = db.goal.findMany.mock.calls[0][0].where;
+    expect(where).toMatchObject({ active: true, startsOn: { lte: now }, endsOn: { gte: now } });
+    expect(where.OR).toEqual([{ scope: "AGENCY" }, { scope: "SECTOR", sectorId: "s1" }]);
+    await listRunningGoals({}, now);
+    expect(db.goal.findMany.mock.calls[1][0].where.OR).toEqual([{ scope: "AGENCY" }]);
   });
 });

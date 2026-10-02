@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dailyMessage, greeting, isDailySummaryAudience, previousWorkday } from "./daily-summary";
+import { dailyMessage, greeting, isDailySummaryAudience, previousWorkday, workdayBefore } from "./daily-summary";
 
 describe("isDailySummaryAudience", () => {
   it("quem executa e não lidera setor", () => {
@@ -29,6 +29,15 @@ describe("previousWorkday", () => {
     const range = previousWorkday(new Date("2026-10-07T15:00:00Z"));
     expect(range.from.toISOString()).toBe("2026-10-06T03:00:00.000Z");
     expect(range.to.toISOString()).toBe("2026-10-07T02:59:59.999Z");
+  });
+});
+
+describe("workdayBefore", () => {
+  it("pula o fim de semana", () => {
+    expect(workdayBefore("2026-10-06").key).toBe("2026-10-05"); // terça → segunda
+    expect(workdayBefore("2026-10-05").key).toBe("2026-10-02"); // segunda → sexta
+    expect(workdayBefore("2026-10-04").key).toBe("2026-10-02"); // domingo → sexta
+    expect(workdayBefore("2026-10-03").key).toBe("2026-10-02"); // sábado → sexta
   });
 });
 

@@ -11,15 +11,24 @@ function weekday(key: string): number {
   return new Date(`${key}T12:00:00Z`).getUTCDay();
 }
 
+export type DayWindow = { key: string; from: Date; to: Date };
+
+function windowOf(key: string): DayWindow {
+  return { key, from: new Date(startOfDayMs(key)), to: new Date(endOfDayMs(key)) };
+}
+
+/** Dia útil imediatamente antes de `key`: segunda, domingo e sábado olham a sexta. */
+export function workdayBefore(key: string): DayWindow {
+  const back = { 1: 3, 0: 2, 6: 1 }[weekday(key)] ?? 1;
+  return windowOf(addDays(key, -back));
+}
+
 /**
  * "Ontem" do resumo: o dia útil anterior. Segunda, domingo e sábado mostram
  * a sexta; os demais dias, o dia anterior.
  */
-export function previousWorkday(now: Date): { key: string; from: Date; to: Date } {
-  const today = dayKey(now);
-  const back = { 1: 3, 0: 2, 6: 1 }[weekday(today)] ?? 1;
-  const key = addDays(today, -back);
-  return { key, from: new Date(startOfDayMs(key)), to: new Date(endOfDayMs(key)) };
+export function previousWorkday(now: Date): DayWindow {
+  return workdayBefore(dayKey(now));
 }
 
 export type DailyFacts = {

@@ -4,13 +4,19 @@ import {
   greeting,
   isDailySummaryAudience,
   previousWorkday,
+  workdayBefore,
 } from "@/lib/agency/daily-summary";
 import { OPEN_EXCLUDED } from "@/lib/agency/demand-filters";
 import { addDays, dayKey, endOfDayMs, startOfDayMs } from "@/lib/agency/sp-calendar";
 import { db } from "@/lib/db";
 import { listLedSectorIds } from "@/lib/permissions/led-sectors";
 import { evaluateGoals, listGoalsForUser, type GoalView } from "@/lib/services/goals.service";
-import { evaluateObjectives, listObjectivesForUser, type ObjectiveView } from "@/lib/services/okr.service";
+import {
+  evaluateObjectives,
+  listObjectivesForUser,
+  objectiveViewer,
+  type ObjectiveView,
+} from "@/lib/services/okr.service";
 import { getPerformanceSummary } from "@/lib/services/performance-summary.service";
 import type { SessionUser } from "@/types/auth";
 
@@ -47,7 +53,7 @@ export async function relevantGoalsForUser(user: SessionUser, now: Date, limit: 
 export async function ownedObjectivesForUser(user: SessionUser, now: Date, limit: number) {
   const rows = await listObjectivesForUser(user, { period: "atual", now });
   const owned = rows.filter((o) => o.ownerId === user.id && o.status === "ACTIVE");
-  return evaluateObjectives(owned.slice(0, limit), user, now);
+  return evaluateObjectives(owned.slice(0, limit), objectiveViewer(user), now);
 }
 
 async function alreadySeen(userId: string, day: string) {
@@ -74,8 +80,15 @@ export async function getDailySummaryForModal(
   if (await alreadySeen(user.id, today)) return null;
 
   const day = previousWorkday(now);
+  // Compara com o dia útil anterior a ele (não com o dia corrido, que pode ser fim de semana).
+  const before = workdayBefore(day.key);
   const [summary, dueToday, goals, objectives] = await Promise.all([
-    getPerformanceSummary({ scope: { userId: user.id }, range: { from: day.from, to: day.to }, now }),
+    getPerformanceSummary({
+      scope: { userId: user.id },
+      range: { from: day.from, to: day.to },
+      previousRange: { from: before.from, to: before.to },
+      now,
+    }),
     db.demand.count({
       where: {
         assigneeId: user.id,

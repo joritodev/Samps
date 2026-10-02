@@ -6,6 +6,7 @@ import { hasPermission } from "@/lib/permissions/resolve";
 import {
   evaluateObjectives,
   listObjectivesForUser,
+  objectiveViewer,
   type OkrPeriodFilter,
 } from "@/lib/services/okr.service";
 
@@ -21,7 +22,7 @@ export default async function PerformanceOkrsPage({
   const period = PERIODS.find((p) => p === searchParams.periodo) ?? "atual";
 
   const [objectives, sectors, people] = await Promise.all([
-    listObjectivesForUser(user, { period }).then((rows) => evaluateObjectives(rows, user)),
+    listObjectivesForUser(user, { period }).then((rows) => evaluateObjectives(rows, objectiveViewer(user))),
     canManage
       ? db.sector.findMany({ where: { isActive: true }, orderBy: { name: "asc" }, select: { id: true, name: true } })
       : Promise.resolve([]),

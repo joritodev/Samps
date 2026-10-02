@@ -82,11 +82,13 @@ async function workedSeconds(scope: SummaryScope, range: DateRange) {
 export async function getPerformanceSummary(params: {
   scope?: SummaryScope;
   range: DateRange;
+  /** Período de comparação; padrão: o de mesma duração logo antes. */
+  previousRange?: DateRange;
   now?: Date;
 }): Promise<PerformanceSummary> {
   const scope = params.scope ?? {};
   const now = params.now ?? new Date();
-  const { current, previous } = resolveComparisonRanges(params.range);
+  const { current, previous } = resolveComparisonRanges(params.range, params.previousRange);
   const where = demandScopeWhere(scope);
   const open = { status: { notIn: OPEN_EXCLUDED } };
 
@@ -95,7 +97,10 @@ export async function getPerformanceSummary(params: {
       db.demand.findMany({
         where: {
           ...where,
-          productionCompletedAt: { gte: previous.from, lte: current.to },
+          productionCompletedAt: {
+            gte: previous.from < current.from ? previous.from : current.from,
+            lte: previous.to > current.to ? previous.to : current.to,
+          },
         },
         select: {
           id: true,
@@ -136,6 +141,7 @@ export async function getPerformanceSummary(params: {
 
   return buildPerformanceSummary({
     range: params.range,
+    previousRange: params.previousRange,
     rows: toDeliveryRows(deliveries),
     workedSeconds: { current: workedCurrent, previous: workedPrevious },
     snapshot: {

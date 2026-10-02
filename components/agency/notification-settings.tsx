@@ -111,6 +111,30 @@ export function NotificationSettings({
             ))}
           </div>
 
+          <div className="space-y-3 pt-2">
+            <div>
+              <h2 className="text-sm font-semibold text-foreground">
+                Resumos por e-mail
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Líderes de setor recebem um resumo diário do setor; gestão e
+                administração recebem o resumo semanal da operação.
+              </p>
+            </div>
+            <div className="flex items-center justify-between gap-4 rounded-xl border border-border px-4 py-3">
+              <Label htmlFor="email-reports" className="text-sm font-medium">
+                Receber resumos por e-mail
+              </Label>
+              <Switch
+                id="email-reports"
+                checked={prefs.emailReports}
+                onCheckedChange={(v) =>
+                  setPrefs((p) => ({ ...p, emailReports: v }))
+                }
+              />
+            </div>
+          </div>
+
           <Button disabled={pending} onClick={save}>
             Salvar preferências
           </Button>

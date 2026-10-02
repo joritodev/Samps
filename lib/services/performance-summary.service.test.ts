@@ -76,6 +76,17 @@ describe("getPerformanceSummary", () => {
     expect(where.productionCompletedAt.lte.toISOString()).toBe("2026-10-12T02:59:59.999Z");
   });
 
+  it("com período de comparação escolhido, a busca cobre os dois", async () => {
+    await getPerformanceSummary({
+      range: { from: new Date("2026-10-05T15:00:00Z"), to: new Date("2026-10-05T15:00:00Z") },
+      previousRange: { from: new Date("2026-10-02T15:00:00Z"), to: new Date("2026-10-02T15:00:00Z") },
+      now,
+    });
+    const gte = db.demand.findMany.mock.calls[0][0].where.productionCompletedAt;
+    expect(gte.gte.toISOString()).toBe("2026-10-02T03:00:00.000Z");
+    expect(gte.lte.toISOString()).toBe("2026-10-06T02:59:59.999Z");
+  });
+
   it("tempo trabalhado de pessoa filtra por usuário, de setor pela demanda", async () => {
     await getPerformanceSummary({ scope: { userId: "u1" }, range, now });
     expect(db.workSession.aggregate.mock.calls[0][0].where).toMatchObject({ userId: "u1" });

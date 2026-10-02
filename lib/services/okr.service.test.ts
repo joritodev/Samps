@@ -24,6 +24,8 @@ import {
   duplicateObjective,
   evaluateObjectives,
   listObjectivesForUser,
+  listRunningObjectives,
+  objectiveViewer,
   setObjectiveStatus,
   updateKeyResult,
   updateObjective,
@@ -234,7 +236,7 @@ describe("evaluateObjectives", () => {
         ],
       }),
     ];
-    const [view] = await evaluateObjectives(rows as never, other, now);
+    const [view] = await evaluateObjectives(rows as never, objectiveViewer(other), now);
     const [k1, k2] = view.keyResults;
     expect(getPerformanceSummary.mock.calls[0][0].range.from.toISOString()).toBe("2026-10-01T03:00:00.000Z");
     expect(k1).toMatchObject({ current: 0.8, progress: expect.closeTo(0.5) });
@@ -243,12 +245,12 @@ describe("evaluateObjectives", () => {
     expect(view.progress).toBeCloseTo(0.5);
     expect(view.confidence).toBe("OFF_TRACK");
     expect(view.canCheckIn).toBe(false);
-    expect((await evaluateObjectives(rows as never, manager, now))[0].canCheckIn).toBe(true);
-    expect((await evaluateObjectives(rows as never, owner, now))[0].canCheckIn).toBe(true);
+    expect((await evaluateObjectives(rows as never, objectiveViewer(manager), now))[0].canCheckIn).toBe(true);
+    expect((await evaluateObjectives(rows as never, objectiveViewer(owner), now))[0].canCheckIn).toBe(true);
   });
   it("objetivo ainda não começado não consulta indicadores", async () => {
     const future = objective({ startsOn: new Date("2027-01-01T03:00:00Z"), endsOn: new Date("2027-03-31T02:59:59Z"), keyResults: [kr({ kind: "KPI", metric: "OVERDUE", unit: null, startValue: 20, targetValue: 5 })] });
-    const [view] = await evaluateObjectives([future] as never, owner, now);
+    const [view] = await evaluateObjectives([future] as never, objectiveViewer(owner), now);
     expect(getPerformanceSummary).not.toHaveBeenCalled();
     expect(view.keyResults[0].current).toBeNull();
     expect(view.progress).toBeNull();
@@ -256,7 +258,19 @@ describe("evaluateObjectives", () => {
   it("objetivos com o mesmo recorte e período dividem a consulta", async () => {
     getPerformanceSummary.mockResolvedValue({ indicators: { OVERDUE: { value: 10 } } });
     const mk = (id: string) => objective({ id, keyResults: [kr({ kind: "KPI", metric: "OVERDUE", unit: null, startValue: 20, targetValue: 5 })] });
-    await evaluateObjectives([mk("a"), mk("b")] as never, owner, now);
+    await evaluateObjectives([mk("a"), mk("b")] as never, objectiveViewer(owner), now);
     expect(getPerformanceSummary).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("listRunningObjectives", () => {
+  it("agência e, se pedido, o setor; só ativos que cruzam hoje", async () => {
+    const now = new Date("2026-11-15T15:00:00Z");
+    await listRunningObjectives({ sectorId: "s1" }, now);
+    const where = db.objective.findMany.mock.calls[0][0].where;
+    expect(where).toMatchObject({ status: "ACTIVE", startsOn: { lte: now }, endsOn: { gte: now } });
+    expect(where.OR).toEqual([{ scope: "AGENCY" }, { scope: "SECTOR", sectorId: "s1" }]);
+    await listRunningObjectives({}, now);
+    expect(db.objective.findMany.mock.calls[1][0].where.OR).toEqual([{ scope: "AGENCY" }]);
   });
 });
