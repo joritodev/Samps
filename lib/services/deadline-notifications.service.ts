@@ -1,4 +1,4 @@
-import { NotificationType, UserStatus } from "@prisma/client";
+import { NotificationType, UserStatus, UserType } from "@prisma/client";
 import { db } from "@/lib/db";
 import { OPEN_EXCLUDED, READY_STATUSES } from "@/lib/agency/demand-filters";
 import {
@@ -6,9 +6,11 @@ import {
   dedupePlanned,
   notificationKey,
   planDeadlineNotification,
+  planUnassignedOverdueDigest,
   type PlannedNotification,
 } from "@/lib/agency/deadline-notifications";
 import { createNotification } from "@/lib/services/notifications.service";
+import { resolveUserClientIds, resolveUserPermissions } from "@/lib/permissions/resolve";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** Se o cron rodar duas vezes no mesmo dia, o 2º não repete (janela menor que 24h). */
@@ -69,6 +71,15 @@ export async function runDeadlineNotifications(
     );
     if (item) planned.push(item);
   }
+  return deliver(planned, demands.length, now);
+}
+
+/** Grava os avisos planejados, pulando duplicatas recentes e quem desligou "Prazos". */
+async function deliver(
+  planned: PlannedNotification[],
+  considered: number,
+  now: Date
+): Promise<DeadlineRunResult> {
   const unique = dedupePlanned(planned);
 
   const recent = unique.length
@@ -86,7 +97,7 @@ export async function runDeadlineNotifications(
   );
 
   const result: DeadlineRunResult = {
-    considered: demands.length,
+    considered,
     planned: unique.length,
     created: 0,
     skippedDuplicates: 0,
@@ -109,4 +120,50 @@ export async function runDeadlineNotifications(
     else result.skippedByPreference += 1;
   }
   return result;
+}
+
+/**
+ * Resumo diário para a gestão (Admin e Gestão ativos): quantas demandas
+ * atrasadas estão sem responsável, dentro do que cada gestor enxerga.
+ */
+export async function runUnassignedOverdueDigest(
+  now: Date = new Date()
+): Promise<DeadlineRunResult> {
+  const demands = await db.demand.findMany({
+    where: {
+      status: { notIn: OPEN_EXCLUDED },
+      assigneeId: null,
+      dueDate: { lt: now },
+    },
+    select: { id: true, title: true, clientId: true, dueDate: true },
+    orderBy: { dueDate: "asc" },
+    take: MAX_DEMANDS,
+  });
+  if (demands.length === 0) {
+    return { considered: 0, planned: 0, created: 0, skippedDuplicates: 0, skippedByPreference: 0 };
+  }
+
+  const managers = await db.user.findMany({
+    where: {
+      status: UserStatus.ACTIVE,
+      userType: { in: [UserType.ADMIN, UserType.MANAGEMENT] },
+    },
+    select: { id: true },
+  });
+  const scopes = await Promise.all(
+    managers.map(async (m) => {
+      const [permissions, clientIds] = await Promise.all([
+        resolveUserPermissions(m.id),
+        resolveUserClientIds(m.id),
+      ]);
+      return { id: m.id, viewAll: permissions.includes("clients.view_all"), clientIds };
+    })
+  );
+
+  const planned = planUnassignedOverdueDigest(
+    demands.flatMap((d) => (d.dueDate ? [{ id: d.id, title: d.title, clientId: d.clientId, dueDate: d.dueDate }] : [])),
+    scopes,
+    now
+  );
+  return deliver(planned, demands.length, now);
 }

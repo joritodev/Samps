@@ -1,6 +1,9 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
-import { runDeadlineNotifications } from "@/lib/services/deadline-notifications.service";
+import {
+  runDeadlineNotifications,
+  runUnassignedOverdueDigest,
+} from "@/lib/services/deadline-notifications.service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,11 +28,21 @@ export async function GET(req: Request) {
   if (!validBearer(req.headers.get("authorization"), secret)) {
     return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
   }
-  try {
-    const result = await runDeadlineNotifications();
-    return NextResponse.json({ ok: true, ...result });
-  } catch (e) {
-    console.error("[cron/prazos] falhou", e);
-    return NextResponse.json({ error: "Falha ao gerar notificações." }, { status: 500 });
+  // Um não bloqueia o outro: se o resumo da gestão falhar, os avisos de prazo saem.
+  const [prazos, gestao] = await Promise.allSettled([
+    runDeadlineNotifications(),
+    runUnassignedOverdueDigest(),
+  ]);
+  for (const [name, r] of [["prazos", prazos], ["gestao", gestao]] as const) {
+    if (r.status === "rejected") console.error(`[cron/prazos] ${name} falhou`, r.reason);
   }
+  const failed = prazos.status === "rejected" || gestao.status === "rejected";
+  return NextResponse.json(
+    {
+      ok: !failed,
+      prazos: prazos.status === "fulfilled" ? prazos.value : { error: "falhou" },
+      gestao: gestao.status === "fulfilled" ? gestao.value : { error: "falhou" },
+    },
+    { status: failed ? 500 : 200 }
+  );
 }
