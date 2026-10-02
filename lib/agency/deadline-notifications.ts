@@ -99,3 +99,53 @@ export function dedupePlanned(items: PlannedNotification[]): PlannedNotification
 export function notificationKey(n: Pick<PlannedNotification, "userId" | "type" | "link">) {
   return `${n.userId}|${n.type}|${n.link}`;
 }
+
+/* ---------- Resumo para a gestão: atrasadas sem responsável ---------- */
+
+export const UNASSIGNED_LINK = "/demandas?filtro=sem-responsavel";
+
+export type UnassignedCandidate = {
+  id: string;
+  title: string;
+  clientId: string;
+  dueDate: Date;
+};
+
+/** Quem enxerga o quê: `viewAll` = todos os clientes; senão só os vinculados. */
+export type ManagerScope = { id: string; viewAll: boolean; clientIds: string[] };
+
+/**
+ * Um resumo por gestor (não um aviso por demanda): quantas demandas atrasadas
+ * estão sem responsável dentro do que ele enxerga e qual é a mais antiga.
+ * Sem nenhuma, não avisa.
+ */
+export function planUnassignedOverdueDigest(
+  demands: UnassignedCandidate[],
+  managers: ManagerScope[],
+  now: Date,
+  timeZone?: string
+): PlannedNotification[] {
+  const overdue = demands
+    .filter((d) => daysUntil(d.dueDate, now, timeZone) < 0)
+    .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
+
+  return managers.flatMap((m) => {
+    const visible = m.viewAll ? overdue : overdue.filter((d) => m.clientIds.includes(d.clientId));
+    if (visible.length === 0) return [];
+    const oldest = visible[0];
+    const days = -daysUntil(oldest.dueDate, now, timeZone);
+    const n = visible.length;
+    return [
+      {
+        userId: m.id,
+        type: "DEMAND_OVERDUE" as const,
+        title:
+          n === 1
+            ? "1 demanda atrasada sem responsável"
+            : `${n} demandas atrasadas sem responsável`,
+        message: `A mais antiga: ${oldest.title}, atrasada há ${days} ${days === 1 ? "dia" : "dias"}.`,
+        link: UNASSIGNED_LINK,
+      },
+    ];
+  });
+}

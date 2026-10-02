@@ -14,6 +14,15 @@ Os tipos `DEADLINE_NEAR` e `DEMAND_OVERDUE` existiam, mas nenhum ponto do sistem
 - **Mensagem:** `Título da demanda · Cliente`; link `/demandas?abrir=<id>`.
 - **Preferências:** `createNotification` já respeita o grupo "Prazos" de cada pessoa.
 
+## Resumo para a gestão: atrasadas sem responsável
+- **Quem recebe:** usuários `ACTIVE` do tipo Admin e Gestão.
+- **O que recebem:** **um resumo por gestor por dia**, não um aviso por demanda: "N demandas atrasadas sem responsável" + a mais antiga ("atrasada há X dias"). Sem nenhuma, não avisa.
+- **Escopo:** respeita o que cada gestor enxerga (mesma regra de `buildContextWhere`): com `clients.view_all` conta todas; sem ela, só os clientes vinculados.
+- **Atrasada** = prazo em dia de calendário anterior a hoje (São Paulo); demandas que vencem hoje não entram.
+- **Tipo e preferência:** `DEMAND_OVERDUE`, grupo "Prazos" (quem desligou não recebe). Link `/demandas?filtro=sem-responsavel`. Mesma janela de 20 h contra duplicata.
+- **Execução:** no mesmo cron/endpoint; falha de um não bloqueia o outro (`allSettled`; 500 se algum falhar, com o outro já gravado).
+- **Fora do escopo:** sem responsável com prazo próximo (ainda não atrasada); avisar por setor.
+
 ## Execução
 - **Vercel Cron** diário, `0 11 * * *` (UTC) = 08:00 em Brasília, via `vercel.json` → `GET /api/cron/prazos`. Cron diário vale no plano Hobby; só roda em Production.
 - **Segurança:** o endpoint exige `Authorization: Bearer ${CRON_SECRET}` (comparação em tempo constante). **Sem `CRON_SECRET` responde 503** (fechado por padrão). Erro interno não vaza detalhe. O middleware não cobre `/api`, então a checagem é do próprio endpoint.
@@ -21,7 +30,6 @@ Os tipos `DEADLINE_NEAR` e `DEMAND_OVERDUE` existiam, mas nenhum ponto do sistem
 - **Escala:** busca só demandas com prazo entre 32 dias atrás e 3 dias à frente, no máximo 5000.
 
 ## Fora do escopo
-- Avisar a gestão sobre demandas atrasadas sem responsável.
 - Horário por pessoa/fuso, resumo diário por e-mail e push.
 - Marcar notificações antigas como obsoletas quando a demanda é concluída.
 
