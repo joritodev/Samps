@@ -164,10 +164,13 @@ export default async function PainelGestaoPage() {
                 {stage.key === "revisao" && adjustments > 0 ? (
                   <Link
                     href={demandFilterHref("ajustes")}
-                    className="mx-1.5 mb-1.5 inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium text-warning transition-colors hover:bg-warning/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    title={`${adjustments} ${adjustments === 1 ? "demanda voltou" : "demandas voltaram"} da revisão para ajuste`}
+                    aria-label={`${adjustments} ${adjustments === 1 ? "voltou" : "voltaram"} para ajuste`}
+                    className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning transition-colors hover:bg-warning/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
-                    <CornerDownLeft className="size-3.5" aria-hidden />
-                    {adjustments} {adjustments === 1 ? "voltou" : "voltaram"} para ajuste
+                    <CornerDownLeft className="size-3" aria-hidden />
+                    <span className="num">{adjustments}</span>
+                    {adjustments === 1 ? "ajuste" : "ajustes"}
                   </Link>
                 ) : null}
               </div>
