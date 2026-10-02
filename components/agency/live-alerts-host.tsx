@@ -1,14 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Volume2, VolumeX } from "lucide-react";
 import { toast } from "sonner";
 import { pollLiveAlertsAction } from "@/app/actions/live-alerts";
+import { MUTE_KEY } from "@/components/agency/session-mute-button";
 import { AlertCard } from "@/components/notifications/alert-card";
 import { markNotificationReadAction } from "@/lib/actions/notifications.actions";
 import { NOTIFICATIONS_CHANGED_EVENT } from "@/lib/agency/notification-display";
-import { Button } from "@/components/ui/button";
 import {
   MURAL_DISMISS_KEY,
   OPEN_MURAL_EVENT,
@@ -22,7 +21,6 @@ import type { NotificationPrefs } from "@/lib/services/notifications.service";
 
 const SEEN_TOASTS_KEY = "samps:toasts-vistos";
 const BASELINE_KEY = "samps:toast-baseline";
-export const MUTE_KEY = "samps:avisos-mudo";
 
 function readJsonIds(key: string): string[] {
   try {
@@ -268,36 +266,4 @@ export function LiveAlertsHost() {
   }, [runPoll]);
 
   return null;
-}
-
-export function SessionMuteButton() {
-  const [muted, setMuted] = useState(false);
-
-  useEffect(() => {
-    setMuted(sessionStorage.getItem(MUTE_KEY) === "1");
-  }, []);
-
-  function toggle() {
-    const next = !muted;
-    setMuted(next);
-    sessionStorage.setItem(MUTE_KEY, next ? "1" : "0");
-  }
-
-  return (
-    <Button
-      type="button"
-      variant="ghost"
-      size="icon"
-      className="size-9 shrink-0"
-      onClick={toggle}
-      aria-pressed={muted}
-      aria-label={muted ? "Ativar som dos avisos" : "Silenciar avisos"}
-    >
-      {muted ? (
-        <VolumeX className="h-5 w-5" aria-hidden />
-      ) : (
-        <Volume2 className="h-5 w-5" aria-hidden />
-      )}
-    </Button>
-  );
 }

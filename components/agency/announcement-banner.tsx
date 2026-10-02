@@ -11,12 +11,16 @@ export type BannerAnnouncement = {
   title: string;
   message: string;
   kind: "INFO" | "URGENT" | "CELEBRATION";
+  authorName?: string;
+  startsAt?: string;
+  endsAt?: string | null;
 };
 
 export type BannerBirthday = {
   id: string;
   name: string;
   kindOf: "client" | "user";
+  age?: number | null;
 };
 
 const STORAGE_KEY = "samps:avisos-vistos";
