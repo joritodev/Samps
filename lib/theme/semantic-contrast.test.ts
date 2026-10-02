@@ -29,7 +29,7 @@ const celebration = {
 function card(themeId: string | null, mode: "light" | "dark") {
   if (!themeId) return token(globals, mode === "light" ? rootBlock : darkBlock, "--card");
   const sel = mode === "light" ? `html[data-theme="${themeId}"] {` : `html.dark[data-theme="${themeId}"] {`;
-  const start = themeId && themes.indexOf(sel);
+  const start = themes.indexOf(sel);
   const body = themes.slice(start, themes.indexOf("}", start));
   return parseHsl(body.match(/--card: ([^;]+);/)![1]);
 }
