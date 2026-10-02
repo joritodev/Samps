@@ -3,13 +3,19 @@
 **Data:** 2026-10-02 · **Playbook:** schema/upload fora de plano → este plano fecha o desenho; **executar com modelo forte e revisão de segurança**.
 **Spec relacionada:** `specs/2026-10-02-personalizacao-quadro-design.md`, `specs/2026-10-02-personalizacao-global-design.md`.
 
-## Decisão pendente do usuário (bloqueia a execução)
-Onde guardar os arquivos. Recomendação: **Vercel Blob** (projeto já está na Vercel; sem servidor próprio; URL pública imutável). Alternativas: Cloudflare R2 / S3 (mais controle, mais configuração). Exige criar o store e a variável `BLOB_READ_WRITE_TOKEN` na Vercel.
+## Decisão: Vercel Blob (aprovada em 02/10, condicionada ao custo abaixo)
+Projeto já está na Vercel; sem servidor próprio. Exige criar o store e a variável `BLOB_READ_WRITE_TOKEN` na Vercel.
+
+**Custo (tabela pública; conferir na página oficial antes de ativar):** Hobby inclui 1 GB de armazenamento, 10 GB de transferência/mês e 10 mil operações simples; excedente a US$ 0,023/GB de armazenamento, US$ 0,05/GB de transferência e US$ 0,40 por milhão de operações. Plano Pro inclui transferência pela CDN (1 TB/mês por time) e créditos mensais para o restante.
+**Estimativa do uso aqui:** capa tratada ~150–300 KB; 100 clientes ≈ 30 MB de armazenamento; ~20 usuários abrindo o quadro 50x/dia ≈ 4–5 GB/mês de transferência com a imagem sem cache. Cache longo (URL imutável por envio) reduz isso a uma fração.
+**Guardas de custo:** limite de 5 MB por envio, capa guardada já reduzida, uma capa por quadro (a antiga é apagada), limite de envios por hora, `Cache-Control` longo.
+**Atenção:** o plano Hobby da Vercel é de uso não comercial; se o Samps OS já roda em produção para a agência, o plano relevante é o Pro.
 
 ## Desenho
 - **Fluxo:** o cliente envia o arquivo por Server Action/Route Handler (`multipart`), o servidor valida, reprocessa e grava no storage; o banco recebe só a URL e metadados. Sem upload direto do navegador ao storage (evita burlar validação).
 - **Validação no servidor:** tipos `image/jpeg|png|webp` conferidos por **assinatura de bytes** (não pelo nome/`Content-Type`); limite 5 MB; dimensões mín. 1280×320, máx. 6000×6000; SVG e GIF recusados.
-- **Reprocessamento:** `sharp` redimensiona (largura máx. 2400), recorta para proporção de faixa (aprox. 6:1) com foco central, converte para WebP, **remove EXIF/GPS**. O original não é guardado.
+- **Seleção do recorte (requisito):** ao escolher a foto, abre uma janela com a foto inteira, um **retângulo de recorte na proporção da faixa** que a pessoa arrasta (teclado: setas) e um **controle de zoom**; a área fora do recorte aparece escurecida. Abaixo, **pré-visualização ao vivo** do cabeçalho real do quadro (faixa + logo + título + botões) com o recorte aplicado, em claro e escuro. Botões "Usar esta foto" e "Cancelar"; nada é enviado antes de confirmar. Componente de recorte próprio (sem dependência nova): cálculo em coordenadas normalizadas (x, y, largura) com limites para não sair da foto. Em celular, recorte por arrasto/pinça.
+- **Reprocessamento:** o navegador envia a foto e o retângulo normalizado; o servidor **revalida e limita** o retângulo, recorta com `sharp` (largura final máx. 2400, proporção da faixa), converte para WebP e **remove EXIF/GPS**. Só a versão recortada é guardada (menos custo); para reposicionar depois, a pessoa escolhe a foto de novo.
 - **Nome do arquivo:** aleatório (cuid), caminho `board-covers/<boardId>/<id>.webp`; nunca usar o nome enviado.
 - **Permissão:** `requireClientAccess(clientId)` + `clients.edit`; o quadro tem de pertencer ao cliente. Rate limit por usuário (ex.: 10 envios/hora).
 - **Dados:** `ClientBoard.config.appearance.coverImage = { url, w, h }` (sem migração). Quando houver imagem, ela tem prioridade sobre a capa em gradiente. Ao trocar/remover, apagar o arquivo antigo do storage (best-effort) e registrar em auditoria (`logAudit`).
