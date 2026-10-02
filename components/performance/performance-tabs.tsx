@@ -4,21 +4,25 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 
-const TABS = [
+const ANALYTICS_TABS = [
   { href: "/performance", label: "Visão geral" },
   { href: "/performance/okrs", label: "OKRs" },
   { href: "/performance/metas", label: "Metas" },
   { href: "/performance/indicadores", label: "Indicadores" },
 ] as const;
 
+const MY_SUMMARY_TAB = { href: "/performance/meu-resumo", label: "Meu resumo" } as const;
+
 /** Abas como links: cada uma é uma página, e o período escolhido acompanha. */
-export function PerformanceTabs() {
+/** `analytics`: quem tem Performance completa; os demais só veem o próprio resumo. */
+export function PerformanceTabs({ analytics }: { analytics: boolean }) {
+  const tabs = analytics ? [...ANALYTICS_TABS, MY_SUMMARY_TAB] : [MY_SUMMARY_TAB];
   const pathname = usePathname();
   const search = useSearchParams().toString();
 
   return (
-    <nav aria-label="Seções de performance" className="flex gap-1 border-b border-border/70">
-      {TABS.map((tab) => {
+    <nav aria-label="Seções de performance" className="flex gap-1 border-b border-border/70 print:hidden">
+      {tabs.map((tab) => {
         const active = pathname === tab.href;
         return (
           <Link

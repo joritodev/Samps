@@ -348,6 +348,7 @@ model User {
   agendaMeetings         AgendaMeeting[]          @relation("AgendaMeetingAuthor")
   goalsAbout             Goal[]                   @relation("GoalUser")
   goalsCreated           Goal[]                   @relation("GoalCreator")
+  reportsSeen            ReportSeen[]             @relation("ReportSeenUser")
   objectivesOwned        Objective[]              @relation("ObjectiveOwner")
   objectivesAbout        Objective[]              @relation("ObjectiveUser")
   objectivesCreated      Objective[]              @relation("ObjectiveCreator")
@@ -488,6 +489,18 @@ model KeyResultCheckIn {
   author    User      @relation("CheckInAuthor", fields: [authorId], references: [id])
 
   @@index([keyResultId, createdAt])
+}
+
+/// Dia (de São Paulo) em que a pessoa já viu ou dispensou o resumo diário.
+model ReportSeen {
+  id        String   @id @default(cuid())
+  userId    String
+  day       String
+  createdAt DateTime @default(now())
+
+  user User @relation("ReportSeenUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, day])
 }
 
 model Announcement {

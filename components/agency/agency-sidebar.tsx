@@ -57,6 +57,8 @@ type NavItem = {
   anyOf?: PermissionCode[];
   /** Restringe a tipos de usuário (além das permissões). */
   userTypes?: AgencyUserProfile["userType"][];
+  /** Escondido quando o usuário tem qualquer uma destas. */
+  hiddenWith?: PermissionCode[];
 };
 
 const NAV_ITEMS: NavItem[] = [
@@ -82,6 +84,14 @@ const NAV_ITEMS: NavItem[] = [
     label: "Performance",
     icon: LineChart,
     anyOf: ["productivity.view"],
+  },
+  {
+    // Quem não tem Performance completa ainda revê o próprio resumo.
+    href: "/performance/meu-resumo",
+    label: "Meu resumo",
+    icon: LineChart,
+    userTypes: ["SOCIAL_MEDIA", "DESIGNER", "VIDEOMAKER", "VIDEO_EDITOR", "OTHER"],
+    hiddenWith: ["productivity.view"],
   },
   {
     href: "/equipe",
@@ -127,6 +137,7 @@ function visibleTo(
 ) {
   return (item: NavItem) => {
     if (item.userTypes && !item.userTypes.includes(userType)) return false;
+    if (item.hiddenWith?.some((code) => permissions.includes(code))) return false;
     return !item.anyOf || item.anyOf.some((code) => permissions.includes(code));
   };
 }
@@ -358,7 +369,7 @@ export function AgencySidebar({
 
   return (
     <>
-      <aside className="hidden h-full w-64 shrink-0 lg:flex">
+      <aside className="hidden h-full w-64 shrink-0 lg:flex print:hidden">
         <SidebarBody
           user={user}
           searchTypes={searchTypes}
@@ -372,7 +383,7 @@ export function AgencySidebar({
           <Button
             variant="outline"
             size="icon"
-            className="fixed left-3 top-3 z-30 size-10 lg:hidden"
+            className="fixed left-3 top-3 z-30 size-10 lg:hidden print:hidden"
             aria-label="Abrir menu"
           >
             <PanelLeft className="h-4 w-4" />
