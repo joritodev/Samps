@@ -1,6 +1,8 @@
+import { Suspense } from "react";
 import { Toaster } from "sonner";
 import { AgencySidebar } from "@/components/agency/agency-sidebar";
 import { LiveAlertsHost } from "@/components/agency/live-alerts-host";
+import { DailySummaryGate } from "@/components/performance/daily-summary-gate";
 import { Providers } from "@/components/providers";
 import { MorphOriginTracker } from "@/components/motion/morph-origin-tracker";
 import { getCurrentAgencyUser } from "@/lib/agency/current-user";
@@ -26,7 +28,7 @@ export default async function AgencyLayout({
   return (
     <Providers>
       <MorphOriginTracker />
-      <div className="flex h-dvh overflow-hidden bg-shell">
+      <div className="print-flow flex h-dvh overflow-hidden bg-shell">
         <AgencySidebar
           user={user}
           searchTypes={allowedSearchTypes(user)}
@@ -43,15 +45,18 @@ export default async function AgencyLayout({
         />
         {/* Painel principal “inset”: sobe uma camada sobre o shell (ref.: Linear,
             Attio, sidebar inset do shadcn) — no mobile ocupa a tela toda. */}
-        <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-background pt-14 lg:my-2 lg:mr-2 lg:rounded-xl lg:border lg:border-border/70 lg:pt-0 lg:shadow-sm">
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-            <div className="flex min-h-0 flex-1 flex-col overflow-auto p-4 sm:p-5">
+        <main className="print-flow flex min-w-0 flex-1 flex-col overflow-hidden bg-background pt-14 lg:my-2 lg:mr-2 lg:rounded-xl lg:border lg:border-border/70 lg:pt-0 lg:shadow-sm">
+          <div className="print-flow flex min-h-0 flex-1 flex-col overflow-hidden">
+            <div className="print-flow flex min-h-0 flex-1 flex-col overflow-auto p-4 sm:p-5">
               {children}
             </div>
           </div>
         </main>
         <LiveAlertsHost />
-        <Toaster richColors position="top-right" visibleToasts={3} />
+        <Suspense fallback={null}>
+          <DailySummaryGate />
+        </Suspense>
+        <Toaster className="print:hidden" richColors position="top-right" visibleToasts={3} />
       </div>
     </Providers>
   );
