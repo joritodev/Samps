@@ -167,19 +167,23 @@
   pointer-events: none;
 }
 
-/* Cor de destaque do quadro do cliente (chaves em lib/board/appearance.ts). */
-[data-board-accent="azul"] { --primary: 217 80% 42%; --ring: 217 80% 42%; }
-.dark [data-board-accent="azul"] { --primary: 217 90% 68%; --ring: 217 90% 68%; }
-[data-board-accent="violeta"] { --primary: 258 55% 48%; --ring: 258 55% 48%; }
-.dark [data-board-accent="violeta"] { --primary: 258 85% 74%; --ring: 258 85% 74%; }
-[data-board-accent="rosa"] { --primary: 340 70% 44%; --ring: 340 70% 44%; }
-.dark [data-board-accent="rosa"] { --primary: 340 85% 70%; --ring: 340 85% 70%; }
-[data-board-accent="coral"] { --primary: 18 72% 40%; --ring: 18 72% 40%; }
-.dark [data-board-accent="coral"] { --primary: 18 85% 66%; --ring: 18 85% 66%; }
-[data-board-accent="verde"] { --primary: 152 60% 30%; --ring: 152 60% 30%; }
-.dark [data-board-accent="verde"] { --primary: 152 55% 52%; --ring: 152 55% 52%; }
-[data-board-accent="grafite"] { --primary: 220 20% 30%; --ring: 220 20% 30%; }
-.dark [data-board-accent="grafite"] { --primary: 220 25% 72%; --ring: 220 25% 72%; }
+/* Cor de destaque: do app (data-accent no <html>, preferência pessoal) e do quadro
+   (data-board-accent, que vence por estar mais perto). Chaves em lib/theme/preferences.ts. */
+[data-accent="azul"], [data-board-accent="azul"] { --primary: 217 80% 42%; --ring: 217 80% 42%; }
+.dark [data-accent="azul"], .dark[data-accent="azul"], .dark [data-board-accent="azul"] { --primary: 217 90% 68%; --ring: 217 90% 68%; }
+[data-accent="violeta"], [data-board-accent="violeta"] { --primary: 258 55% 48%; --ring: 258 55% 48%; }
+.dark [data-accent="violeta"], .dark[data-accent="violeta"], .dark [data-board-accent="violeta"] { --primary: 258 85% 74%; --ring: 258 85% 74%; }
+[data-accent="rosa"], [data-board-accent="rosa"] { --primary: 340 70% 44%; --ring: 340 70% 44%; }
+.dark [data-accent="rosa"], .dark[data-accent="rosa"], .dark [data-board-accent="rosa"] { --primary: 340 85% 70%; --ring: 340 85% 70%; }
+[data-accent="coral"], [data-board-accent="coral"] { --primary: 18 72% 40%; --ring: 18 72% 40%; }
+.dark [data-accent="coral"], .dark[data-accent="coral"], .dark [data-board-accent="coral"] { --primary: 18 85% 66%; --ring: 18 85% 66%; }
+[data-accent="verde"], [data-board-accent="verde"] { --primary: 152 60% 30%; --ring: 152 60% 30%; }
+.dark [data-accent="verde"], .dark[data-accent="verde"], .dark [data-board-accent="verde"] { --primary: 152 55% 52%; --ring: 152 55% 52%; }
+[data-accent="grafite"], [data-board-accent="grafite"] { --primary: 220 20% 30%; --ring: 220 20% 30%; }
+.dark [data-accent="grafite"], .dark[data-accent="grafite"], .dark [data-board-accent="grafite"] { --primary: 220 25% 72%; --ring: 220 25% 72%; }
+
+/* Densidade (preferência pessoal): só os cards de demanda ficam mais compactos. */
+[data-density="compact"] { --card-pad: 0.625rem; --card-gap: 0.5rem; }
 
 @layer utilities {
   /* Número de KPI / dado: mesma família da UI (Operate), dígitos tabulares. */

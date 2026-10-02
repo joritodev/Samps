@@ -38,3 +38,11 @@ Personalizar a **moldura** (login, cabeçalhos, destaque), nunca a superfície d
 2. Tema de cor pessoal + densidade (`User.preferences`, cookie espelho).
 3. Login com identidade da agência (reaproveita o upload).
 4. Portal do cliente com marca.
+
+## Fatia 2 (implementada): cor de tema e densidade pessoais
+- **Decisão:** guardadas **por dispositivo, em cookie** (`samps-accent`, `samps-density`), como o tema claro/escuro já funciona. Não usa `User.preferences`: evita migração (aplicada à mão em produção, ver README) e a sincronização entre dispositivos fica para uma fatia própria.
+- **Sem flash:** script inline no `<head>` aplica `data-accent`/`data-density` no `<html>` antes da primeira pintura, sem tornar o layout dinâmico.
+- **Precedência:** cor do quadro (`data-board-accent`) vence a pessoal por estar mais perto na árvore.
+- **Contraste:** teste lê `globals.css` e exige ≥ 4,5:1 entre `--primary` e o texto do botão, nos dois temas.
+- **Densidade:** só os cards de demanda (`--card-pad`, `--card-gap`).
+- **Onde:** Configurações > Aparência (`/configuracoes/temas`).
