@@ -1,4 +1,5 @@
 import { SMALL_SAMPLE_N, mean, onTimeRate } from "@/lib/agency/performance-math";
+import { DAY_MS, dayKey, startOfDayMs } from "@/lib/agency/sp-calendar";
 
 export type KpiKey =
   | "COMPLETED"
@@ -7,10 +8,10 @@ export type KpiKey =
   | "REWORK_RATE"
   | "ADJUSTMENTS"
   | "WORKED_HOURS"
-  | "AVG_LEAD_TIME_HOURS"
+  | "AVG_LEAD_TIME_DAYS"
   | "UNASSIGNED_OPEN";
 
-export type KpiUnit = "count" | "percent" | "hours";
+export type KpiUnit = "count" | "percent" | "hours" | "days";
 export type KpiDirection = "higher" | "lower";
 
 /**
@@ -28,27 +29,13 @@ export const KPI_CATALOG: Record<
   REWORK_RATE: { label: "Retrabalho", unit: "percent", direction: "lower", snapshot: false },
   ADJUSTMENTS: { label: "Em ajuste", unit: "count", direction: "lower", snapshot: true },
   WORKED_HOURS: { label: "Tempo trabalhado", unit: "hours", direction: "higher", snapshot: false },
-  AVG_LEAD_TIME_HOURS: { label: "Tempo até concluir", unit: "hours", direction: "lower", snapshot: false },
+  AVG_LEAD_TIME_DAYS: { label: "Tempo até concluir", unit: "days", direction: "lower", snapshot: false },
   UNASSIGNED_OPEN: { label: "Sem responsável", unit: "count", direction: "lower", snapshot: true },
 };
 
 export const KPI_KEYS = Object.keys(KPI_CATALOG) as KpiKey[];
 
 // ---------------------------------------------------------------- calendário
-// O dia da agência é o de São Paulo. O Brasil não tem horário de verão desde
-// 2019, então o deslocamento fixo de -3 h é exato.
-const DAY_MS = 24 * 60 * 60 * 1000;
-const SP_OFFSET_MS = 3 * 60 * 60 * 1000;
-
-/** `AAAA-MM-DD` do dia de São Paulo em que o instante cai. */
-export function dayKey(date: Date): string {
-  return new Date(date.getTime() - SP_OFFSET_MS).toISOString().slice(0, 10);
-}
-
-function startOfDay(key: string): number {
-  return Date.parse(`${key}T00:00:00.000Z`) + SP_OFFSET_MS;
-}
-
 export type DateRange = { from: Date; to: Date };
 
 /**
@@ -60,8 +47,8 @@ export function resolveComparisonRanges(range: DateRange): {
   previous: DateRange;
   days: number;
 } {
-  const fromMs = startOfDay(dayKey(range.from));
-  const toStart = startOfDay(dayKey(range.to));
+  const fromMs = startOfDayMs(dayKey(range.from));
+  const toStart = startOfDayMs(dayKey(range.to));
   const days = Math.max(1, Math.round((toStart - fromMs) / DAY_MS) + 1);
   const toMs = fromMs + days * DAY_MS - 1;
   return {
@@ -158,7 +145,7 @@ type Window = {
   onTime: number;
   withDueDate: number;
   rework: number;
-  leadHours: number[];
+  leadDays: number[];
 };
 
 function inRange(date: Date, range: DateRange) {
@@ -166,14 +153,14 @@ function inRange(date: Date, range: DateRange) {
 }
 
 function windowOf(rows: DeliveryRow[]): Window {
-  const w: Window = { completed: rows.length, onTime: 0, withDueDate: 0, rework: 0, leadHours: [] };
+  const w: Window = { completed: rows.length, onTime: 0, withDueDate: 0, rework: 0, leadDays: [] };
   for (const row of rows) {
     if (row.dueDate) {
       w.withDueDate += 1;
       if (row.completedAt <= row.dueDate) w.onTime += 1;
     }
     if (row.hadRework) w.rework += 1;
-    w.leadHours.push((row.completedAt.getTime() - row.createdAt.getTime()) / 3_600_000);
+    w.leadDays.push((row.completedAt.getTime() - row.createdAt.getTime()) / DAY_MS);
   }
   return w;
 }
@@ -200,8 +187,8 @@ function buildSeries(
   const startCur = ranges.current.from.getTime();
   const startPrev = ranges.previous.from.getTime();
   return Array.from({ length: ranges.days }, (_, i) => {
-    const date = dayKey(new Date(startCur + i * DAY_MS + SP_OFFSET_MS));
-    const prevDate = dayKey(new Date(startPrev + i * DAY_MS + SP_OFFSET_MS));
+    const date = dayKey(new Date(startCur + i * DAY_MS + DAY_MS / 2));
+    const prevDate = dayKey(new Date(startPrev + i * DAY_MS + DAY_MS / 2));
     return { date, current: cur.get(date) ?? 0, previous: prev.get(prevDate) ?? 0 };
   });
 }
@@ -279,7 +266,7 @@ export function buildPerformanceSummary(input: {
     REWORK_RATE: result("REWORK_RATE", ratio(cur.rework, cur.completed), ratio(prev.rework, prev.completed)),
     ADJUSTMENTS: result("ADJUSTMENTS", input.snapshot.adjustments, null),
     WORKED_HOURS: result("WORKED_HOURS", hours(input.workedSeconds.current), hours(input.workedSeconds.previous)),
-    AVG_LEAD_TIME_HOURS: result("AVG_LEAD_TIME_HOURS", mean(cur.leadHours), mean(prev.leadHours)),
+    AVG_LEAD_TIME_DAYS: result("AVG_LEAD_TIME_DAYS", mean(cur.leadDays), mean(prev.leadDays)),
     UNASSIGNED_OPEN: result("UNASSIGNED_OPEN", input.snapshot.unassignedOpen, null),
   };
 

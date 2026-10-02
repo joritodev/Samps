@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { buildPerformanceReport } from "./performance.service";
 
-const from = new Date(2026, 7, 1, 0, 0, 0, 0);
-const to = new Date(2026, 7, 31, 23, 59, 59, 999);
+const from = new Date("2026-08-01T03:00:00.000Z");
+const to = new Date("2026-09-01T02:59:59.999Z");
 
 describe("buildPerformanceReport", () => {
   it("aggregates deliveries, deadlines, rework, and time by user", () => {

@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { Download } from "lucide-react";
-import { MetricCard } from "@/components/agency/metric-card";
-import { PerformanceFilters, type PerformanceFiltersProps } from "@/components/agency/performance-filters";
+import { PerformanceFilters, type PerformanceFiltersProps } from "@/components/performance/performance-filters";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,47 +20,19 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { SMALL_SAMPLE_N } from "@/lib/agency/performance-math";
+import { formatDuration } from "@/lib/agency/performance-format";
 import type {
   ContentTypeStats,
   PerformanceReport,
   UserRow,
 } from "@/lib/services/performance.service";
-import { cn } from "@/lib/utils";
-
-export type IndicatorSnapshot = {
-  period: string;
-  completed: number;
-  overdue: number;
-  inProgress: number;
-  adjustments: number;
-  sessionsCount: number;
-  totalWorkedSeconds: number;
-  avgSessionSeconds: number;
-};
-
-type PeriodKey = "today" | "week" | "month";
-type ReportTab = "resumo" | "pessoas" | "tipos";
-
-const PERIODS: { key: PeriodKey; label: string }[] = [
-  { key: "today", label: "Hoje" },
-  { key: "week", label: "Semana" },
-  { key: "month", label: "Mês" },
-];
-
-function hours(seconds: number) {
-  return `${(seconds / 3600).toFixed(1)}h`;
-}
-
-function duration(seconds: number | null) {
-  if (seconds === null) return "—";
-  if (seconds < 3600) return `${Math.round(seconds / 60)} min`;
-  return `${(seconds / 3600).toFixed(1)} h`;
-}
 
 function percentage(value: number | null) {
   if (value === null) return "—";
   return `${Math.round(value * 100)}%`;
 }
+
+type ReportTab = "pessoas" | "tipos";
 
 function csvCell(value: string | number) {
   const text = String(value);
@@ -74,87 +45,6 @@ function csvFromRows(rows: (string | number)[][]) {
 
 function SmallSampleBadge() {
   return <Badge variant="warning">Amostra pequena</Badge>;
-}
-
-function MiniStat({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="min-w-0">
-      <p className="truncate text-xs font-medium text-muted-foreground">
-        {label}
-      </p>
-      <p className="num mt-1 text-lg font-semibold leading-none text-foreground">
-        {value}
-      </p>
-    </div>
-  );
-}
-
-function PeriodStripCard({
-  label,
-  data,
-  selected,
-  onSelect,
-}: {
-  label: string;
-  data: IndicatorSnapshot;
-  selected: boolean;
-  onSelect: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      aria-pressed={selected}
-      className={cn(
-        "w-full rounded-xl border px-4 py-3.5 text-left shadow-xs transition-[border-color,box-shadow,background-color] duration-150",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-        selected
-          ? "border-primary/60 bg-card ring-[3px] ring-cyan/20"
-          : "border-border/80 bg-card hover:border-foreground/20 hover:shadow-sm"
-      )}
-    >
-      <p className="text-sm font-semibold tracking-tight text-foreground">
-        {label}
-      </p>
-      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <MiniStat label="Concluídas" value={data.completed} />
-        <MiniStat label="Produção" value={data.inProgress} />
-        <MiniStat label="Atrasadas" value={data.overdue} />
-        <MiniStat label="Ajustes" value={data.adjustments} />
-      </div>
-    </button>
-  );
-}
-
-function PeriodDetail({
-  title,
-  data,
-}: {
-  title: string;
-  data: IndicatorSnapshot;
-}) {
-  return (
-    <section className="space-y-3">
-      <h2 className="text-sm font-semibold tracking-tight text-foreground">
-        Detalhe: {title}
-      </h2>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard label="Concluídas" value={data.completed} tone="primary" />
-        <MetricCard label="Em produção" value={data.inProgress} tone="success" />
-        <MetricCard label="Atrasadas" value={data.overdue} tone="danger" />
-        <MetricCard label="Ajustes" value={data.adjustments} tone="danger" />
-        <MetricCard label="Sessões" value={data.sessionsCount} />
-        <MetricCard
-          label="Tempo trabalhado"
-          value={hours(data.totalWorkedSeconds)}
-        />
-        <MetricCard
-          label="Tempo médio/sessão"
-          value={hours(data.avgSessionSeconds)}
-        />
-      </div>
-    </section>
-  );
 }
 
 function PeopleTable({ rows }: { rows: UserRow[] }) {
@@ -218,7 +108,7 @@ function PeopleTable({ rows }: { rows: UserRow[] }) {
                         >
                           <span>{type.name}</span>
                           <span className="tabular-nums text-muted-foreground">
-                            {duration(type.avgSeconds)} · n={type.n}
+                            {formatDuration(type.avgSeconds)} · n={type.n}
                           </span>
                           {type.n < SMALL_SAMPLE_N ? (
                             <span className="text-warning">
@@ -286,13 +176,13 @@ function ContentTypeTable({ rows }: { rows: ContentTypeStats[] }) {
                   </div>
                 </TableCell>
                 <TableCell className="text-right tabular-nums">
-                  {duration(row.avgSeconds)}
+                  {formatDuration(row.avgSeconds)}
                 </TableCell>
                 <TableCell className="text-right tabular-nums">
-                  {duration(row.medianSeconds)}
+                  {formatDuration(row.medianSeconds)}
                 </TableCell>
                 <TableCell className="text-right tabular-nums">
-                  {duration(row.stdDevSeconds)}
+                  {formatDuration(row.stdDevSeconds)}
                 </TableCell>
               </TableRow>
             ))
@@ -303,96 +193,53 @@ function ContentTypeTable({ rows }: { rows: ContentTypeStats[] }) {
   );
 }
 
-export function PerformanceDashboard({
-  today,
-  week,
-  month,
+export function PerformanceIndicators({
   report,
   filters,
 }: {
-  today: IndicatorSnapshot;
-  week: IndicatorSnapshot;
-  month: IndicatorSnapshot;
   report: PerformanceReport;
   filters: PerformanceFiltersProps;
 }) {
-  const [selected, setSelected] = useState<PeriodKey>("week");
-  const [activeTab, setActiveTab] = useState<ReportTab>("resumo");
-
-  const byPeriod: Record<PeriodKey, IndicatorSnapshot> = {
-    today,
-    week,
-    month,
-  };
-
-  const activeLabel =
-    PERIODS.find((p) => p.key === selected)?.label ?? "Semana";
+  const [activeTab, setActiveTab] = useState<ReportTab>("pessoas");
 
   function exportCsv() {
-    let rows: (string | number)[][];
-
-    if (activeTab === "resumo") {
-      const deliveries = report.byContentType.reduce((acc, row) => acc + row.n, 0);
-      rows = [
-        [
-          "De",
-          "Até",
-          "Entregas (filtro)",
-          "Pessoas",
-          "Tipos",
-          "Snapshot hoje concluídas",
-          "Snapshot semana concluídas",
-          "Snapshot mês concluídas",
-        ],
-        [
-          report.from,
-          report.to,
-          deliveries,
-          report.byUser.length,
-          report.byContentType.length,
-          today.completed,
-          week.completed,
-          month.completed,
-        ],
-      ];
-    } else if (activeTab === "pessoas") {
-      rows = [
-        [
-          "Pessoa",
-          "Entregas",
-          "No prazo",
-          "Com prazo",
-          "No prazo %",
-          "Retrabalho (sessões)",
-          "Tempo médio por tipo",
-        ],
-        ...report.byUser.map((row) => [
-          row.name,
-          row.deliveries,
-          row.onTime,
-          row.withDueDate,
-          row.onTimeRate === null ? "" : (row.onTimeRate * 100).toFixed(1),
-          row.reworkSessions,
-          row.avgSecondsByType
-            .map(
-              (type) =>
-                `${type.name}: ${type.avgSeconds ?? ""}s (n=${type.n})`,
-            )
-            .join("; "),
-        ]),
-      ];
-    } else {
-      rows = [
-        ["Tipo", "n", "Média (s)", "Mediana (s)", "Desvio (s)"],
-        ...report.byContentType.map((row) => [
-          row.name,
-          row.n,
-          row.avgSeconds ?? "",
-          row.medianSeconds ?? "",
-          row.stdDevSeconds ?? "",
-        ]),
-      ];
-    }
+    const rows: (string | number)[][] =
+      activeTab === "pessoas"
+        ? [
+            [
+              "Pessoa",
+              "Entregas",
+              "No prazo",
+              "Com prazo",
+              "No prazo %",
+              "Retrabalho (sessões)",
+              "Tempo médio por tipo",
+            ],
+            ...report.byUser.map((row) => [
+              row.name,
+              row.deliveries,
+              row.onTime,
+              row.withDueDate,
+              row.onTimeRate === null ? "" : (row.onTimeRate * 100).toFixed(1),
+              row.reworkSessions,
+              row.avgSecondsByType
+                .map(
+                  (type) =>
+                    `${type.name}: ${type.avgSeconds ?? ""}s (n=${type.n})`,
+                )
+                .join("; "),
+            ]),
+          ]
+        : [
+            ["Tipo", "n", "Média (s)", "Mediana (s)", "Desvio (s)"],
+            ...report.byContentType.map((row) => [
+              row.name,
+              row.n,
+              row.avgSeconds ?? "",
+              row.medianSeconds ?? "",
+              row.stdDevSeconds ?? "",
+            ]),
+          ];
 
     const blob = new Blob([`\uFEFF${csvFromRows(rows)}`], {
       type: "text/csv;charset=utf-8",
@@ -408,54 +255,29 @@ export function PerformanceDashboard({
   }
 
   return (
-    <div className="h-full min-h-0 space-y-6 overflow-y-auto p-4 sm:p-6">
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">
-            Performance
-          </h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Indicadores de produtividade por período
-          </p>
-        </div>
-        <Button type="button" variant="outline" onClick={exportCsv}>
-          <Download />
-          Exportar CSV
-        </Button>
-      </header>
-
+    <div className="space-y-5">
       <PerformanceFilters {...filters} />
 
       <Tabs
         value={activeTab}
         onValueChange={(value) => setActiveTab(value as ReportTab)}
       >
-        <TabsList className="grid w-full grid-cols-3 sm:w-auto">
-          <TabsTrigger value="resumo">Resumo</TabsTrigger>
-          <TabsTrigger value="pessoas">Por pessoa</TabsTrigger>
-          <TabsTrigger value="tipos">Por tipo</TabsTrigger>
-        </TabsList>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <TabsList className="grid w-full grid-cols-2 sm:w-auto">
+            <TabsTrigger value="pessoas">Por pessoa</TabsTrigger>
+            <TabsTrigger value="tipos">Por tipo</TabsTrigger>
+          </TabsList>
+          <Button type="button" variant="outline" size="sm" onClick={exportCsv}>
+            <Download />
+            Exportar CSV
+          </Button>
+        </div>
 
-        <TabsContent value="resumo" className="mt-5 space-y-6">
-          <div className="grid gap-3 lg:grid-cols-3">
-            {PERIODS.map(({ key, label }) => (
-              <PeriodStripCard
-                key={key}
-                label={label}
-                data={byPeriod[key]}
-                selected={selected === key}
-                onSelect={() => setSelected(key)}
-              />
-            ))}
-          </div>
-          <PeriodDetail title={activeLabel} data={byPeriod[selected]} />
-        </TabsContent>
-
-        <TabsContent value="pessoas" className="mt-5">
+        <TabsContent value="pessoas" className="mt-4">
           <PeopleTable rows={report.byUser} />
         </TabsContent>
 
-        <TabsContent value="tipos" className="mt-5">
+        <TabsContent value="tipos" className="mt-4">
           <ContentTypeTable rows={report.byContentType} />
         </TabsContent>
       </Tabs>

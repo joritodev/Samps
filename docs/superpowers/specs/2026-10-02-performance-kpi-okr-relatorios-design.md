@@ -37,7 +37,7 @@ A página Performance repete os mesmos números, não compara com nada e não di
 | `REWORK_RATE` | entregas que passaram por Ajuste / entregues |
 | `ADJUSTMENTS` | demandas em Ajuste |
 | `WORKED_HOURS` | soma de `WorkSession.totalActiveSeconds` |
-| `AVG_LEAD_TIME_HOURS` | média entre criação e conclusão de produção |
+| `AVG_LEAD_TIME_DAYS` | média, em dias, entre criação e conclusão de produção |
 | `UNASSIGNED_OPEN` | abertas sem responsável |
 
 **Meta (`Goal`):** indicador + escopo (agência, setor ou pessoa) + valor-alvo + direção + período (`startsOn`, `endsOn`) + ativo.

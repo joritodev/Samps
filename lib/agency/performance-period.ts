@@ -1,4 +1,12 @@
-export type PerformancePreset = "today" | "week" | "month" | "custom";
+import {
+  addDays,
+  dayKey,
+  endOfDayMs,
+  isValidDayKey,
+  startOfDayMs,
+} from "@/lib/agency/sp-calendar";
+
+export type PerformancePreset = "today" | "week" | "month" | "quarter" | "custom";
 
 type PerformanceRangeInput = {
   preset?: string;
@@ -13,81 +21,38 @@ type PerformanceRange = {
   preset: PerformancePreset;
 };
 
-const ISO_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
-
-function parseLocalDate(value: string | undefined): Date | null {
-  if (!value) return null;
-
-  const match = ISO_DATE_PATTERN.exec(value);
-  if (!match) return null;
-
-  const year = Number(match[1]);
-  const month = Number(match[2]);
-  const day = Number(match[3]);
-  const date = new Date(year, month - 1, day);
-
-  if (
-    date.getFullYear() !== year ||
-    date.getMonth() !== month - 1 ||
-    date.getDate() !== day
-  ) {
-    return null;
-  }
-
-  return date;
+function range(fromKey: string, toKey: string, preset: PerformancePreset): PerformanceRange {
+  return {
+    from: new Date(startOfDayMs(fromKey)),
+    to: new Date(endOfDayMs(toKey)),
+    preset,
+  };
 }
 
-function startOfDay(date: Date): Date {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
-
-function endOfDay(date: Date): Date {
-  return new Date(
-    date.getFullYear(),
-    date.getMonth(),
-    date.getDate(),
-    23,
-    59,
-    59,
-    999,
-  );
-}
-
+/**
+ * Período do relatório em dias de São Paulo. Sem preset válido, mês atual
+ * até hoje. "Semana" são os últimos 7 dias; "trimestre" vai do começo do
+ * trimestre até hoje; datas livres (`from` e `to` válidas) ganham sempre.
+ */
 export function resolvePerformanceRange(
   input: PerformanceRangeInput,
 ): PerformanceRange {
-  const now = input.now ?? new Date();
-  const customFrom = parseLocalDate(input.from);
-  const customTo = parseLocalDate(input.to);
+  const today = dayKey(input.now ?? new Date());
 
-  if (customFrom && customTo) {
-    const ordered =
-      customFrom.getTime() <= customTo.getTime()
-        ? { start: customFrom, end: customTo }
-        : { start: customTo, end: customFrom };
-    return {
-      from: startOfDay(ordered.start),
-      to: endOfDay(ordered.end),
-      preset: "custom",
-    };
+  if (isValidDayKey(input.from) && isValidDayKey(input.to)) {
+    const [start, end] =
+      input.from <= input.to ? [input.from, input.to] : [input.to, input.from];
+    return range(start, end, "custom");
   }
 
-  const todayStart = startOfDay(now);
-  const todayEnd = endOfDay(now);
+  if (input.preset === "today") return range(today, today, "today");
+  if (input.preset === "week") return range(addDays(today, -6), today, "week");
 
-  if (input.preset === "today") {
-    return { from: todayStart, to: todayEnd, preset: "today" };
+  if (input.preset === "quarter") {
+    const month = Number(today.slice(5, 7));
+    const first = String(Math.floor((month - 1) / 3) * 3 + 1).padStart(2, "0");
+    return range(`${today.slice(0, 4)}-${first}-01`, today, "quarter");
   }
 
-  if (input.preset === "week") {
-    const weekStart = new Date(todayStart);
-    weekStart.setDate(weekStart.getDate() - 6);
-    return { from: weekStart, to: todayEnd, preset: "week" };
-  }
-
-  return {
-    from: new Date(now.getFullYear(), now.getMonth(), 1),
-    to: todayEnd,
-    preset: "month",
-  };
+  return range(`${today.slice(0, 7)}-01`, today, "month");
 }
