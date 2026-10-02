@@ -804,22 +804,6 @@ export async function deleteChecklistItem(
   await db.checklistItem.delete({ where: { id: itemId } });
 }
 
-export async function listChecklistsForDemand(demandId: string) {
-  return db.checklist.findMany({
-    where: { demandId },
-    orderBy: { sortOrder: "asc" },
-    include: {
-      items: {
-        orderBy: { sortOrder: "asc" },
-        include: {
-          assignee: { select: { id: true, name: true, avatarUrl: true } },
-          linkedDemand: { select: { id: true, status: true } },
-        },
-      },
-    },
-  });
-}
-
 export async function reorderChecklistItems(
   user: SessionUser,
   checklistId: string,
