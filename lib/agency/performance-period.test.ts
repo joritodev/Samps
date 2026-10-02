@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { resolvePerformanceRange } from "./performance-period";
+import { comparisonRangeFor, lastQuarters, resolvePerformanceRange } from "./performance-period";
+import { dayKey } from "./sp-calendar";
 
 // 16/08/2026 14:30 em São Paulo.
 const now = new Date("2026-08-16T17:30:45.123Z");
@@ -56,5 +57,55 @@ describe("resolvePerformanceRange", () => {
     for (const input of [{ from: "2026-02-31", to: "2026-03-02" }, { from: "xx", to: "2026-03-02" }, { from: "2026-03-01" }]) {
       expect(resolvePerformanceRange({ ...input, now }).preset).toBe("month");
     }
+  });
+});
+
+describe("trimestre anterior", () => {
+  it("é o trimestre fechado, inclusive na virada de ano", () => {
+    const r = resolvePerformanceRange({ preset: "lastquarter", now });
+    expect(r.preset).toBe("lastquarter");
+    expect([dayKey(r.from), dayKey(r.to)]).toEqual(["2026-04-01", "2026-06-30"]);
+    const jan = resolvePerformanceRange({ preset: "lastquarter", now: new Date("2026-02-10T15:00:00Z") });
+    expect([dayKey(jan.from), dayKey(jan.to)]).toEqual(["2025-10-01", "2025-12-31"]);
+  });
+});
+
+describe("comparisonRangeFor", () => {
+  const keys = (r?: { from: Date; to: Date }) => (r ? [dayKey(r.from), dayKey(r.to)] : undefined);
+  const resolve = (preset: string, iso: string) => {
+    const r = resolvePerformanceRange({ preset, now: new Date(iso) });
+    return comparisonRangeFor(r);
+  };
+
+  it("mês em andamento compara com os mesmos dias do mês anterior", () => {
+    expect(keys(resolve("month", "2026-10-02T15:00:00Z"))).toEqual(["2026-09-01", "2026-09-02"]);
+    expect(keys(resolve("month", "2026-03-31T15:00:00Z"))).toEqual(["2026-02-01", "2026-02-28"]); // fevereiro é mais curto
+    expect(keys(resolve("month", "2026-01-15T15:00:00Z"))).toEqual(["2025-12-01", "2025-12-15"]);
+  });
+  it("trimestre em andamento compara com os mesmos dias do anterior", () => {
+    expect(keys(resolve("quarter", "2026-10-02T15:00:00Z"))).toEqual(["2026-07-01", "2026-07-02"]);
+    expect(keys(resolve("quarter", "2026-11-15T15:00:00Z"))).toEqual(["2026-07-01", "2026-08-15"]);
+  });
+  it("trimestre fechado compara com o trimestre antes dele", () => {
+    expect(keys(resolve("lastquarter", "2026-08-16T15:00:00Z"))).toEqual(["2026-01-01", "2026-03-31"]);
+  });
+  it("hoje, semana e livre usam o padrão (undefined)", () => {
+    expect(resolve("today", "2026-10-02T15:00:00Z")).toBeUndefined();
+    expect(resolve("week", "2026-10-02T15:00:00Z")).toBeUndefined();
+    expect(comparisonRangeFor(resolvePerformanceRange({ from: "2026-09-01", to: "2026-09-10", now }))).toBeUndefined();
+  });
+});
+
+describe("lastQuarters", () => {
+  it("quatro trimestres, o atual parcial até hoje", () => {
+    const q = lastQuarters(new Date("2026-11-15T15:00:00Z"), 4);
+    expect(q.map((x) => x.label)).toEqual(["T1 2026", "T2 2026", "T3 2026", "T4 2026"]);
+    expect(q.map((x) => x.partial)).toEqual([false, false, false, true]);
+    expect([dayKey(q[0]!.from), dayKey(q[0]!.to)]).toEqual(["2026-01-01", "2026-03-31"]);
+    expect([dayKey(q[3]!.from), dayKey(q[3]!.to)]).toEqual(["2026-10-01", "2026-11-15"]);
+  });
+  it("atravessa o ano", () => {
+    const q = lastQuarters(new Date("2026-02-10T15:00:00Z"), 3);
+    expect(q.map((x) => x.label)).toEqual(["T3 2025", "T4 2025", "T1 2026"]);
   });
 });

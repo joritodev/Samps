@@ -4,12 +4,14 @@ import { GoalsStrip } from "@/components/performance/goals-strip";
 import { HeadlineCard } from "@/components/performance/headline-card";
 import { KpiTile } from "@/components/performance/kpi-tile";
 import { ObjectivesStrip } from "@/components/performance/objectives-strip";
+import { QuarterHistory } from "@/components/performance/quarter-history";
 import { RankBars } from "@/components/performance/rank-bars";
 import { formatDuration } from "@/lib/agency/performance-format";
 import type { PerformanceSummary } from "@/lib/agency/performance-summary";
 import type { GoalView } from "@/lib/services/goals.service";
 import type { ObjectiveView } from "@/lib/services/okr.service";
 import type { ContentTypeStats } from "@/lib/services/performance.service";
+import type { QuarterRow } from "@/lib/services/performance-summary.service";
 
 const MAIN_KPIS = [
   "COMPLETED",
@@ -24,11 +26,13 @@ export function PerformanceOverview({
   byContentType,
   goals,
   objectives,
+  quarters,
 }: {
   summary: PerformanceSummary;
   byContentType: ContentTypeStats[];
   goals: GoalView[];
   objectives: ObjectiveView[];
+  quarters: QuarterRow[];
 }) {
   const { indicators } = summary;
   const maxDeliveries = Math.max(1, ...summary.topDeliverers.map((d) => d.deliveries));
@@ -82,6 +86,8 @@ export function PerformanceOverview({
           }))}
         />
       </div>
+
+      <QuarterHistory rows={quarters} />
     </div>
   );
 }

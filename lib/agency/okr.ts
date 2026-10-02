@@ -293,3 +293,58 @@ export function nextPeriod(period: { startsOn: Date; endsOn: Date }): { startsOn
     endsOn: new Date(period.endsOn.getTime() + length),
   };
 }
+
+/** Dias sem check-in a partir dos quais o resultado-chave manual fica pendente. */
+export const STALE_CHECKIN_DAYS = 7;
+
+export type StaleCheckIn = {
+  objectiveId: string;
+  objectiveTitle: string;
+  ownerId: string;
+  ownerName: string;
+  keyResultId: string;
+  keyResultTitle: string;
+  /** Dias desde o último check-in; null quando nunca houve. */
+  daysSince: number | null;
+};
+
+type CheckInSource = {
+  id: string;
+  title: string;
+  ownerId: string;
+  ownerName: string;
+  startsOn: Date;
+  keyResults: { id: string; title: string; kind: string; lastCheckInAt: Date | null }[];
+};
+
+/**
+ * Resultados-chave manuais de objetivos em andamento sem check-in há
+ * `STALE_CHECKIN_DAYS` dias ou mais. Sem nenhum check-in, vale a idade do
+ * objetivo (objetivo recém-criado não cobra ninguém).
+ */
+export function findStaleCheckIns(
+  objectives: CheckInSource[],
+  now: Date,
+  days: number = STALE_CHECKIN_DAYS
+): StaleCheckIn[] {
+  const limit = days * 24 * 60 * 60 * 1000;
+  const out: StaleCheckIn[] = [];
+  for (const o of objectives) {
+    for (const kr of o.keyResults) {
+      if (kr.kind !== "MANUAL") continue;
+      const since = kr.lastCheckInAt ?? o.startsOn;
+      const elapsed = now.getTime() - since.getTime();
+      if (elapsed < limit) continue;
+      out.push({
+        objectiveId: o.id,
+        objectiveTitle: o.title,
+        ownerId: o.ownerId,
+        ownerName: o.ownerName,
+        keyResultId: kr.id,
+        keyResultTitle: kr.title,
+        daysSince: kr.lastCheckInAt ? Math.floor(elapsed / (24 * 60 * 60 * 1000)) : null,
+      });
+    }
+  }
+  return out;
+}

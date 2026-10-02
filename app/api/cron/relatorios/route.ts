@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { rejectUnlessCron } from "@/lib/cron/auth";
+import { dueReportKinds } from "@/lib/agency/report-emails";
+import { runGoalCelebrations } from "@/lib/services/celebrations.service";
+import { runOkrCheckInReminders } from "@/lib/services/okr-reminders.service";
 import { runReportEmails } from "@/lib/services/report-emails.service";
 
 export const runtime = "nodejs";
@@ -14,13 +17,25 @@ export const maxDuration = 60;
 export async function GET(req: Request) {
   const rejected = rejectUnlessCron(req);
   if (rejected) return rejected;
-  try {
-    const result = await runReportEmails();
-    // Falha de envio aparece como erro no log do cron; o corpo diz quantos.
-    const ok = result.failed === 0;
-    return NextResponse.json({ ok, ...result }, { status: ok ? 200 : 500 });
-  } catch (error) {
-    console.error("[cron/relatorios] falhou", error);
-    return NextResponse.json({ ok: false, error: "Falha ao enviar os resumos." }, { status: 500 });
+  const now = new Date();
+  // Independentes: se uma rotina falhar, as outras saem do mesmo jeito.
+  const [emails, celebrations, reminders] = await Promise.allSettled([
+    runReportEmails(now),
+    runGoalCelebrations(now),
+    // Cobrança de check-in na segunda, junto do resumo semanal.
+    dueReportKinds(now).includes("MANAGEMENT_WEEKLY") ? runOkrCheckInReminders(now) : Promise.resolve(null),
+  ]);
+  const parts = { emails, celebrations, reminders };
+  for (const [name, r] of Object.entries(parts)) {
+    if (r.status === "rejected") console.error(`[cron/relatorios] ${name} falhou`, r.reason);
   }
+  // Falha de envio aparece como erro no log do cron; o corpo diz quantos.
+  const failed =
+    Object.values(parts).some((r) => r.status === "rejected") ||
+    (emails.status === "fulfilled" && emails.value.failed > 0);
+  const value = (r: PromiseSettledResult<unknown>) => (r.status === "fulfilled" ? r.value : { error: "falhou" });
+  return NextResponse.json(
+    { ok: !failed, emails: value(emails), celebrations: value(celebrations), reminders: value(reminders) },
+    { status: failed ? 500 : 200 }
+  );
 }

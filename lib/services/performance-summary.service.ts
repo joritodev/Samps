@@ -7,6 +7,7 @@ import {
   type DeliveryRow,
   type PerformanceSummary,
 } from "@/lib/agency/performance-summary";
+import { lastQuarters } from "@/lib/agency/performance-period";
 import { db } from "@/lib/db";
 
 /** Recorte do resumo: agência inteira (vazio), setor, cliente e/ou pessoa. */
@@ -154,5 +155,37 @@ export async function getPerformanceSummary(params: {
         count: g._count._all,
       })),
     },
+  });
+}
+
+export type QuarterRow = {
+  label: string;
+  partial: boolean;
+  completed: number;
+  onTimeRate: number | null;
+  reworkRate: number | null;
+  workedHours: number;
+};
+
+/** Os últimos trimestres (o atual parcial) no recorte, lado a lado. */
+export async function getQuarterHistory(
+  scope: SummaryScope,
+  now: Date = new Date(),
+  count = 4
+): Promise<QuarterRow[]> {
+  const quarters = lastQuarters(now, count);
+  const summaries = await Promise.all(
+    quarters.map((q) => getPerformanceSummary({ scope, range: { from: q.from, to: q.to }, now }))
+  );
+  return quarters.map((q, i) => {
+    const ind = summaries[i]!.indicators;
+    return {
+      label: q.label,
+      partial: q.partial,
+      completed: ind.COMPLETED.value ?? 0,
+      onTimeRate: ind.ON_TIME_RATE.value,
+      reworkRate: ind.REWORK_RATE.value,
+      workedHours: ind.WORKED_HOURS.value ?? 0,
+    };
   });
 }

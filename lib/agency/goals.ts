@@ -195,3 +195,9 @@ export function metricUnitSuffix(metric: KpiKey): string {
   if (unit === "days") return "dias";
   return "demandas";
 }
+
+/** Meta cujo período acabou há no máximo `days` dias (janela da celebração). */
+export function endedRecently(goal: { endsOn: Date }, now: Date, days = 2): boolean {
+  const elapsed = now.getTime() - goal.endsOn.getTime();
+  return elapsed >= 0 && elapsed <= days * 24 * 60 * 60 * 1000;
+}

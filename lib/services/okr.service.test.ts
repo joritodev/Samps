@@ -11,9 +11,11 @@ const db = vi.hoisted(() => ({
 }));
 const logAudit = vi.hoisted(() => vi.fn());
 const getPerformanceSummary = vi.hoisted(() => vi.fn());
+const createNotification = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/db", () => ({ db }));
 vi.mock("@/lib/services/audit.service", () => ({ logAudit }));
 vi.mock("@/lib/services/performance-summary.service", () => ({ getPerformanceSummary }));
+vi.mock("@/lib/services/notifications.service", () => ({ createNotification }));
 
 import {
   addCheckIn,
@@ -24,6 +26,7 @@ import {
   duplicateObjective,
   evaluateObjectives,
   listObjectivesForUser,
+  listAllRunningObjectives,
   listRunningObjectives,
   objectiveViewer,
   setObjectiveStatus,
@@ -126,6 +129,23 @@ describe("objetivo", () => {
     expect(logAudit).toHaveBeenCalledWith(expect.objectContaining({ action: "OBJECTIVE_UPDATED", previousValue: expect.objectContaining({ title: "T" }), newValue: expect.objectContaining({ title: "Novo" }) }));
     db.objective.findUnique.mockResolvedValueOnce(null);
     await expect(deleteObjective(manager, "x")).rejects.toThrow("não encontrado");
+  });
+  it("concluir celebra com o dono; cancelar e reabrir não", async () => {
+    db.objective.findUnique.mockResolvedValue(objective({ title: "Consistência" }));
+    await setObjectiveStatus(manager, "ob1", "DONE");
+    expect(createNotification).toHaveBeenCalledWith(expect.objectContaining({ userId: "o1", title: "Objetivo concluído: Consistência" }));
+    createNotification.mockClear();
+    await setObjectiveStatus(manager, "ob1", "CANCELLED");
+    db.objective.findUnique.mockResolvedValue(objective({ status: "DONE" }));
+    await setObjectiveStatus(manager, "ob1", "ACTIVE");
+    expect(createNotification).not.toHaveBeenCalled();
+  });
+  it("falha do aviso não impede encerrar", async () => {
+    db.objective.findUnique.mockResolvedValue(objective());
+    createNotification.mockRejectedValueOnce(new Error("sem banco"));
+    const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    await expect(setObjectiveStatus(manager, "ob1", "DONE")).resolves.toBeDefined();
+    spy.mockRestore();
   });
   it("encerrar e apagar auditam", async () => {
     db.objective.findUnique.mockResolvedValue(objective());
@@ -272,5 +292,13 @@ describe("listRunningObjectives", () => {
     expect(where.OR).toEqual([{ scope: "AGENCY" }, { scope: "SECTOR", sectorId: "s1" }]);
     await listRunningObjectives({}, now);
     expect(db.objective.findMany.mock.calls[1][0].where.OR).toEqual([{ scope: "AGENCY" }]);
+  });
+});
+
+describe("listAllRunningObjectives", () => {
+  it("todos os escopos, só ativos que cruzam hoje", async () => {
+    const now = new Date("2026-11-15T15:00:00Z");
+    await listAllRunningObjectives(now);
+    expect(db.objective.findMany.mock.calls[0][0].where).toEqual({ status: "ACTIVE", startsOn: { lte: now }, endsOn: { gte: now } });
   });
 });

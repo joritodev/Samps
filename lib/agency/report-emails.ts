@@ -1,6 +1,6 @@
 import { workdayBefore, previousWorkday } from "@/lib/agency/daily-summary";
 import { describeTarget, GOAL_STATUS_LABEL } from "@/lib/agency/goals";
-import { CONFIDENCE_LABEL } from "@/lib/agency/okr";
+import { CONFIDENCE_LABEL, type StaleCheckIn } from "@/lib/agency/okr";
 import { formatProgress } from "@/lib/agency/okr-format";
 import { formatComparison, formatKpiValue, shortDay } from "@/lib/agency/performance-format";
 import { KPI_CATALOG, type KpiKey, type PerformanceSummary } from "@/lib/agency/performance-summary";
@@ -88,6 +88,8 @@ export type ReportEmailData = {
   summary: PerformanceSummary;
   goals: GoalView[];
   objectives: ObjectiveView[];
+  /** Check-ins pendentes (só no semanal da gestão). */
+  pendingCheckIns?: StaleCheckIn[];
   /** URL absoluta da página Performance. */
   link: string;
 };
@@ -192,6 +194,22 @@ export function renderReportEmail(data: ReportEmailData): { subject: string; htm
               `<tr><td style="padding:3px 0;color:${INK}">${esc(o.title)}</td><td style="padding:3px 0;text-align:right;color:${INK}">${esc(formatProgress(o.progress))}</td><td style="padding:3px 0 3px 12px;text-align:right;color:${MUTED};white-space:nowrap">${o.confidence ? esc(CONFIDENCE_LABEL[o.confidence]) : "Sem leitura"}</td></tr>`
           )
           .join("")}</table>`
+      )
+    );
+  }
+
+  const pending = data.pendingCheckIns ?? [];
+  if (weekly && pending.length > 0) {
+    parts.push(
+      section(
+        "Check-ins pendentes",
+        `<ul style="margin:0;padding-left:18px;font-size:14px;line-height:1.7;color:${INK}">${pending
+          .slice(0, 8)
+          .map(
+            (p) =>
+              `<li>${esc(p.ownerName)}: ${esc(p.keyResultTitle)} <span style="color:${MUTED}">(${esc(p.objectiveTitle)}, ${p.daysSince === null ? "sem check-in ainda" : `há ${p.daysSince} dias`})</span></li>`
+          )
+          .join("")}${pending.length > 8 ? `<li style="color:${MUTED}">e mais ${pending.length - 8}</li>` : ""}</ul>`
       )
     );
   }

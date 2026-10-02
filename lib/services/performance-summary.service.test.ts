@@ -10,6 +10,7 @@ vi.mock("@/lib/db", () => ({ db }));
 import {
   demandScopeWhere,
   getPerformanceSummary,
+  getQuarterHistory,
   toDeliveryRows,
 } from "./performance-summary.service";
 
@@ -126,5 +127,25 @@ describe("getPerformanceSummary", () => {
     const overdueCall = db.demand.count.mock.calls.find((c) => c[0].where.dueDate)?.[0];
     expect(overdueCall.where.dueDate).toEqual({ lt: now });
     expect(overdueCall.where.status.notIn).toContain("DONE");
+  });
+});
+
+describe("getQuarterHistory", () => {
+  it("quatro trimestres, o atual parcial, no recorte pedido", async () => {
+    db.demand.findMany.mockImplementation(async ({ where }) =>
+      where.productionCompletedAt.gte <= new Date("2026-10-02T15:00:00Z") &&
+      where.productionCompletedAt.lte >= new Date("2026-10-02T15:00:00Z")
+        ? [
+            { id: "d1", createdAt: new Date("2026-09-20T12:00:00Z"), dueDate: null, productionCompletedAt: new Date("2026-10-02T15:00:00Z"), assignee: null, contentType: null, workSessions: [] },
+          ]
+        : []
+    );
+    const rows = await getQuarterHistory({ sectorId: "s1" }, new Date("2026-11-15T15:00:00Z"));
+    expect(rows.map((r) => r.label)).toEqual(["T1 2026", "T2 2026", "T3 2026", "T4 2026"]);
+    expect(rows.map((r) => r.partial)).toEqual([false, false, false, true]);
+    expect(rows[3]!.completed).toBe(1);
+    expect(rows[0]!.completed).toBe(0);
+    expect(rows[0]!.onTimeRate).toBeNull();
+    expect(db.demand.findMany.mock.calls.every((c) => c[0].where.sectorId === "s1")).toBe(true);
   });
 });

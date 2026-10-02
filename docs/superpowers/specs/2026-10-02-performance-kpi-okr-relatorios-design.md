@@ -1,6 +1,6 @@
 # Performance, KPIs, OKRs e relatórios
 
-**Data:** 2026-10-02 · **Status:** proposta para aprovação · **Fatias:** ver `docs/superpowers/plans/2026-10-02-performance-kpi-okr-roadmap.md`
+**Data:** 2026-10-02 · **Status:** implementado (fatias 1 a 7) · **Fatias:** ver `docs/superpowers/plans/2026-10-02-performance-kpi-okr-roadmap.md`
 
 ## Problema
 A página Performance repete os mesmos números, não compara com nada e não diz se o resultado é bom. A CEO quer implantar cultura de KPI e OKR usando as métricas do sistema, e a equipe que mantém o projeto depois da entrega não é a que o construiu. Por isso a entrega precisa sair completa.

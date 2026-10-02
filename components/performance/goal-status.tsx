@@ -1,9 +1,9 @@
-import { CircleAlert, CircleCheck, CircleDashed, CircleDot } from "lucide-react";
+import { CircleAlert, CircleDashed, CircleDot, PartyPopper } from "lucide-react";
 import { GOAL_STATUS_LABEL, type GoalStatus } from "@/lib/agency/goals";
 import { cn } from "@/lib/utils";
 
-const STYLE: Record<GoalStatus, { icon: typeof CircleCheck; text: string; bar: string }> = {
-  met: { icon: CircleCheck, text: "text-success", bar: "bg-success" },
+const STYLE: Record<GoalStatus, { icon: typeof PartyPopper; text: string; bar: string }> = {
+  met: { icon: PartyPopper, text: "text-success", bar: "bg-success" },
   near: { icon: CircleDot, text: "text-warning", bar: "bg-warning" },
   off: { icon: CircleAlert, text: "text-urgent", bar: "bg-urgent" },
   none: { icon: CircleDashed, text: "text-muted-foreground", bar: "bg-muted-foreground/40" },

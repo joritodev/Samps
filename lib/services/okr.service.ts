@@ -33,6 +33,7 @@ import { endOfDayMs, startOfDayMs } from "@/lib/agency/sp-calendar";
 import { db } from "@/lib/db";
 import { hasPermission } from "@/lib/permissions/resolve";
 import { logAudit } from "@/lib/services/audit.service";
+import { createNotification } from "@/lib/services/notifications.service";
 import { getPerformanceSummary, type SummaryScope } from "@/lib/services/performance-summary.service";
 import type { SessionUser } from "@/types/auth";
 
@@ -184,6 +185,15 @@ export async function listRunningObjectives(
     },
     include: includeAll,
     orderBy: [{ scope: "asc" }, { createdAt: "asc" }],
+  });
+}
+
+/** Todos os objetivos em andamento que cruzam `now`, de qualquer escopo (rotinas do sistema). */
+export async function listAllRunningObjectives(now: Date = new Date()): Promise<ObjectiveRow[]> {
+  return db.objective.findMany({
+    where: { status: "ACTIVE", startsOn: { lte: now }, endsOn: { gte: now } },
+    include: includeAll,
+    orderBy: [{ startsOn: "asc" }, { createdAt: "asc" }],
   });
 }
 
@@ -388,6 +398,20 @@ export async function setObjectiveStatus(user: SessionUser, id: string, status: 
     previousValue: snapshot(existing),
     newValue: snapshot(objective),
   });
+  // Celebra com o dono; se o aviso falhar, o encerramento já valeu.
+  if (status === "DONE") {
+    try {
+      await createNotification({
+        userId: existing.ownerId,
+        type: "OTHER",
+        title: `Objetivo concluído: ${existing.title}`,
+        message: "Parabéns! O objetivo foi marcado como concluído.",
+        link: "/performance/okrs?periodo=todos",
+      });
+    } catch (error) {
+      console.error("[okr] aviso de objetivo concluído", error);
+    }
+  }
   return objective;
 }
 
