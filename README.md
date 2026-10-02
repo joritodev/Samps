@@ -147,6 +147,8 @@ Fonte: `.env.example`. **Nunca** commitar `.env`, `.env.*`, `.vercel/` ou dumps.
 | `NEXTAUTH_URL` | sim em prod | URL canônica (`http://localhost:3000` em dev) |
 | `RESEND_API_KEY` | não | Convites e reset de senha; sem ela, o fluxo loga o link no terminal |
 | `RESEND_FROM_EMAIL` | não | Default `noreply@samps.digital` |
+| `CRON_SECRET` | sim em prod | Protege `/api/cron/prazos` (avisos de prazo/atraso). Sem ela o endpoint responde 503 e nada roda. O Vercel Cron envia `Authorization: Bearer <CRON_SECRET>` |
+| `BLOB_READ_WRITE_TOKEN` | para foto de capa | Vercel Blob (upload da capa do quadro) |
 | `PRISMA_LOG_QUERIES` | não | `1` loga todo SQL — **ausente em Production** |
 
 ---
