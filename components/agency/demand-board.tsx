@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Filter, Plus, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { BoardColumnEmpty } from "@/components/board/board-column-empty";
@@ -12,6 +12,15 @@ import {
   DemandDetailSheet,
 } from "@/components/agency/demand-card";
 import { NewDemandSheet } from "@/components/agency/new-demand-sheet";
+import { BoardFilterPopover } from "@/components/agency/board-filter-popover";
+import {
+  applyFiltersToParams,
+  buildFilterOptions,
+  countFilters,
+  filterColumns,
+  parseFilters,
+  type BoardFilters,
+} from "@/lib/agency/board-filters";
 import type {
   BoardColumn,
   BoardDemand,
@@ -115,6 +124,29 @@ export function DemandBoard({
     if (!value) clearOpenParam();
   }
   const [createOpen, setCreateOpen] = useState(false);
+  const [filters, setFilters] = useState<BoardFilters>(() =>
+    parseFilters(new URLSearchParams(searchParams.toString()))
+  );
+  const filterOptions = useMemo(() => buildFilterOptions(columns), [columns]);
+  const visibleColumns = useMemo(
+    () => filterColumns(columns, filters),
+    [columns, filters]
+  );
+  const hasLocalFilters = countFilters(filters) > 0;
+
+  /** Filtra no cliente e guarda na URL sem pedir o quadro de novo ao servidor. */
+  function handleFiltersChange(next: BoardFilters) {
+    setFilters(next);
+    const qs = applyFiltersToParams(
+      new URLSearchParams(window.location.search),
+      next
+    ).toString();
+    window.history.replaceState(
+      null,
+      "",
+      qs ? `${pathname}?${qs}` : pathname
+    );
+  }
 
   function handleOpenCard(demand: BoardDemand) {
     setSelected(demand);
@@ -141,15 +173,11 @@ export function DemandBoard({
           ) : null}
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            type="button"
-            onClick={() => toast.message("Filtros em breve.")}
-          >
-            <Filter className="h-3.5 w-3.5" />
-            Filtros
-          </Button>
+          <BoardFilterPopover
+            filters={filters}
+            options={filterOptions}
+            onChange={handleFiltersChange}
+          />
           {canCreate ? (
             <Button
               size="sm"
@@ -166,12 +194,12 @@ export function DemandBoard({
 
       <div className="min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden">
         <div className="flex h-full min-h-0 min-w-max gap-3 px-1 pb-1 sm:px-2">
-          {columns.map((column) => (
+          {visibleColumns.map((column) => (
             <div key={column.id} className="snap-start">
               <BoardColumnView
                 column={column}
                 onOpenCard={handleOpenCard}
-                filtered={Boolean(filterLabel)}
+                filtered={Boolean(filterLabel) || hasLocalFilters}
               />
             </div>
           ))}
