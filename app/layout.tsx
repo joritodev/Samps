@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import { PREFERENCES_BOOT_SCRIPT } from "@/lib/theme/preferences";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -27,6 +28,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
+      <head>
+        {/* Aplica cor/densidade pessoais antes da 1ª pintura (sem flash). */}
+        <script dangerouslySetInnerHTML={{ __html: PREFERENCES_BOOT_SCRIPT }} />
+      </head>
       <body
         className={`${inter.variable} ${plusJakarta.variable} font-sans antialiased`}
       >

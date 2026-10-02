@@ -1,10 +1,16 @@
 "use client";
 
-import { ChevronLeft } from "lucide-react";
+import { Check, ChevronLeft } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { startThemeViewTransition } from "@/lib/theme/view-transition";
+import { BOARD_ACCENTS } from "@/lib/board/appearance";
+import {
+  applyPreferences,
+  readPreferences,
+  type DensityId,
+} from "@/lib/theme/preferences";
 import { cn } from "@/lib/utils";
 
 function AppearancePreview({ mode }: { mode: "light" | "dark" }) {
@@ -53,9 +59,21 @@ export function ThemesSettings() {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
+  const [accent, setAccent] = useState<string | null>(null);
+  const [density, setDensity] = useState<DensityId>("comfortable");
+
   useEffect(() => {
     setMounted(true);
+    const prefs = readPreferences(document.cookie);
+    setAccent(prefs.accent);
+    setDensity(prefs.density);
   }, []);
+
+  function savePrefs(next: { accent: string | null; density: DensityId }) {
+    setAccent(next.accent);
+    setDensity(next.density);
+    applyPreferences(next);
+  }
 
   const appearance = (resolvedTheme ?? theme) === "dark" ? "dark" : "light";
 
@@ -88,7 +106,7 @@ export function ThemesSettings() {
           Aparência
         </h1>
         <p className="mt-0.5 text-sm text-muted-foreground">
-          Escolha o modo claro ou escuro.
+          Modo, cor de destaque e densidade. Valem só neste dispositivo.
         </p>
       </header>
 
@@ -118,6 +136,90 @@ export function ThemesSettings() {
                   <p className="py-2.5 text-center text-sm font-medium text-foreground">
                     {option.label}
                   </p>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        <section aria-labelledby="accent-title" className="space-y-3">
+          <div>
+            <h2 id="accent-title" className="text-sm font-semibold text-foreground">
+              Cor de destaque
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Botões, abas e foco. Quadros que têm cor própria mantêm a deles, e
+              alertas de atraso continuam vermelhos.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Cor de destaque">
+            {BOARD_ACCENTS.map((a) => {
+              const selected = mounted && (accent ?? "teal") === a.id;
+              return (
+                <button
+                  key={a.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  aria-label={a.label}
+                  title={a.label}
+                  onClick={() => savePrefs({ accent: a.id === "teal" ? null : a.id, density })}
+                  className={cn(
+                    "grid size-9 place-items-center rounded-full border border-border text-white outline-none transition-shadow focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                    selected && "ring-2 ring-foreground ring-offset-2 ring-offset-background"
+                  )}
+                  style={{ backgroundColor: a.swatch }}
+                >
+                  {selected ? <Check className="size-4" aria-hidden /> : null}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        <section aria-labelledby="density-title" className="space-y-3">
+          <div>
+            <h2 id="density-title" className="text-sm font-semibold text-foreground">
+              Densidade
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Compacta deixa os cards de demanda mais juntos, para ver mais por tela.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label="Densidade">
+            {(
+              [
+                { id: "comfortable" as const, label: "Confortável" },
+                { id: "compact" as const, label: "Compacta" },
+              ] as const
+            ).map((o) => {
+              const selected = mounted && density === o.id;
+              return (
+                <button
+                  key={o.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  onClick={() => savePrefs({ accent, density: o.id })}
+                  className={cn(
+                    "rounded-xl p-3 text-left outline-none transition-shadow focus-visible:ring-2 focus-visible:ring-ring",
+                    selected
+                      ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
+                      : "ring-1 ring-border"
+                  )}
+                >
+                  <div className="space-y-1.5" aria-hidden>
+                    {[0, 1, 2].map((n) => (
+                      <div
+                        key={n}
+                        className={cn(
+                          "rounded-md border border-border bg-card",
+                          o.id === "compact" ? "h-4" : "h-7"
+                        )}
+                      />
+                    ))}
+                  </div>
+                  <p className="mt-2.5 text-sm font-medium text-foreground">{o.label}</p>
                 </button>
               );
             })}

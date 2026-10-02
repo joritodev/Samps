@@ -42,7 +42,7 @@ export function DemandCard({
       type="button"
       data-morph-id={demand.id}
       onClick={() => onOpen(demand)}
-      className="group w-full rounded-lg border border-border/80 bg-card p-3.5 text-left shadow-xs transition-[box-shadow,border-color,transform] duration-150 ease-out-soft hover:-translate-y-px hover:border-foreground/15 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="group w-full rounded-lg border border-border/80 bg-card p-[var(--card-pad,0.875rem)] text-left shadow-xs transition-[box-shadow,border-color,transform] duration-150 ease-out-soft hover:-translate-y-px hover:border-foreground/15 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <p className="truncate text-xs font-medium text-muted-foreground">
         {demand.clientName}

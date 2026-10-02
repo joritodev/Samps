@@ -80,7 +80,7 @@ export function DemandCard({
     demand.status !== "CANCELLED";
 
   const cardClassName = cn(
-    "group/card flex flex-col gap-3 rounded-lg border border-border/80 bg-card p-3.5 text-card-foreground shadow-xs transition-[box-shadow,border-color,transform] duration-150 ease-out-soft",
+    "group/card flex flex-col gap-[var(--card-gap,0.75rem)] rounded-lg border border-border/80 bg-card p-[var(--card-pad,0.875rem)] text-card-foreground shadow-xs transition-[box-shadow,border-color,transform] duration-150 ease-out-soft",
     (onClick || href) &&
       "w-full cursor-pointer text-left hover:-translate-y-px hover:border-foreground/15 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
     overdue && "border-destructive/40",
