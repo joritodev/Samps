@@ -1,87 +1,60 @@
 import { describe, expect, it } from "vitest";
 import { resolvePerformanceRange } from "./performance-period";
 
-const now = new Date(2026, 7, 16, 14, 30, 45, 123);
+// 16/08/2026 14:30 em São Paulo.
+const now = new Date("2026-08-16T17:30:45.123Z");
+
+const iso = (r: { from: Date; to: Date }) => [r.from.toISOString(), r.to.toISOString()];
 
 describe("resolvePerformanceRange", () => {
-  it("defaults to the current month through the end of today", () => {
-    expect(resolvePerformanceRange({ now })).toEqual({
-      from: new Date(2026, 7, 1, 0, 0, 0, 0),
-      to: new Date(2026, 7, 16, 23, 59, 59, 999),
-      preset: "month",
-    });
+  it("padrão: mês atual até o fim de hoje (dias de São Paulo)", () => {
+    const r = resolvePerformanceRange({ now });
+    expect(r.preset).toBe("month");
+    expect(iso(r)).toEqual(["2026-08-01T03:00:00.000Z", "2026-08-17T02:59:59.999Z"]);
   });
 
-  it("resolves today from the start through the end of the day", () => {
-    expect(resolvePerformanceRange({ preset: "today", now })).toEqual({
-      from: new Date(2026, 7, 16, 0, 0, 0, 0),
-      to: new Date(2026, 7, 16, 23, 59, 59, 999),
-      preset: "today",
-    });
+  it("hoje", () => {
+    const r = resolvePerformanceRange({ preset: "today", now });
+    expect(r.preset).toBe("today");
+    expect(iso(r)).toEqual(["2026-08-16T03:00:00.000Z", "2026-08-17T02:59:59.999Z"]);
   });
 
-  it("resolves the week as today and the previous six days", () => {
-    expect(resolvePerformanceRange({ preset: "week", now })).toEqual({
-      from: new Date(2026, 7, 10, 0, 0, 0, 0),
-      to: new Date(2026, 7, 16, 23, 59, 59, 999),
-      preset: "week",
-    });
+  it("depois das 21h em SP ainda é o mesmo dia (já é o dia seguinte em UTC)", () => {
+    const late = new Date("2026-08-17T01:00:00Z");
+    const r = resolvePerformanceRange({ preset: "today", now: late });
+    expect(r.from.toISOString()).toBe("2026-08-16T03:00:00.000Z");
   });
 
-  it("uses valid ISO dates as a custom inclusive range", () => {
-    expect(
-      resolvePerformanceRange({
-        preset: "today",
-        from: "2026-07-30",
-        to: "2026-08-02",
-        now,
-      }),
-    ).toEqual({
-      from: new Date(2026, 6, 30, 0, 0, 0, 0),
-      to: new Date(2026, 7, 2, 23, 59, 59, 999),
-      preset: "custom",
-    });
+  it("semana: hoje e os seis dias anteriores", () => {
+    const r = resolvePerformanceRange({ preset: "week", now });
+    expect(r.preset).toBe("week");
+    expect(iso(r)).toEqual(["2026-08-10T03:00:00.000Z", "2026-08-17T02:59:59.999Z"]);
   });
 
-  it("swaps inverted custom dates", () => {
-    expect(
-      resolvePerformanceRange({
-        from: "2026-08-10",
-        to: "2026-08-01",
-        now,
-      }),
-    ).toEqual({
-      from: new Date(2026, 7, 1, 0, 0, 0, 0),
-      to: new Date(2026, 7, 10, 23, 59, 59, 999),
-      preset: "custom",
-    });
+  it("trimestre: do primeiro dia do trimestre até hoje", () => {
+    const r = resolvePerformanceRange({ preset: "quarter", now });
+    expect(r.preset).toBe("quarter");
+    expect(r.from.toISOString()).toBe("2026-07-01T03:00:00.000Z");
+    const q1 = resolvePerformanceRange({ preset: "quarter", now: new Date("2026-03-31T15:00:00Z") });
+    expect(q1.from.toISOString()).toBe("2026-01-01T03:00:00.000Z");
+    const q4 = resolvePerformanceRange({ preset: "quarter", now: new Date("2026-12-31T15:00:00Z") });
+    expect(q4.from.toISOString()).toBe("2026-10-01T03:00:00.000Z");
   });
 
-  it("falls back to the current month when from is invalid", () => {
-    expect(
-      resolvePerformanceRange({
-        preset: "custom",
-        from: "2026-02-30",
-        to: "2026-03-02",
-        now,
-      }),
-    ).toEqual({
-      from: new Date(2026, 7, 1, 0, 0, 0, 0),
-      to: new Date(2026, 7, 16, 23, 59, 59, 999),
-      preset: "month",
-    });
+  it("datas livres válidas valem sempre, inclusive nas pontas", () => {
+    const r = resolvePerformanceRange({ preset: "today", from: "2026-07-30", to: "2026-08-02", now });
+    expect(r.preset).toBe("custom");
+    expect(iso(r)).toEqual(["2026-07-30T03:00:00.000Z", "2026-08-03T02:59:59.999Z"]);
   });
 
-  it("falls back to the current month when only one custom date is present", () => {
-    expect(
-      resolvePerformanceRange({
-        from: "2026-08-01",
-        now,
-      }),
-    ).toEqual({
-      from: new Date(2026, 7, 1, 0, 0, 0, 0),
-      to: new Date(2026, 7, 16, 23, 59, 59, 999),
-      preset: "month",
-    });
+  it("troca datas invertidas", () => {
+    const r = resolvePerformanceRange({ from: "2026-08-10", to: "2026-08-01", now });
+    expect(iso(r)).toEqual(["2026-08-01T03:00:00.000Z", "2026-08-11T02:59:59.999Z"]);
+  });
+
+  it("data inválida cai no mês atual", () => {
+    for (const input of [{ from: "2026-02-31", to: "2026-03-02" }, { from: "xx", to: "2026-03-02" }, { from: "2026-03-01" }]) {
+      expect(resolvePerformanceRange({ ...input, now }).preset).toBe("month");
+    }
   });
 });

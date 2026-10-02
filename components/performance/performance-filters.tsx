@@ -77,8 +77,8 @@ export function PerformanceFilters({
 
   return (
     <div className="rounded-xl border border-border/80 bg-card shadow-xs p-4">
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <label className="space-y-1.5">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+        <label className="col-span-2 space-y-1.5 lg:col-span-1">
           <span className="text-xs font-medium text-muted-foreground">
             Período
           </span>
@@ -90,6 +90,7 @@ export function PerformanceFilters({
               <SelectItem value="today">Hoje</SelectItem>
               <SelectItem value="week">Últimos 7 dias</SelectItem>
               <SelectItem value="month">Mês atual</SelectItem>
+              <SelectItem value="quarter">Trimestre atual</SelectItem>
               <SelectItem value="custom">Personalizado</SelectItem>
             </SelectContent>
           </Select>

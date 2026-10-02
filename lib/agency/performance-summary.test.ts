@@ -4,7 +4,6 @@ import {
   buildHeadline,
   buildPerformanceSummary,
   compareValue,
-  dayKey,
   resolveComparisonRanges,
   type DeliveryRow,
   type Snapshot,
@@ -25,6 +24,8 @@ function row(over: Partial<Omit<DeliveryRow, "completedAt">> & { completedAt: st
     completedAt: new Date(over.completedAt),
   };
 }
+
+import { dayKey } from "./sp-calendar";
 
 describe("dayKey", () => {
   it("usa o dia de São Paulo", () => {
@@ -148,7 +149,7 @@ describe("buildPerformanceSummary", () => {
     const s = buildPerformanceSummary({ range, rows: [], workedSeconds: { current: 0, previous: 0 }, snapshot: SNAP });
     expect(s.indicators.ON_TIME_RATE.value).toBeNull();
     expect(s.indicators.REWORK_RATE.value).toBeNull();
-    expect(s.indicators.AVG_LEAD_TIME_HOURS.value).toBeNull();
+    expect(s.indicators.AVG_LEAD_TIME_DAYS.value).toBeNull();
     expect(s.headline).toBe("Nenhuma entrega no período nem no anterior.");
   });
 });

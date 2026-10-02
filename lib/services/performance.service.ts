@@ -1,5 +1,6 @@
 import { WorkSessionStage, WorkSessionStatus } from "@prisma/client";
 import { mean, median, onTimeRate, stdDev } from "@/lib/agency/performance-math";
+import { dayKey } from "@/lib/agency/sp-calendar";
 import { db } from "@/lib/db";
 
 export type ContentTypeStats = {
@@ -65,13 +66,6 @@ type UserBucket = {
   reworkSessions: number;
   secondsByType: Map<string, ContentTypeBucket>;
 };
-
-function formatDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
 
 function isInRange(date: Date, from: Date, to: Date): boolean {
   return date >= from && date <= to;
@@ -168,8 +162,8 @@ export function buildPerformanceReport(
   }
 
   return {
-    from: formatDate(range.from),
-    to: formatDate(range.to),
+    from: dayKey(range.from),
+    to: dayKey(range.to),
     byUser: Array.from(byUser.values())
       .map(
         (bucket): UserRow => ({
