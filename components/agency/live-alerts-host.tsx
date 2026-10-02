@@ -1,11 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Megaphone, Volume2, VolumeX } from "lucide-react";
 import { toast } from "sonner";
 import { pollLiveAlertsAction } from "@/app/actions/live-alerts";
-import { Button } from "@/components/ui/button";
+import { MUTE_KEY } from "@/components/agency/session-mute-button";
+import { AlertCard } from "@/components/notifications/alert-card";
+import { markNotificationReadAction } from "@/lib/actions/notifications.actions";
+import { NOTIFICATIONS_CHANGED_EVENT } from "@/lib/agency/notification-display";
 import {
   MURAL_DISMISS_KEY,
   OPEN_MURAL_EVENT,
@@ -16,11 +18,9 @@ import {
   rememberIds,
 } from "@/lib/agency/live-alerts";
 import type { NotificationPrefs } from "@/lib/services/notifications.service";
-import { cn } from "@/lib/utils";
 
 const SEEN_TOASTS_KEY = "samps:toasts-vistos";
 const BASELINE_KEY = "samps:toast-baseline";
-export const MUTE_KEY = "samps:avisos-mudo";
 
 function readJsonIds(key: string): string[] {
   try {
@@ -53,6 +53,10 @@ function dismissMuralId(id: string) {
   } catch {
     /* ignore */
   }
+}
+
+function notifyNotificationsChanged() {
+  window.dispatchEvent(new Event(NOTIFICATIONS_CHANGED_EVENT));
 }
 
 export function playAlertTone(kind: "announcement" | "notification") {
@@ -96,55 +100,34 @@ function AnnouncementToast({
   toastId: string | number;
 }) {
   const urgent = kind === "URGENT";
-  const celebration = kind === "CELEBRATION";
   return (
-    <div
-      className={cn(
-        "w-[min(100%,22rem)] rounded-xl border border-border bg-card p-4 shadow-lg",
-        urgent &&
-          "border-amber-300 bg-amber-50 text-amber-950 dark:border-amber-400/40 dark:bg-amber-400/10 dark:text-amber-50",
-        celebration &&
-          !urgent &&
-          "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-950 dark:border-fuchsia-400/30 dark:bg-fuchsia-400/10 dark:text-fuchsia-50"
-      )}
-    >
-      <div className="flex gap-2">
-        <Megaphone className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-        <div className="min-w-0 space-y-1">
-          <p className="text-sm font-semibold">{title}</p>
-          <p className="line-clamp-2 text-sm text-muted-foreground">{message}</p>
-          <p className="text-xs text-muted-foreground">
-            {kind === "URGENT"
-              ? "Urgente"
-              : kind === "CELEBRATION"
-                ? "Celebração"
-                : "Informativo"}
-          </p>
-        </div>
-      </div>
-      <div className="mt-3 flex gap-2">
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={() => {
-            dismissMuralId(muralId);
-            toast.dismiss(toastId);
-          }}
-        >
-          Dispensar
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => {
-            window.dispatchEvent(new Event(OPEN_MURAL_EVENT));
-            toast.dismiss(toastId);
-          }}
-        >
-          Ver mural
-        </Button>
-      </div>
-    </div>
+    <AlertCard
+      kind={urgent ? "urgent" : kind === "CELEBRATION" ? "celebration" : "info"}
+      title={title}
+      message={message}
+      actions={
+        urgent
+          ? [
+              {
+                label: "Entendi",
+                primary: true,
+                onClick: () => {
+                  dismissMuralId(muralId);
+                  toast.dismiss(toastId);
+                },
+              },
+              {
+                label: "Ver aviso",
+                onClick: () => {
+                  window.dispatchEvent(new Event(OPEN_MURAL_EVENT));
+                  toast.dismiss(toastId);
+                },
+              },
+            ]
+          : undefined
+      }
+      onClose={() => toast.dismiss(toastId)}
+    />
   );
 }
 
@@ -202,7 +185,7 @@ export function LiveAlertsHost() {
                   toastId={t}
                 />
               ),
-              { duration: 12000 }
+              { duration: item.kind === "URGENT" ? Infinity : 8000 }
             );
           }
           if (!muted && !hidden && prefs.soundAnnouncements) {
@@ -215,18 +198,45 @@ export function LiveAlertsHost() {
           const item = payload.notifications.find((n) => n.id === rawId);
           if (!item) continue;
           if (prefs.toastNotifications) {
-            toast(item.title, {
-              description: item.message,
-              duration: 8000,
-              action: item.link
-                ? {
-                    label: "Abrir",
-                    onClick: () => {
-                      window.location.href = item.link!;
+            toast.custom(
+              (t) => (
+                <AlertCard
+                  kind="notification"
+                  notificationType={item.type}
+                  title={item.title}
+                  message={item.message}
+                  actions={[
+                    ...(item.link
+                      ? [
+                          {
+                            label: "Abrir",
+                            primary: true,
+                            onClick: () => {
+                              void markNotificationReadAction(item.id).then(
+                                notifyNotificationsChanged
+                              );
+                              toast.dismiss(t);
+                              router.push(item.link!);
+                            },
+                          },
+                        ]
+                      : []),
+                    {
+                      label: "Marcar como lida",
+                      onClick: () => {
+                        void markNotificationReadAction(item.id).then(
+                          notifyNotificationsChanged
+                        );
+                        toast.dismiss(t);
+                      },
                     },
-                  }
-                : undefined,
-            });
+                  ]}
+                  onClose={() => toast.dismiss(t)}
+                />
+              ),
+              { duration: 8000 }
+            );
+            notifyNotificationsChanged();
           }
           if (!muted && !hidden && prefs.soundNotifications) {
             playAlertTone("notification");
@@ -256,36 +266,4 @@ export function LiveAlertsHost() {
   }, [runPoll]);
 
   return null;
-}
-
-export function SessionMuteButton() {
-  const [muted, setMuted] = useState(false);
-
-  useEffect(() => {
-    setMuted(sessionStorage.getItem(MUTE_KEY) === "1");
-  }, []);
-
-  function toggle() {
-    const next = !muted;
-    setMuted(next);
-    sessionStorage.setItem(MUTE_KEY, next ? "1" : "0");
-  }
-
-  return (
-    <Button
-      type="button"
-      variant="ghost"
-      size="icon"
-      className="size-9 shrink-0"
-      onClick={toggle}
-      aria-pressed={muted}
-      aria-label={muted ? "Ativar som dos avisos" : "Silenciar avisos"}
-    >
-      {muted ? (
-        <VolumeX className="h-5 w-5" aria-hidden />
-      ) : (
-        <Volume2 className="h-5 w-5" aria-hidden />
-      )}
-    </Button>
-  );
 }

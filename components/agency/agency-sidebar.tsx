@@ -27,7 +27,6 @@ import { SampsLogo } from "@/components/brand/samps-logo";
 import { GlobalSearch } from "@/components/layout/global-search";
 import { NotificationBell } from "@/components/layout/notification-bell";
 import { MuralPopover } from "@/components/agency/mural-popover";
-import { SessionMuteButton } from "@/components/agency/live-alerts-host";
 import type { BannerAnnouncement, BannerBirthday } from "@/components/agency/announcement-banner";
 import type { SearchType } from "@/lib/agency/search-types";
 import type { PermissionCode } from "@/lib/permissions/codes";
@@ -206,7 +205,6 @@ function SidebarBody({
         <SampsLogo />
         <div className="flex items-center">
           <MuralPopover announcements={announcements} birthdays={birthdays} />
-          <SessionMuteButton />
           <NotificationBell />
         </div>
       </div>

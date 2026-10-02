@@ -234,6 +234,14 @@ Faixa única de métricas num card, divididas por linhas finas (grade com 1px de
 ### Demand Card (signature)
 Título, prioridade (ponto + nome), cliente com quadradinho da cor da marca, chips de tipo/formato/status, rodapé com prazo (ícone de calendário, vermelho se atrasada) e responsável com iniciais. Clicável abre o detalhe; no painel é um link para `/demandas?abrir=<id>`. Em "Precisa de você" o card abre com o motivo em Label semibold ("Atrasada há 2 dias" em Perigo; "Sem responsável" ou "Vence amanhã" em Atenção), e o chip de prioridade some quando todos os cards têm a mesma.
 
+### Notifications & Avisos
+Dois ícones no topo do menu: **megafone = Avisos** (comunicados da agência e aniversários) e **sino = Notificações** (pessoais). O som dos pop-ups fica dentro da janela de Avisos.
+- **Sino:** janelinha com abas Todas/Não lidas, ícone por tipo, tempo relativo, ponto teal de não lida e "Marcar todas como lidas". Clicar marca como lida e abre o link. A página `/notificacoes` agrupa por Hoje/Ontem/Esta semana, filtra por grupo e mostra "Tudo em dia" quando vazia.
+- **Avisos:** abas Novos/Vistos (dispensar move para Vistos), grupos Urgente, Comunicados e Aniversários, com autor, quando e até quando vale.
+- **Pop-up "cartão limpo":** cartão branco, borda fina, ícone em círculo, fonte do sistema, botões "Entendi"/"Ver aviso". Urgente fica na tela até clicar; os demais somem sozinhos.
+- **Cor:** tokens `--urgent` (terracota) e `--celebration`, fixos entre temas e com teste de contraste (≥ 4,5:1 sobre o card de todos os temas). Ícone neutro por padrão; terracota para ajuste e urgente. Nunca amarelo preenchido.
+- **Selos:** megafone usa a cor do tema (terracota se há urgente não visto); o sino usa a cor do tema. Vermelho fica reservado a atraso e erro.
+
 ### Detail Window (signature)
 O detalhe de uma demanda abre como uma janela centralizada (até 1040×660px; tela cheia abaixo de 768px) que **cresce a partir do card clicado**: a casca anima a geometria do card até a janela, um clone do card some nos primeiros 35%, o título viaja até a barra de título e o conteúdo (chips, lateral "Andamento", documento, rodapé) aparece escalonado. Fechar roda o caminho inverso até o card, no lugar onde ele está agora.
 - **Tempos:** abrir 460ms e fechar 300ms, com `cubic-bezier(0.32, 0.72, 0, 1)` na geometria e no título; fades e revelação com `cubic-bezier(0.22, 1, 0.36, 1)` (out-soft). Fonte única: `lib/motion/morph-geometry.ts` (`MORPH_TIMING`).

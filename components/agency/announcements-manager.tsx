@@ -9,18 +9,13 @@ import {
   deleteAnnouncement,
   toggleAnnouncement,
 } from "@/app/actions/announcements";
-import { Badge } from "@/components/ui/badge";
+import { AvisoItem } from "@/components/agency/mural-popover";
+import { AlertCard } from "@/components/notifications/alert-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 export type AnnouncementRow = {
   id: string;
@@ -39,14 +34,66 @@ const KIND_LABEL: Record<AnnouncementKind, string> = {
   CELEBRATION: "Celebração",
 };
 
+type Status = "Ativo" | "Agendado" | "Expirado" | "Inativo";
+
+export function announcementStatus(
+  item: Pick<AnnouncementRow, "active" | "startsAt" | "endsAt">,
+  now: Date = new Date()
+): Status {
+  if (!item.active) return "Inativo";
+  if (new Date(item.startsAt) > now) return "Agendado";
+  if (item.endsAt && new Date(item.endsAt) < now) return "Expirado";
+  return "Ativo";
+}
+
+const STATUS_CLASS: Record<Status, string> = {
+  Ativo: "bg-success/10 text-success",
+  Agendado: "bg-primary/10 text-primary",
+  Expirado: "bg-secondary text-muted-foreground",
+  Inativo: "bg-secondary text-muted-foreground",
+};
+
 function formatWhen(iso: string) {
   return new Date(iso).toLocaleString("pt-BR", {
     day: "2-digit",
     month: "2-digit",
-    year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function Segmented<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: T;
+  options: { value: T; label: string }[];
+  onChange: (v: T) => void;
+}) {
+  return (
+    <div role="radiogroup" aria-label={label} className="inline-flex overflow-hidden rounded-lg border border-border bg-card">
+      {options.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          role="radio"
+          aria-checked={value === o.value}
+          onClick={() => onChange(o.value)}
+          className={cn(
+            "border-r border-border px-3 py-1.5 text-xs font-medium outline-none last:border-r-0 focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
+            value === o.value
+              ? "bg-foreground text-background"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 export function AnnouncementsManager({
@@ -58,7 +105,9 @@ export function AnnouncementsManager({
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [kind, setKind] = useState<AnnouncementKind>(AnnouncementKind.INFO);
+  const [schedule, setSchedule] = useState<"now" | "later">("now");
   const [startsAt, setStartsAt] = useState("");
+  const [expires, setExpires] = useState<"never" | "date">("never");
   const [endsAt, setEndsAt] = useState("");
   const [pending, startTransition] = useTransition();
   const router = useRouter();
@@ -67,27 +116,31 @@ export function AnnouncementsManager({
     setTitle("");
     setMessage("");
     setKind(AnnouncementKind.INFO);
+    setSchedule("now");
     setStartsAt("");
+    setExpires("never");
     setEndsAt("");
   }
 
   function handleCreate() {
+    const start = schedule === "later" ? startsAt : "";
+    const end = expires === "date" ? endsAt : "";
     startTransition(async () => {
       const result = await createAnnouncement({
         title,
         message,
         kind,
-        startsAt: startsAt || undefined,
-        endsAt: endsAt || undefined,
+        startsAt: start || undefined,
+        endsAt: end || undefined,
       });
       if (result.error) {
         toast.error(result.error);
         return;
       }
-      if (startsAt && new Date(startsAt) > new Date()) {
-        toast.success("Aviso agendado. Ele aparece no mural a partir da data de início.");
+      if (start && new Date(start) > new Date()) {
+        toast.success("Aviso agendado. Ele aparece a partir da data de início.");
       } else {
-        toast.success("Aviso publicado no mural");
+        toast.success("Aviso publicado");
       }
       resetForm();
       router.refresh();
@@ -97,10 +150,8 @@ export function AnnouncementsManager({
           title: title.trim(),
           message: message.trim(),
           kind,
-          startsAt: startsAt
-            ? new Date(startsAt).toISOString()
-            : new Date().toISOString(),
-          endsAt: endsAt ? new Date(endsAt).toISOString() : null,
+          startsAt: start ? new Date(start).toISOString() : new Date().toISOString(),
+          endsAt: end ? new Date(end).toISOString() : null,
           active: true,
           authorName: "Você",
         },
@@ -134,145 +185,191 @@ export function AnnouncementsManager({
     });
   }
 
-  return (
-    <div className="space-y-8 p-6">
-      <section className="space-y-4 rounded-xl border border-border/80 bg-card shadow-xs p-5">
-        <div>
-          <h2 className="text-base font-semibold text-foreground">Novo aviso</h2>
-          <p className="text-sm text-muted-foreground">
-            Avisos gerais aparecem no megafone da área interna enquanto
-            estiverem ativos. Deixe o início vazio para publicar agora; se
-            preencher um horário futuro, só aparece a partir dele.
-          </p>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="aviso-title">Título</Label>
-            <Input
-              id="aviso-title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Ex: Reunião geral às 16h"
-            />
-          </div>
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="aviso-message">Mensagem</Label>
-            <Textarea
-              id="aviso-message"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              rows={3}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Tipo</Label>
-            <Select
-              value={kind}
-              onValueChange={(v) => setKind(v as AnnouncementKind)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={AnnouncementKind.INFO}>Informativo</SelectItem>
-                <SelectItem value={AnnouncementKind.URGENT}>Urgente</SelectItem>
-                <SelectItem value={AnnouncementKind.CELEBRATION}>
-                  Celebração
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            <p
-              className={
-                kind === AnnouncementKind.URGENT
-                  ? "rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-950 dark:border-amber-400/40 dark:bg-amber-400/10 dark:text-amber-100"
-                  : kind === AnnouncementKind.CELEBRATION
-                    ? "rounded-md border border-fuchsia-200 bg-fuchsia-50 px-3 py-2 text-xs text-fuchsia-950 dark:border-fuchsia-400/30 dark:bg-fuchsia-400/10 dark:text-fuchsia-100"
-                    : "rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground"
-              }
-            >
-              {kind === AnnouncementKind.URGENT
-                ? "Preview: destaque no mural; não é um erro do sistema."
-                : kind === AnnouncementKind.CELEBRATION
-                  ? "Preview: aviso de celebração no mural e no pop-up."
-                  : "Preview: informativo no megafone e no pop-up. Urgente usa destaque no mural; não é um erro do sistema."}
-            </p>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="aviso-starts">Publicar agora ou agendar</Label>
-            <Input
-              id="aviso-starts"
-              type="datetime-local"
-              value={startsAt}
-              onChange={(e) => setStartsAt(e.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">
-              Vazio = publicar agora. Preenchido = agendar.
-            </p>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="aviso-ends">Some do mural depois desta data</Label>
-            <Input
-              id="aviso-ends"
-              type="datetime-local"
-              value={endsAt}
-              onChange={(e) => setEndsAt(e.target.value)}
-            />
-          </div>
-        </div>
-        <Button type="button" disabled={pending} onClick={handleCreate}>
-          {pending ? "Salvando..." : "Publicar aviso"}
-        </Button>
-      </section>
+  const previewTitle = title.trim() || "Título do aviso";
+  const previewMessage = message.trim() || "A mensagem aparece aqui.";
+  const previewKind =
+    kind === AnnouncementKind.URGENT ? "URGENT" : kind === AnnouncementKind.CELEBRATION ? "CELEBRATION" : "INFO";
 
-      <section className="space-y-3">
-        <h2 className="text-base font-semibold text-foreground">Avisos</h2>
+  return (
+    <div className="space-y-5 p-6">
+      <div className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
+        <section className="space-y-1 rounded-xl border border-border/80 bg-card p-5 shadow-xs">
+          <h2 className="font-display text-[15px] font-semibold">Novo aviso</h2>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="aviso-title">Título</Label>
+              <Input
+                id="aviso-title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Ex.: Reunião geral às 16h"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="aviso-message">Mensagem</Label>
+              <Textarea
+                id="aviso-message"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                rows={3}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Tipo</Label>
+              <div>
+                <Segmented
+                  label="Tipo"
+                  value={kind}
+                  onChange={setKind}
+                  options={[
+                    { value: AnnouncementKind.INFO, label: "Informativo" },
+                    { value: AnnouncementKind.URGENT, label: "Urgente" },
+                    { value: AnnouncementKind.CELEBRATION, label: "Celebração" },
+                  ]}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {kind === AnnouncementKind.URGENT
+                  ? "Urgente fica na tela até a pessoa clicar em Entendi. Não é um erro do sistema."
+                  : kind === AnnouncementKind.CELEBRATION
+                    ? "Celebração: pop-up discreto e destaque em tom quente nos Avisos."
+                    : "Informativo: pop-up discreto que some sozinho."}
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Quando publicar</Label>
+              <div className="flex flex-wrap items-center gap-3">
+                <Segmented
+                  label="Quando publicar"
+                  value={schedule}
+                  onChange={setSchedule}
+                  options={[
+                    { value: "now", label: "Agora" },
+                    { value: "later", label: "Agendar" },
+                  ]}
+                />
+                {schedule === "later" ? (
+                  <Input
+                    aria-label="Data e hora de início"
+                    type="datetime-local"
+                    className="h-9 w-auto"
+                    value={startsAt}
+                    onChange={(e) => setStartsAt(e.target.value)}
+                  />
+                ) : null}
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Sai do ar</Label>
+              <div className="flex flex-wrap items-center gap-3">
+                <Segmented
+                  label="Sai do ar"
+                  value={expires}
+                  onChange={setExpires}
+                  options={[
+                    { value: "never", label: "Sem data final" },
+                    { value: "date", label: "Definir data" },
+                  ]}
+                />
+                {expires === "date" ? (
+                  <Input
+                    aria-label="Data e hora de término"
+                    type="datetime-local"
+                    className="h-9 w-auto"
+                    value={endsAt}
+                    onChange={(e) => setEndsAt(e.target.value)}
+                  />
+                ) : null}
+              </div>
+            </div>
+            <Button type="button" disabled={pending} onClick={handleCreate}>
+              {pending ? "Salvando..." : "Publicar aviso"}
+            </Button>
+          </div>
+        </section>
+
+        <section className="space-y-3 rounded-xl border border-border/80 bg-muted/30 p-5" aria-label="Pré-visualização">
+          <div>
+            <h2 className="font-display text-[15px] font-semibold">Como vai aparecer</h2>
+            <p className="text-xs text-muted-foreground">Nos Avisos e no pop-up</p>
+          </div>
+          <ul className="overflow-hidden rounded-xl border border-border bg-card">
+            <AvisoItem
+              item={{
+                id: "preview",
+                title: previewTitle,
+                message: previewMessage,
+                kind: previewKind,
+                isBirthday: false,
+                meta: `${KIND_LABEL[kind]} · agora`,
+              }}
+            />
+          </ul>
+          <AlertCard
+            kind={kind === AnnouncementKind.URGENT ? "urgent" : kind === AnnouncementKind.CELEBRATION ? "celebration" : "info"}
+            title={previewTitle}
+            message={previewMessage}
+            actions={
+              kind === AnnouncementKind.URGENT
+                ? [
+                    { label: "Entendi", primary: true, onClick: () => {} },
+                    { label: "Ver aviso", onClick: () => {} },
+                  ]
+                : undefined
+            }
+            onClose={() => {}}
+          />
+        </section>
+      </div>
+
+      <section className="space-y-2.5 rounded-xl border border-border/80 bg-card p-5 shadow-xs">
+        <h2 className="font-display text-[15px] font-semibold">Avisos publicados</h2>
         {items.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nenhum aviso cadastrado.</p>
         ) : (
-          <ul className="divide-y divide-border rounded-xl border border-border/80 bg-card shadow-xs">
-            {items.map((item) => (
-              <li
-                key={item.id}
-                className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between"
-              >
-                <div className="min-w-0 space-y-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-medium text-foreground">{item.title}</p>
-                    <Badge variant="outline">{KIND_LABEL[item.kind]}</Badge>
-                    <Badge variant={item.active ? "default" : "secondary"}>
-                      {item.active ? "Ativo" : "Inativo"}
-                    </Badge>
+          <ul className="divide-y divide-border">
+            {items.map((item) => {
+              const status = announcementStatus(item);
+              return (
+                <li
+                  key={item.id}
+                  className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-semibold">{item.title}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {KIND_LABEL[item.kind]} · {formatWhen(item.startsAt)}
+                      {item.endsAt ? ` até ${formatWhen(item.endsAt)}` : ", sem data final"}
+                      {" · "}
+                      {item.authorName}
+                    </p>
                   </div>
-                  <p className="text-sm text-muted-foreground">{item.message}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatWhen(item.startsAt)}
-                    {item.endsAt ? ` até ${formatWhen(item.endsAt)}` : ", sem data de fim"}
-                    {" · "}
-                    {item.authorName}
-                  </p>
-                </div>
-                <div className="flex shrink-0 gap-2">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    disabled={pending}
-                    onClick={() => handleToggle(item.id, !item.active)}
-                  >
-                    {item.active ? "Desativar" : "Ativar"}
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="ghost"
-                    disabled={pending}
-                    onClick={() => handleDelete(item.id)}
-                  >
-                    Remover
-                  </Button>
-                </div>
-              </li>
-            ))}
+                  <div className="flex shrink-0 items-center gap-2">
+                    <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-semibold", STATUS_CLASS[status])}>
+                      {status}
+                    </span>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={pending}
+                      onClick={() => handleToggle(item.id, !item.active)}
+                    >
+                      {item.active ? "Desativar" : "Ativar"}
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      disabled={pending}
+                      onClick={() => handleDelete(item.id)}
+                    >
+                      Remover
+                    </Button>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>

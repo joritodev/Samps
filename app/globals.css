@@ -47,6 +47,8 @@
     --teal-light: 188 55% 40%;
     --success: 142 71% 30%;
     --success-foreground: 142 76% 97%;
+    --urgent: 14 68% 38%;
+    --celebration: 21 70% 34%;
     --warning: 32 95% 34%;
     --warning-foreground: 32 76% 97%;
     --info: 189 85% 31%;
@@ -106,6 +108,8 @@
     --teal-light: 188 55% 55%;
     --success: 142 60% 45%;
     --success-foreground: 142 76% 97%;
+    --urgent: 14 80% 68%;
+    --celebration: 21 80% 70%;
     --warning: 32 90% 55%;
     --warning-foreground: 32 76% 97%;
     --info: 188 70% 58%;

@@ -33,6 +33,7 @@ export async function pollLiveAlertsAction() {
     birthdays,
     notifications: notifications.map((n) => ({
       id: n.id,
+      type: n.type,
       title: n.title,
       message: n.message,
       link: n.link,

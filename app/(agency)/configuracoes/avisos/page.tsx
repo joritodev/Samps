@@ -22,8 +22,8 @@ export default async function ConfiguracoesAvisosPage() {
           Avisos gerais
         </h1>
         <p className="mt-0.5 text-sm text-muted-foreground">
-          Comunicados para a equipe. Aparecem no megafone e, se a pessoa já
-          estiver logada, num pop-up.
+          Comunicados para a equipe. Aparecem em Avisos (megafone) e, se a
+          pessoa já estiver logada, num pop-up.
         </p>
       </header>
       <AnnouncementsManager

@@ -58,6 +58,8 @@ const config: Config = {
           DEFAULT: "hsl(var(--success))",
           foreground: "hsl(var(--success-foreground))",
         },
+        urgent: "hsl(var(--urgent))",
+        celebration: "hsl(var(--celebration))",
         warning: {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",

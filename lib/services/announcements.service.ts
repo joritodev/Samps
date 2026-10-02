@@ -2,6 +2,13 @@ import { ClientStatus, UserStatus } from "@prisma/client";
 import { isBirthdayToday } from "@/lib/agency/birthdays";
 import { db } from "@/lib/db";
 
+/** Idade que a pessoa faz hoje (null se a data não tem ano plausível). */
+function ageOn(birthDate: Date | null, now: Date = new Date()) {
+  if (!birthDate) return null;
+  const age = now.getFullYear() - birthDate.getFullYear();
+  return age > 0 && age < 120 ? age : null;
+}
+
 export async function listActiveAnnouncements(now: Date = new Date()) {
   return db.announcement.findMany({
     where: {
@@ -40,9 +47,19 @@ export async function listTodayBirthdays(clientScope?: { in: string[] }) {
   return [
     ...clients
       .filter((c) => isBirthdayToday(c.birthDate))
-      .map((c) => ({ id: c.id, name: c.name, kindOf: "client" as const })),
+      .map((c) => ({
+        id: c.id,
+        name: c.name,
+        kindOf: "client" as const,
+        age: ageOn(c.birthDate),
+      })),
     ...users
       .filter((u) => isBirthdayToday(u.birthDate))
-      .map((u) => ({ id: u.id, name: u.name, kindOf: "user" as const })),
+      .map((u) => ({
+        id: u.id,
+        name: u.name,
+        kindOf: "user" as const,
+        age: ageOn(u.birthDate),
+      })),
   ];
 }

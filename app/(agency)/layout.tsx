@@ -35,6 +35,9 @@ export default async function AgencyLayout({
             title: a.title,
             message: a.message,
             kind: a.kind,
+            authorName: a.author.name,
+            startsAt: a.startsAt.toISOString(),
+            endsAt: a.endsAt?.toISOString() ?? null,
           }))}
           birthdays={birthdays}
         />
