@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarClock, Timer } from "lucide-react";
+import { CalendarClock, CircleAlert, Clock, Timer } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   demandOriginLabel,
@@ -98,6 +98,11 @@ export function DemandCard({
             reason.tone === "neutral" && "text-muted-foreground"
           )}
         >
+          {reason.tone === "danger" ? (
+            <CircleAlert className="size-3.5 shrink-0" aria-hidden />
+          ) : reason.tone === "warning" ? (
+            <Clock className="size-3.5 shrink-0" aria-hidden />
+          ) : null}
           {reason.label}
         </span>
       ) : null}

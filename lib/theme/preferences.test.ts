@@ -46,8 +46,8 @@ const hsl = (v: string) => v.trim().split(/[\s%]+/).filter(Boolean).map(Number) 
 
 describe("contraste das cores de destaque", () => {
   const css = readFileSync("app/globals.css", "utf8");
-  const light = Array.from(css.matchAll(/^\[data-accent="(\w+)"\][^{]*\{ --primary: ([^;]+);/gm));
-  const dark = Array.from(css.matchAll(/^\.dark \[data-accent="(\w+)"\][^{]*\{ --primary: ([^;]+);/gm));
+  const light = Array.from(css.matchAll(/^html\[data-accent="(\w+)"\][^{]*\{ --primary: ([^;]+);/gm));
+  const dark = Array.from(css.matchAll(/^html\.dark\[data-accent="(\w+)"\][^{]*\{ --primary: ([^;]+);/gm));
   const lightFg = hslToLum(...hsl("0 0% 100%"));
   const darkFg = hslToLum(...hsl("220 28% 8%"));
 
