@@ -91,6 +91,8 @@ export default async function QuadroConfiguracoesPage({
           canManageLists={canManageLists}
           canEditBoard={canEditBoard}
           appearance={parseAppearance(board.config)}
+          clientName={board.client.name}
+          brandColor={board.client.brandColor}
         />
       </div>
     </div>

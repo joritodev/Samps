@@ -41,6 +41,8 @@ type BoardSettingsProps = {
   canManageLists: boolean;
   canEditBoard: boolean;
   appearance: BoardAppearance;
+  clientName: string;
+  brandColor?: string | null;
 };
 
 export function BoardSettingsForm({
@@ -54,6 +56,8 @@ export function BoardSettingsForm({
   canManageLists,
   canEditBoard,
   appearance,
+  clientName,
+  brandColor,
 }: BoardSettingsProps) {
   const [pending, startTransition] = useTransition();
   const [portalName, setPortalName] = useState(portal.displayName);
@@ -137,6 +141,8 @@ export function BoardSettingsForm({
                 boardId={boardId}
                 clientId={clientId}
                 initial={appearance}
+                clientName={clientName}
+                brandColor={brandColor}
               />
             </CardContent>
           </Card>

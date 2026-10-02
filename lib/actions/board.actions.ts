@@ -15,7 +15,7 @@ import {
   reorderBoardLists,
   unarchiveBoardList,
 } from "@/lib/services/board.service";
-import { sanitizeAppearance } from "@/lib/board/appearance";
+import { parseAppearance, sanitizeAppearance } from "@/lib/board/appearance";
 import type { BoardWizardInput } from "@/types/board";
 
 export async function createBoardAction(input: BoardWizardInput) {
@@ -241,7 +241,16 @@ export async function updateBoardAppearanceAction(
       : {};
   await db.clientBoard.update({
     where: { id: boardId },
-    data: { config: { ...current, appearance } },
+    data: {
+      config: {
+        ...current,
+        // Preserva a foto enviada: ela só muda pelas rotas de upload/remoção.
+        appearance: {
+          ...appearance,
+          coverImage: parseAppearance(current).coverImage,
+        },
+      },
+    },
   });
   revalidatePath(`/clientes/${clientId}/quadro`);
   revalidatePath(`/clientes/${clientId}/quadro/configuracoes`);

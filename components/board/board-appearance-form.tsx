@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BoardCoverUpload } from "@/components/board/board-cover-upload";
 import { Label } from "@/components/ui/label";
 import { updateBoardAppearanceAction } from "@/lib/actions/board.actions";
 import {
@@ -17,10 +18,14 @@ export function BoardAppearanceForm({
   boardId,
   clientId,
   initial,
+  clientName,
+  brandColor,
 }: {
   boardId: string;
   clientId: string;
   initial: BoardAppearance;
+  clientName: string;
+  brandColor?: string | null;
 }) {
   const [accent, setAccent] = useState(initial.accent);
   const [cover, setCover] = useState(initial.cover);
@@ -100,6 +105,18 @@ export function BoardAppearanceForm({
             />
           ))}
         </div>
+      </fieldset>
+
+      <fieldset className="space-y-2">
+        <Label asChild>
+          <legend>Foto da capa</legend>
+        </Label>
+        <BoardCoverUpload
+          clientId={clientId}
+          clientName={clientName}
+          brandColor={brandColor}
+          initial={initial.coverImage}
+        />
       </fieldset>
 
       <Button disabled={pending || !dirty} onClick={save}>

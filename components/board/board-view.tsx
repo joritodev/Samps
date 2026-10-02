@@ -219,11 +219,25 @@ export function BoardView({
       data-board-accent={appearance?.accent ?? undefined}
       className="flex h-full min-h-0 flex-col bg-card"
     >
-      {appearance?.cover ? (
+      {appearance?.coverImage ? (
+        <div
+          data-board-cover="image"
+          className="h-14 shrink-0 overflow-hidden border-b border-border sm:h-20 lg:h-24"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={appearance.coverImage.url}
+            alt=""
+            width={appearance.coverImage.w}
+            height={appearance.coverImage.h}
+            className="size-full object-cover"
+          />
+        </div>
+      ) : appearance?.cover ? (
         <div
           aria-hidden
           data-board-cover={appearance.cover}
-          className="h-14 shrink-0 border-b border-border sm:h-20"
+          className="h-14 shrink-0 border-b border-border sm:h-20 lg:h-24"
           style={{ background: coverCss(appearance.cover) }}
         />
       ) : null}

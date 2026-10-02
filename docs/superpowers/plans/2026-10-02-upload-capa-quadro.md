@@ -36,3 +36,9 @@ Imagem inválida (SVG, executável renomeado, 20 MB) é recusada; foto com GPS s
 
 ## Fora do escopo
 Login, portal externo, perfil e preferências pessoais (fatias seguintes do mapa global).
+
+## Ajustes feitos na implementação (02/10)
+- Proporção da faixa **12:1** (2400×200); faixa com `h-14 sm:h-20 lg:h-24` e `object-cover`.
+- Limite do servidor **4 MB** (a Vercel limita o corpo da requisição a 4,5 MB); o navegador reduz a foto (lado maior ≤ 2400px, JPEG) antes de enviar e aceita originais de até 25 MB.
+- Endpoint: `POST/DELETE /api/clientes/[clientId]/quadro/capa` (checagem de mesma origem, login, `clients.edit` e acesso ao cliente; limite de 10 envios/hora via auditoria).
+- Dev sem Blob: `LOCAL_IMAGE_STORAGE=1` grava em `public/uploads-dev` (opt-in; nunca na Vercel). Em produção sem `BLOB_READ_WRITE_TOKEN` o envio falha com mensagem clara.

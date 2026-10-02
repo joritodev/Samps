@@ -53,3 +53,6 @@ _e.txt
 # impeccable: estado local do servidor de detecção/live
 .impeccable/live/
 .impeccable/config.local.json
+
+# imagens enviadas em dev (storage local)
+/public/uploads-dev/

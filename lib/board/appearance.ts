@@ -51,12 +51,47 @@ export const BOARD_COVERS = [
 export type BoardAccentId = (typeof BOARD_ACCENTS)[number]["id"];
 export type BoardCoverId = (typeof BOARD_COVERS)[number]["id"];
 
+/** Foto de capa já tratada (recortada) e hospedada pelo nosso storage. */
+export type BoardCoverImage = { url: string; w: number; h: number };
+
 export type BoardAppearance = {
   accent: BoardAccentId | null;
   cover: BoardCoverId | null;
+  coverImage: BoardCoverImage | null;
 };
 
-export const DEFAULT_APPEARANCE: BoardAppearance = { accent: null, cover: null };
+export const DEFAULT_APPEARANCE: BoardAppearance = {
+  accent: null,
+  cover: null,
+  coverImage: null,
+};
+
+/** Só aceitamos imagem do nosso storage (Vercel Blob) ou, em dev, do disco local. */
+export function isTrustedCoverUrl(url: unknown): url is string {
+  if (typeof url !== "string" || url.length > 500) return false;
+  if (url.startsWith("/uploads-dev/board-covers/") && !url.includes("..")) {
+    return process.env.LOCAL_IMAGE_STORAGE === "1";
+  }
+  try {
+    const u = new URL(url);
+    return (
+      u.protocol === "https:" &&
+      u.hostname.endsWith(".public.blob.vercel-storage.com") &&
+      u.pathname.startsWith("/board-covers/")
+    );
+  } catch {
+    return false;
+  }
+}
+
+export function parseCoverImage(raw: unknown): BoardCoverImage | null {
+  if (!raw || typeof raw !== "object") return null;
+  const { url, w, h } = raw as Record<string, unknown>;
+  if (!isTrustedCoverUrl(url)) return null;
+  if (typeof w !== "number" || typeof h !== "number") return null;
+  if (!(w > 0 && w <= 6000 && h > 0 && h <= 6000)) return null;
+  return { url, w, h };
+}
 
 export function isAccentId(v: unknown): v is BoardAccentId {
   return BOARD_ACCENTS.some((a) => a.id === v);
@@ -73,10 +108,11 @@ export function parseAppearance(config: unknown): BoardAppearance {
       ? (config as { appearance?: unknown }).appearance
       : undefined;
   if (!raw || typeof raw !== "object") return DEFAULT_APPEARANCE;
-  const { accent, cover } = raw as Record<string, unknown>;
+  const { accent, cover, coverImage } = raw as Record<string, unknown>;
   return {
     accent: isAccentId(accent) ? accent : null,
     cover: isCoverId(cover) ? cover : null,
+    coverImage: parseCoverImage(coverImage),
   };
 }
 
@@ -84,7 +120,7 @@ export function parseAppearance(config: unknown): BoardAppearance {
 export function sanitizeAppearance(input: {
   accent?: unknown;
   cover?: unknown;
-}): BoardAppearance | undefined {
+}): Pick<BoardAppearance, "accent" | "cover"> | undefined {
   const accent = input.accent ?? null;
   const cover = input.cover ?? null;
   if (accent !== null && !isAccentId(accent)) return undefined;
