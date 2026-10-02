@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   canViewGoal,
   describeTarget,
+  endedRecently,
   evaluateGoal,
   goalPeriodState,
   parseGoalInput,
@@ -135,5 +136,15 @@ describe("metricUnitSuffix", () => {
     expect(metricUnitSuffix("WORKED_HOURS")).toBe("h");
     expect(metricUnitSuffix("AVG_LEAD_TIME_DAYS")).toBe("dias");
     expect(metricUnitSuffix("OVERDUE")).toBe("demandas");
+  });
+});
+
+describe("endedRecently", () => {
+  const goal = { endsOn: new Date("2026-12-31T23:59:59Z") };
+  it("só nos 2 dias depois do fim", () => {
+    expect(endedRecently(goal, new Date("2026-12-31T12:00:00Z"))).toBe(false); // ainda não acabou
+    expect(endedRecently(goal, new Date("2027-01-01T12:00:00Z"))).toBe(true);
+    expect(endedRecently(goal, new Date("2027-01-02T12:00:00Z"))).toBe(true);
+    expect(endedRecently(goal, new Date("2027-01-04T12:00:00Z"))).toBe(false);
   });
 });

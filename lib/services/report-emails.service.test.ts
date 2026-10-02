@@ -13,11 +13,13 @@ const evaluateGoals = vi.hoisted(() => vi.fn());
 const listRunningObjectives = vi.hoisted(() => vi.fn());
 const evaluateObjectives = vi.hoisted(() => vi.fn());
 const createNotification = vi.hoisted(() => vi.fn());
+const getPendingCheckIns = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/db", () => ({ db }));
 vi.mock("@/lib/mail/send", () => ({ sendEmail, appUrl: (p: string) => `https://app.exemplo.com${p}` }));
 vi.mock("@/lib/services/performance-summary.service", () => ({ getPerformanceSummary }));
 vi.mock("@/lib/services/goals.service", () => ({ listRunningGoals, evaluateGoals }));
 vi.mock("@/lib/services/okr.service", () => ({ listRunningObjectives, evaluateObjectives }));
+vi.mock("@/lib/services/okr-reminders.service", () => ({ getPendingCheckIns }));
 vi.mock("@/lib/services/notifications.service", async () => {
   const actual = await vi.importActual<typeof import("@/lib/services/notifications.service")>("@/lib/services/notifications.service");
   return { ...actual, createNotification };
@@ -62,6 +64,7 @@ beforeEach(() => {
   evaluateGoals.mockResolvedValue([]);
   listRunningObjectives.mockResolvedValue([]);
   evaluateObjectives.mockResolvedValue([]);
+  getPendingCheckIns.mockResolvedValue([]);
 });
 afterEach(() => {
   process.env = env;
@@ -148,6 +151,25 @@ describe("runReportEmails: gestão (semanal)", () => {
     const agencyCalls = getPerformanceSummary.mock.calls.filter((c) => !c[0].scope.sectorId);
     expect(agencyCalls).toHaveLength(1);
     expect(sendEmail).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("runReportEmails: check-ins pendentes", () => {
+  it("o semanal da gestão leva as pendências, calculadas uma vez; o diário não", async () => {
+    getPendingCheckIns.mockResolvedValue([
+      { objectiveId: "o", objectiveTitle: "Obj", ownerId: "u", ownerName: "Ana", keyResultId: "k", keyResultTitle: "Clientes novos", daysSince: 9 },
+    ]);
+    db.user.findMany.mockResolvedValue([
+      { id: "m1", name: "A", email: "a@x.com", notificationPrefs: null },
+      { id: "m2", name: "B", email: "b@x.com", notificationPrefs: null },
+    ]);
+    db.sector.findMany.mockResolvedValue([{ id: "s1", name: "Design", leader: leader("l1") }]);
+    await runReportEmails(MONDAY);
+    expect(getPendingCheckIns).toHaveBeenCalledTimes(1);
+    const html = (to: string) => sendEmail.mock.calls.find((c) => c[0].to === to)![0].html as string;
+    expect(html("a@x.com")).toContain("Check-ins pendentes");
+    expect(html("a@x.com")).toContain("Clientes novos");
+    expect(html("l1@x.com")).not.toContain("Check-ins pendentes");
   });
 });
 

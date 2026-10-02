@@ -1,6 +1,6 @@
 import { ClientStatus } from "@prisma/client";
 import type { PerformanceFiltersProps } from "@/components/performance/performance-filters";
-import { resolvePerformanceRange } from "@/lib/agency/performance-period";
+import { comparisonRangeFor, resolvePerformanceRange } from "@/lib/agency/performance-period";
 import { dayKey } from "@/lib/agency/sp-calendar";
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/permissions/check";
@@ -52,5 +52,5 @@ export async function loadPerformanceContext(searchParams: PerformanceSearchPara
     clients,
   };
 
-  return { user, isMgmt, range, scope, filters };
+  return { user, isMgmt, range, previousRange: comparisonRangeFor(range), scope, filters };
 }

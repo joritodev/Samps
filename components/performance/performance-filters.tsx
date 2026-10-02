@@ -91,6 +91,7 @@ export function PerformanceFilters({
               <SelectItem value="week">Últimos 7 dias</SelectItem>
               <SelectItem value="month">Mês atual</SelectItem>
               <SelectItem value="quarter">Trimestre atual</SelectItem>
+              <SelectItem value="lastquarter">Trimestre anterior</SelectItem>
               <SelectItem value="custom">Personalizado</SelectItem>
             </SelectContent>
           </Select>

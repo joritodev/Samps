@@ -5,6 +5,7 @@ import {
   canViewObjective,
   computedConfidence,
   expectedProgress,
+  findStaleCheckIns,
   keyResultConfidence,
   keyResultProgress,
   nextPeriod,
@@ -152,5 +153,29 @@ describe("nextPeriod", () => {
   it("intervalo livre anda com o mesmo tamanho", () => {
     expect(keys(nextPeriod(sp("2026-10-05", "2026-10-11")))).toEqual(["2026-10-12", "2026-10-18"]);
     expect(keys(nextPeriod(sp("2026-02-01", "2026-04-30")))).toEqual(["2026-05-01", "2026-07-28"]);
+  });
+});
+
+describe("findStaleCheckIns", () => {
+  const now = new Date("2026-11-16T12:00:00Z");
+  const day = (n: number) => new Date(now.getTime() - n * 24 * 60 * 60 * 1000);
+  const obj = (over: object, keyResults: object[]) =>
+    ({ id: "o1", title: "Obj", ownerId: "u1", ownerName: "Ana", startsOn: day(30), keyResults, ...over }) as never;
+  const kr = (over: object) => ({ id: "k", title: "KR", kind: "MANUAL", lastCheckInAt: null, ...over });
+
+  it("manual com último check-in há 7 dias ou mais fica pendente", () => {
+    const out = findStaleCheckIns([obj({}, [kr({ id: "a", lastCheckInAt: day(7) }), kr({ id: "b", lastCheckInAt: day(6) })])], now);
+    expect(out.map((x) => x.keyResultId)).toEqual(["a"]);
+    expect(out[0]).toMatchObject({ daysSince: 7, ownerId: "u1", objectiveTitle: "Obj" });
+  });
+  it("nunca houve check-in: vale a idade do objetivo", () => {
+    expect(findStaleCheckIns([obj({ startsOn: day(10) }, [kr({})])], now)[0]?.daysSince).toBeNull();
+    expect(findStaleCheckIns([obj({ startsOn: day(3) }, [kr({})])], now)).toEqual([]);
+  });
+  it("resultado automático nunca é cobrado", () => {
+    expect(findStaleCheckIns([obj({}, [kr({ kind: "KPI" })])], now)).toEqual([]);
+  });
+  it("dias configuráveis", () => {
+    expect(findStaleCheckIns([obj({}, [kr({ lastCheckInAt: day(4) })])], now, 3)).toHaveLength(1);
   });
 });

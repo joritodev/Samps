@@ -1,5 +1,7 @@
 # Roadmap: Performance, KPIs, OKRs e relatórios
 
+**Status (02/10/2026): as 7 fatias foram implementadas e mergeadas** (#74 a #80). Guia de manutenção: `docs/superpowers/notas/2026-10-02-performance-guia.md`.
+
 **Spec:** `docs/superpowers/specs/2026-10-02-performance-kpi-okr-relatorios-design.md`
 **Regra:** 1 fatia = 1 PR. Cada fatia ganha seu plano detalhado **antes** de ser executada (schema, auth e e-mail só com desenho fechado). Esta página é o índice; a fatia 1 está detalhada em `2026-10-02-performance-resumo-fatia1.md`.
 
@@ -20,4 +22,4 @@
 - Variáveis na Vercel: `CRON_SECRET` (já existe), `RESEND_API_KEY`, `REPORTS_FROM`, `REPORTS_EMAIL_ENABLED`.
 - Verificar o domínio no Resend e ligar `REPORTS_EMAIL_ENABLED=true`.
 - Cron novo em `vercel.json` (Production).
-- `docs/superpowers/notas/`: guia curto "como criar metas e OKRs" e "como o resumo é calculado", para quem assumir.
+- `docs/superpowers/notas/2026-10-02-performance-guia.md`: guia para quem assumir (feito).

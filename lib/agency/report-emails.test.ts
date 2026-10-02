@@ -82,6 +82,24 @@ function data(over: Partial<ReportEmailData> = {}): ReportEmailData {
   };
 }
 
+describe("renderReportEmail: check-ins pendentes", () => {
+  const pending = (n: number) =>
+    Array.from({ length: n }, (_, i) => ({
+      objectiveId: `o${i}`, objectiveTitle: `Obj <${i}>`, ownerId: "u", ownerName: "Ana", keyResultId: `k${i}`,
+      keyResultTitle: `KR ${i}`, daysSince: i === 0 ? null : 9,
+    }));
+  it("seção só no semanal, escapada e limitada a 8", () => {
+    const { html } = renderReportEmail(data({ pendingCheckIns: pending(10) }));
+    expect(html).toContain("Check-ins pendentes");
+    expect(html).toContain("sem check-in ainda");
+    expect(html).toContain("há 9 dias");
+    expect(html).toContain("Obj &lt;0&gt;");
+    expect(html).toContain("e mais 2");
+    expect(renderReportEmail(data({ kind: "LEADER_DAILY", pendingCheckIns: pending(2) })).html).not.toContain("Check-ins pendentes");
+    expect(renderReportEmail(data({ pendingCheckIns: [] })).html).not.toContain("Check-ins pendentes");
+  });
+});
+
 describe("renderReportEmail", () => {
   it("assunto por tipo", () => {
     expect(reportSubject(data())).toBe("Resumo semanal da operação · 28/09 a 04/10");

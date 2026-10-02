@@ -13,6 +13,7 @@ import { appUrl, sendEmail } from "@/lib/mail/send";
 import { evaluateGoals, listRunningGoals } from "@/lib/services/goals.service";
 import { createNotification, parseNotificationPrefs } from "@/lib/services/notifications.service";
 import { evaluateObjectives, listRunningObjectives } from "@/lib/services/okr.service";
+import { getPendingCheckIns } from "@/lib/services/okr-reminders.service";
 import { getPerformanceSummary } from "@/lib/services/performance-summary.service";
 
 export type ReportRunResult = {
@@ -127,6 +128,7 @@ export async function runReportEmails(now: Date = new Date()): Promise<ReportRun
   });
   let limitHit = false;
   const summaries = new Map<string, ReturnType<typeof getPerformanceSummary>>();
+  let pendingCheckIns: ReturnType<typeof getPendingCheckIns> | null = null;
 
   for (const kind of kinds) {
     const period = reportPeriod(kind, now);
@@ -180,6 +182,7 @@ export async function runReportEmails(now: Date = new Date()): Promise<ReportRun
           goals,
           objectives,
           link: appUrl("/performance"),
+          pendingCheckIns: kind === "MANAGEMENT_WEEKLY" ? await (pendingCheckIns ??= getPendingCheckIns(now)) : undefined,
         });
         const sent = await sendEmail({ to: r.email, subject: email.subject, html: email.html });
         if (sent.delivered) {
