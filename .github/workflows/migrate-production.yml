@@ -55,6 +55,34 @@ jobs:
             echo "::error::O secret PRODUCTION_DATABASE_URL não está configurado."
             exit 1
           fi
+          host=$(printf '%s' "$DATABASE_URL" | sed -E 's#^[a-zA-Z]+://[^@]*@([^/:?]+).*#\1#')
+          case "$host" in
+            *-pooler*)
+              echo "::warning::A URL usa o endereço com pooler ($host). Para migrar, use o endereço direto (o mesmo, sem '-pooler')."
+              ;;
+          esac
+
+      - name: Acordar o banco
+        # Bancos serverless (Neon) suspendem quando ociosos: a primeira conexão
+        # pode falhar enquanto ele acorda. Tenta de novo antes de desistir.
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: |
+          case "$DATABASE_URL" in
+            *connect_timeout=*) ;;
+            *\?*) DATABASE_URL="${DATABASE_URL}&connect_timeout=30" ;;
+            *) DATABASE_URL="${DATABASE_URL}?connect_timeout=30" ;;
+          esac
+          export DATABASE_URL
+          for attempt in 1 2 3 4 5 6; do
+            if echo 'SELECT 1;' | npx prisma db execute --stdin --schema prisma/schema.prisma; then
+              exit 0
+            fi
+            echo "Tentativa $attempt de 6 falhou; esperando 10 s."
+            sleep 10
+          done
+          echo "::error::Não foi possível conectar ao banco. Confira se a URL é a direta (sem pooler), se o banco está ativo e se não há lista de IPs permitidos bloqueando o GitHub."
+          exit 1
 
       - name: Migrações pendentes (antes)
         env:
@@ -65,7 +93,14 @@ jobs:
       - name: Aplicar migrações
         env:
           DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
-        run: npx prisma migrate deploy
+        run: |
+          case "$DATABASE_URL" in
+            *connect_timeout=*) ;;
+            *\?*) DATABASE_URL="${DATABASE_URL}&connect_timeout=30" ;;
+            *) DATABASE_URL="${DATABASE_URL}?connect_timeout=30" ;;
+          esac
+          export DATABASE_URL
+          npx prisma migrate deploy
 
       - name: Migrações pendentes (depois)
         env:
