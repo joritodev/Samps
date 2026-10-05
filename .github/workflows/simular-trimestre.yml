@@ -1,0 +1,95 @@
+name: Simular trimestre de trabalho
+
+# Manual. APAGA os dados operacionais (clientes, contratos, quadros, demandas,
+# sessões de trabalho, projetos, captações, agenda, avisos, metas, OKRs e
+# notificações) e grava um trimestre simulado e coerente. Mantém usuários,
+# funções, permissões, setores, configurações e catálogos. Não cria contas.
+#
+# Por padrão roda só o ENSAIO (planeja e mostra o resumo, sem alterar nada).
+# Para aplicar de verdade: desmarque "ensaio" e digite a frase de confirmação.
+# Antes de aplicar, crie um branch/backup do banco no painel do Neon.
+
+on:
+  workflow_dispatch:
+    inputs:
+      ensaio:
+        description: 'Ensaio: só mostra o plano, não altera o banco (desmarque para aplicar)'
+        required: true
+        type: boolean
+        default: true
+      confirmar:
+        description: 'Para aplicar, digite: apagar e simular'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: migrate-production
+  cancel-in-progress: false
+
+jobs:
+  simular:
+    if: github.ref == 'refs/heads/master' && (inputs.ensaio || inputs.confirmar == 'apagar e simular')
+    runs-on: ubuntu-latest
+    environment: production-db
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Instalar dependências
+        env:
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci?schema=public
+        run: npm ci
+
+      - name: Conferir o secret
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::O secret PRODUCTION_DATABASE_URL não está configurado."
+            exit 1
+          fi
+          host=$(printf '%s' "$DATABASE_URL" | sed -E 's#^[a-zA-Z]+://[^@]*@([^/:?]+).*#\1#')
+          case "$host" in
+            *-pooler*)
+              echo "::error::Use o endereço direto do banco (sem '-pooler'): a gravação usa uma transação longa."
+              exit 1
+              ;;
+          esac
+
+      - name: Ensaio (não altera nada)
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: |
+          case "$DATABASE_URL" in
+            *connect_timeout=*) ;;
+            *\?*) DATABASE_URL="${DATABASE_URL}&connect_timeout=30" ;;
+            *) DATABASE_URL="${DATABASE_URL}?connect_timeout=30" ;;
+          esac
+          export DATABASE_URL
+          for attempt in 1 2 3 4 5; do
+            npx tsx prisma/simulate-quarter.ts --dry-run && exit 0
+            echo "Tentativa $attempt falhou; esperando o banco acordar…"
+            sleep 10
+          done
+          exit 1
+
+      - name: Apagar e gravar a simulação
+        if: ${{ !inputs.ensaio }}
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: |
+          case "$DATABASE_URL" in
+            *connect_timeout=*) ;;
+            *\?*) DATABASE_URL="${DATABASE_URL}&connect_timeout=30" ;;
+            *) DATABASE_URL="${DATABASE_URL}?connect_timeout=30" ;;
+          esac
+          export DATABASE_URL
+          npx tsx prisma/simulate-quarter.ts --yes
