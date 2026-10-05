@@ -39,7 +39,7 @@ Para quem assume o projeto. Spec e planos: `docs/superpowers/specs/2026-10-02-pe
 - Plano gratuito do Resend: 100 e-mails por dia; o sistema para em 90 e avisa a gestão.
 
 ## Banco
-Migrações da frente (aplicar com `npx prisma migrate deploy` em produção, o deploy da Vercel não aplica sozinho): `20261002190000_goals`, `20261002200000_okrs`, `20261002210000_report_seen`, `20261002220000_report_delivery`. Todas as tabelas novas têm RLS (cliente externo não lê nem grava).
+Migrações da frente. O deploy da Vercel **não** aplica migração sozinho. Duas formas de aplicar em produção: (a) `DATABASE_URL="…url direta de produção…" npx prisma migrate deploy` na sua máquina; ou (b) a aba **Actions** do GitHub, workflow "Migrar banco de produção" (manual, pede para digitar "aplicar", só roda a partir da master; exige o secret `PRODUCTION_DATABASE_URL` com a URL direta do banco, e pode exigir aprovação se você criar o Environment `production-db` com "Required reviewers"). Migrações desta frente: `20261002190000_goals`, `20261002200000_okrs`, `20261002210000_report_seen`, `20261002220000_report_delivery`. Todas as tabelas novas têm RLS (cliente externo não lê nem grava).
 
 ## Crons (`vercel.json`, só rodam em Production)
 - `/api/cron/prazos` 11:00 UTC: avisos de prazo e atraso.

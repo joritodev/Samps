@@ -1,0 +1,73 @@
+name: Migrar banco de produção
+
+# Manual: só roda quando alguém clica em "Run workflow" na aba Actions e digita
+# "aplicar". Aplica as migrações pendentes (`prisma migrate deploy`): só cria o
+# que falta, na ordem, e não apaga dados.
+#
+# Configuração (uma vez): em Settings > Secrets and variables > Actions, crie o
+# secret PRODUCTION_DATABASE_URL com a URL de conexão DIRETA do banco de
+# produção (sem pooler). Se quiser exigir aprovação de alguém antes de rodar,
+# crie o Environment "production-db" em Settings > Environments, ative
+# "Required reviewers" e guarde o secret lá.
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmar:
+        description: 'Digite "aplicar" para confirmar que quer migrar o banco de PRODUÇÃO'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+# Duas execuções ao mesmo tempo disputariam o lock do banco.
+concurrency:
+  group: migrate-production
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    # Só a partir da master: nunca migra produção com código de branch.
+    if: github.ref == 'refs/heads/master' && inputs.confirmar == 'aplicar'
+    runs-on: ubuntu-latest
+    environment: production-db
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Instalar dependências
+        # O postinstall roda `prisma generate`, que exige a variável mas não conecta.
+        env:
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci?schema=public
+        run: npm ci
+
+      - name: Conferir o secret
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::O secret PRODUCTION_DATABASE_URL não está configurado."
+            exit 1
+          fi
+
+      - name: Migrações pendentes (antes)
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        # `status` sai com código 1 quando há migração pendente: é informativo aqui.
+        run: npx prisma migrate status || true
+
+      - name: Aplicar migrações
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: npx prisma migrate deploy
+
+      - name: Migrações pendentes (depois)
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: npx prisma migrate status
