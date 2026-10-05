@@ -1,17 +1,12 @@
+import type { ReactNode } from "react";
 import { AttentionPanel } from "@/components/performance/attention-panel";
 import { DailyChart } from "@/components/performance/daily-chart";
-import { GoalsStrip } from "@/components/performance/goals-strip";
 import { HeadlineCard } from "@/components/performance/headline-card";
 import { KpiTile } from "@/components/performance/kpi-tile";
-import { ObjectivesStrip } from "@/components/performance/objectives-strip";
-import { QuarterHistory } from "@/components/performance/quarter-history";
 import { RankBars } from "@/components/performance/rank-bars";
 import { formatDuration } from "@/lib/agency/performance-format";
 import type { PerformanceSummary } from "@/lib/agency/performance-summary";
-import type { GoalView } from "@/lib/services/goals.service";
-import type { ObjectiveView } from "@/lib/services/okr.service";
 import type { ContentTypeStats } from "@/lib/services/performance.service";
-import type { QuarterRow } from "@/lib/services/performance-summary.service";
 
 const MAIN_KPIS = [
   "COMPLETED",
@@ -26,13 +21,14 @@ export function PerformanceOverview({
   byContentType,
   goals,
   objectives,
-  quarters,
+  history,
 }: {
   summary: PerformanceSummary;
   byContentType: ContentTypeStats[];
-  goals: GoalView[];
-  objectives: ObjectiveView[];
-  quarters: QuarterRow[];
+  /** Blocos que carregam por conta própria (ver `_blocks.tsx`). */
+  goals: ReactNode;
+  objectives: ReactNode;
+  history: ReactNode;
 }) {
   const { indicators } = summary;
   const maxDeliveries = Math.max(1, ...summary.topDeliverers.map((d) => d.deliveries));
@@ -49,9 +45,9 @@ export function PerformanceOverview({
         ))}
       </div>
 
-      <ObjectivesStrip objectives={objectives} />
+      {objectives}
 
-      <GoalsStrip goals={goals} />
+      {goals}
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
         <section className="rounded-xl border border-border/80 bg-card p-4 shadow-xs">
@@ -87,7 +83,7 @@ export function PerformanceOverview({
         />
       </div>
 
-      <QuarterHistory rows={quarters} />
+      {history}
     </div>
   );
 }
