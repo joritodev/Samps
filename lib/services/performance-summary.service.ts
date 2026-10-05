@@ -85,11 +85,17 @@ export async function getPerformanceSummary(params: {
   range: DateRange;
   /** Período de comparação; padrão: o de mesma duração logo antes. */
   previousRange?: DateRange;
+  /** `false` pula o período anterior (metade das consultas): para quem só quer o valor atual. */
+  withPrevious?: boolean;
   now?: Date;
 }): Promise<PerformanceSummary> {
   const scope = params.scope ?? {};
   const now = params.now ?? new Date();
-  const { current, previous } = resolveComparisonRanges(params.range, params.previousRange);
+  const resolved = resolveComparisonRanges(params.range, params.previousRange);
+  const { current } = resolved;
+  const withPrevious = params.withPrevious !== false;
+  // Sem comparação, o "anterior" é o próprio período: nada extra a buscar.
+  const previous = withPrevious ? resolved.previous : current;
   const where = demandScopeWhere(scope);
   const open = { status: { notIn: OPEN_EXCLUDED } };
 
@@ -117,7 +123,7 @@ export async function getPerformanceSummary(params: {
         },
       }),
       workedSeconds(scope, current),
-      workedSeconds(scope, previous),
+      withPrevious ? workedSeconds(scope, previous) : Promise.resolve(0),
       db.demand.count({ where: { ...where, ...open, dueDate: { lt: now } } }),
       db.demand.count({ where: { ...where, status: "ADJUSTMENTS" } }),
       // Sem responsável não faz sentido no recorte de uma pessoa.
@@ -142,7 +148,7 @@ export async function getPerformanceSummary(params: {
 
   return buildPerformanceSummary({
     range: params.range,
-    previousRange: params.previousRange,
+    previousRange: withPrevious ? params.previousRange : current,
     rows: toDeliveryRows(deliveries),
     workedSeconds: { current: workedCurrent, previous: workedPrevious },
     snapshot: {
@@ -175,7 +181,7 @@ export async function getQuarterHistory(
 ): Promise<QuarterRow[]> {
   const quarters = lastQuarters(now, count);
   const summaries = await Promise.all(
-    quarters.map((q) => getPerformanceSummary({ scope, range: { from: q.from, to: q.to }, now }))
+    quarters.map((q) => getPerformanceSummary({ scope, range: { from: q.from, to: q.to }, withPrevious: false, now }))
   );
   return quarters.map((q, i) => {
     const ind = summaries[i]!.indicators;

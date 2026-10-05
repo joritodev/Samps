@@ -22,6 +22,18 @@ const PERIODS = [
 
 const KPIS = ["COMPLETED", "ON_TIME_RATE", "REWORK_RATE", "WORKED_HOURS", "AVG_LEAD_TIME_DAYS"] as const;
 
+/** Metas e objetivos são extras: se falharem, o resumo da pessoa continua. */
+async function orEmpty<T>(label: string, work: Promise<T[]>): Promise<T[]> {
+  try {
+    return await work;
+  } catch (error) {
+    console.error(`[meu-resumo] ${label} falhou`, error);
+    return [];
+  }
+}
+
+export const maxDuration = 30;
+
 export default async function MySummaryPage({
   searchParams,
 }: {
@@ -38,8 +50,8 @@ export default async function MySummaryPage({
 
   const [summary, goals, objectives] = await Promise.all([
     getPerformanceSummary({ scope: { userId: user.id }, range: { from: range.from, to: range.to }, now }),
-    relevantGoalsForUser(user, now, 6),
-    ownedObjectivesForUser(user, now, 4),
+    orEmpty("metas", relevantGoalsForUser(user, now, 6)),
+    orEmpty("objetivos", ownedObjectivesForUser(user, now, 4)),
   ]);
 
   return (

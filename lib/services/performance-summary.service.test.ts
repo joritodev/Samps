@@ -148,4 +148,15 @@ describe("getQuarterHistory", () => {
     expect(rows[0]!.onTimeRate).toBeNull();
     expect(db.demand.findMany.mock.calls.every((c) => c[0].where.sectorId === "s1")).toBe(true);
   });
+
+  it("não busca o período anterior: uma só consulta de entregas e de tempo por trimestre", async () => {
+    db.demand.findMany.mockResolvedValue([]);
+    db.workSession.aggregate.mockClear();
+    await getQuarterHistory({}, new Date("2026-11-15T15:00:00Z"));
+    expect(db.demand.findMany).toHaveBeenCalledTimes(4);
+    expect(db.workSession.aggregate).toHaveBeenCalledTimes(4);
+    const first = db.demand.findMany.mock.calls[0][0].where.productionCompletedAt;
+    expect(first.gte.toISOString()).toBe("2026-01-01T03:00:00.000Z");
+    expect(first.lte.toISOString()).toBe("2026-04-01T02:59:59.999Z");
+  });
 });
