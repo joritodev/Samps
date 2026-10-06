@@ -1,0 +1,1041 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Samps OS — abertura da reunião</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face {
+        font-family: "Plus Jakarta Sans";
+        src: url("assets/fonts/plus-jakarta-sans-600.woff2") format("woff2");
+        font-weight: 600;
+        font-style: normal;
+        font-display: block;
+      }
+      @font-face {
+        font-family: "Plus Jakarta Sans";
+        src: url("assets/fonts/plus-jakarta-sans-700.woff2") format("woff2");
+        font-weight: 700;
+        font-style: normal;
+        font-display: block;
+      }
+      @font-face {
+        font-family: "Inter";
+        src: url("assets/fonts/inter-400.woff2") format("woff2");
+        font-weight: 400;
+        font-style: normal;
+        font-display: block;
+      }
+      @font-face {
+        font-family: "Inter";
+        src: url("assets/fonts/inter-500.woff2") format("woff2");
+        font-weight: 500;
+        font-style: normal;
+        font-display: block;
+      }
+      @font-face {
+        font-family: "Inter";
+        src: url("assets/fonts/inter-600.woff2") format("woff2");
+        font-weight: 600;
+        font-style: normal;
+        font-display: block;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { margin: 0; background: #07090e; }
+
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #07090e;
+        color: #f9fafb;
+        font-family: Inter, sans-serif;
+      }
+
+      .clip { position: absolute; inset: 0; overflow: hidden; }
+      .display { font-family: "Plus Jakarta Sans", sans-serif; }
+
+      /* ---------- fundo permanente ---------- */
+      #bg {
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(1400px 900px at 88% 12%, rgba(45, 179, 200, 0.09) 0%, rgba(7, 9, 14, 0) 70%),
+          radial-gradient(1200px 800px at 6% 94%, rgba(224, 138, 92, 0.055) 0%, rgba(7, 9, 14, 0) 72%),
+          linear-gradient(180deg, #080b11 0%, #07090e 55%, #05070b 100%);
+      }
+      #progress-track {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 3px;
+        background: rgba(228, 234, 242, 0.08);
+      }
+      #progress {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 1920px;
+        height: 3px;
+        transform-origin: 0% 50%;
+        background: linear-gradient(90deg, #0c7e92 0%, #3cc7dd 70%, #7ae0ef 100%);
+      }
+
+      /* ---------- ato 0: o antes ---------- */
+      #chaos-field {
+        position: absolute;
+        inset: 0;
+      }
+      .ghost {
+        position: absolute;
+        border-radius: 8px;
+        border: 1px solid rgba(168, 182, 202, 0.28);
+        background: linear-gradient(180deg, #242b37 0%, #1b2129 100%);
+        padding: 8px 10px 0 10px;
+        overflow: hidden;
+        opacity: 0;
+      }
+      .ghost b {
+        display: block;
+        font-family: Inter, sans-serif;
+        font-size: 12.5px;
+        font-weight: 500;
+        line-height: 1.15;
+        letter-spacing: 0.005em;
+        color: rgba(216, 224, 234, 0.95);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .ghost i {
+        display: block;
+        margin-top: 7px;
+        width: 46%;
+        height: 5px;
+        border-radius: 3px;
+        background: rgba(168, 182, 202, 0.32);
+      }
+      .ghost u {
+        display: block;
+        margin-top: 6px;
+        width: 30%;
+        height: 5px;
+        border-radius: 3px;
+        background: rgba(168, 182, 202, 0.22);
+      }
+      .ghost.late b { color: #f0a0a0; }
+      .ghost.late { border-color: rgba(220, 60, 60, 0.46); }
+
+      #chaos-cap-scrim {
+        position: absolute;
+        left: 0;
+        top: 356px;
+        width: 1920px;
+        height: 724px;
+        background: linear-gradient(180deg, rgba(4, 6, 10, 0) 0%, rgba(4, 6, 10, 0.78) 16%, rgba(4, 6, 10, 0.95) 42%, rgba(4, 6, 10, 0.97) 100%);
+        -webkit-mask-image: linear-gradient(102deg, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 44%, rgba(0, 0, 0, 0.55) 74%, rgba(0, 0, 0, 0) 100%);
+        mask-image: linear-gradient(102deg, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 44%, rgba(0, 0, 0, 0.55) 74%, rgba(0, 0, 0, 0) 100%);
+      }
+      #chaos-veil {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(1200px 820px at 50% 52%, rgba(7, 9, 14, 0) 0%, rgba(5, 6, 10, 0.86) 76%);
+        opacity: 0;
+      }
+      #wipe {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 2300px;
+        height: 1080px;
+        background: linear-gradient(100deg, rgba(7, 9, 14, 0) 0%, rgba(12, 126, 146, 0.92) 26%, rgba(60, 199, 221, 0.98) 50%, rgba(12, 126, 146, 0.92) 74%, rgba(7, 9, 14, 0) 100%);
+        opacity: 0.95;
+      }
+
+      .big-cap {
+        position: absolute;
+        left: 104px;
+        top: 556px;
+        width: 1420px;
+        height: 290px;
+        opacity: 0;
+      }
+      .big-cap .kick {
+        margin: 0 0 22px 0;
+        font-family: Inter, sans-serif;
+        font-size: 21px;
+        font-weight: 600;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: #3cc7dd;
+      }
+      .big-cap h2 {
+        margin: 0;
+        font-family: "Plus Jakarta Sans", sans-serif;
+        font-size: 88px;
+        font-weight: 700;
+        line-height: 1.04;
+        letter-spacing: -0.03em;
+        color: #f4f7fa;
+      }
+
+      /* ---------- shots ---------- */
+      .view {
+        position: absolute;
+        left: 0;
+        top: -60px;
+        width: 1920px;
+        height: 1200px;
+      }
+      .view img {
+        display: block;
+        width: 1920px;
+        height: 1200px;
+      }
+      .scrim {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 700px;
+        background: linear-gradient(
+          180deg,
+          rgba(5, 7, 11, 0) 0%,
+          rgba(5, 7, 11, 0.3) 30%,
+          rgba(4, 6, 10, 0.74) 54%,
+          rgba(3, 5, 9, 0.94) 74%,
+          rgba(3, 5, 9, 0.99) 100%
+        );
+      }
+      .edge {
+        position: absolute;
+        inset: 0;
+        box-shadow: inset 0 0 240px rgba(3, 5, 9, 0.72);
+      }
+      .capbox {
+        position: absolute;
+        left: 104px;
+        bottom: 96px;
+        width: 1500px;
+        height: 250px;
+      }
+      /* almofada escura local: a legenda nunca disputa leitura com o texto do print */
+      .capbox::before {
+        content: "";
+        position: absolute;
+        left: -180px;
+        top: -110px;
+        width: 1860px;
+        height: 480px;
+        background: radial-gradient(
+          1180px 430px at 16% 58%,
+          rgba(3, 5, 9, 0.97) 0%,
+          rgba(3, 5, 9, 0.92) 38%,
+          rgba(3, 5, 9, 0.6) 68%,
+          rgba(3, 5, 9, 0) 100%
+        );
+      }
+      .capbox .bar {
+        position: absolute;
+        left: 0;
+        top: 8px;
+        width: 4px;
+        height: 100%;
+        transform-origin: 50% 0%;
+        border-radius: 3px;
+        background: linear-gradient(180deg, #3cc7dd 0%, #0c7e92 100%);
+      }
+      .capbox .inner {
+        position: absolute;
+        left: 30px;
+        top: 0;
+        width: 1440px;
+        height: 250px;
+      }
+      .capbox .kick {
+        margin: 0;
+        height: 26px;
+        font-family: Inter, sans-serif;
+        font-size: 19px;
+        font-weight: 600;
+        letter-spacing: 0.26em;
+        text-transform: uppercase;
+        color: #4fd3e6;
+      }
+      .capbox h2 {
+        margin: 14px 0 0 0;
+        width: 1420px;
+        font-family: "Plus Jakarta Sans", sans-serif;
+        font-size: 58px;
+        font-weight: 600;
+        line-height: 1.08;
+        letter-spacing: -0.025em;
+        color: #f7f9fb;
+      }
+      .capbox .sub {
+        margin: 26px 0 0 0;
+        width: 1300px;
+        font-family: Inter, sans-serif;
+        font-size: 26px;
+        font-weight: 400;
+        line-height: 1.35;
+        color: #c3ccd8;
+      }
+
+      /* ---------- reveal ---------- */
+      #reveal-glow {
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(900px 620px at 72% 48%, rgba(45, 179, 200, 0.2) 0%, rgba(7, 9, 14, 0) 72%),
+          radial-gradient(760px 520px at 10% 78%, rgba(224, 138, 92, 0.1) 0%, rgba(7, 9, 14, 0) 70%);
+      }
+      /* o print entra como painel emoldurado, com brilho próprio, em vez de fundo escurecido */
+      #reveal-card {
+        position: absolute;
+        left: 928px;
+        top: 222px;
+        width: 900px;
+        height: 562px;
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid rgba(60, 199, 221, 0.3);
+        box-shadow:
+          0 52px 130px rgba(2, 4, 8, 0.82),
+          0 0 72px rgba(45, 179, 200, 0.12);
+        opacity: 0;
+      }
+      #reveal-card img {
+        display: block;
+        width: 900px;
+        height: 562px;
+      }
+      #reveal-note {
+        position: absolute;
+        left: 928px;
+        top: 808px;
+        margin: 0;
+        width: 900px;
+        height: 24px;
+        font-family: Inter, sans-serif;
+        font-size: 19px;
+        font-weight: 500;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgba(169, 183, 198, 0.78);
+        opacity: 0;
+      }
+      #reveal-copy {
+        position: absolute;
+        left: 110px;
+        top: 288px;
+        width: 820px;
+        height: 530px;
+      }
+      #reveal-kick {
+        margin: 0;
+        height: 26px;
+        font-family: Inter, sans-serif;
+        font-size: 20px;
+        font-weight: 600;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: #4fd3e6;
+        opacity: 0;
+      }
+      #reveal-name {
+        margin: 26px 0 0 0;
+        width: 800px;
+        height: 132px;
+        font-family: "Plus Jakarta Sans", sans-serif;
+        font-size: 120px;
+        font-weight: 700;
+        line-height: 1;
+        letter-spacing: -0.045em;
+        color: #ffffff;
+        opacity: 0;
+      }
+      #reveal-line {
+        margin: 24px 0 0 0;
+        width: 800px;
+        height: 104px;
+        font-family: "Plus Jakarta Sans", sans-serif;
+        font-size: 42px;
+        font-weight: 600;
+        line-height: 1.2;
+        letter-spacing: -0.02em;
+        color: #e7eef5;
+        opacity: 0;
+      }
+      #reveal-rule {
+        margin: 32px 0 0 0;
+        width: 440px;
+        height: 2px;
+        transform-origin: 0% 50%;
+        background: linear-gradient(90deg, #e08a5c 0%, #3cc7dd 100%);
+      }
+      #reveal-lema {
+        margin: 26px 0 0 0;
+        width: 820px;
+        height: 36px;
+        font-family: Inter, sans-serif;
+        font-size: 25px;
+        font-weight: 500;
+        letter-spacing: 0.01em;
+        color: #c9d3de;
+        opacity: 0;
+      }
+
+      /* ---------- identidade claro/escuro ---------- */
+      #theme-light {
+        position: absolute;
+        left: 0;
+        top: -60px;
+        width: 1920px;
+        height: 1200px;
+        clip-path: inset(0% 100% 0% 0%);
+      }
+      #theme-light img {
+        display: block;
+        width: 1920px;
+        height: 1200px;
+      }
+      #theme-seam {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 3px;
+        height: 1080px;
+        background: linear-gradient(180deg, rgba(60, 199, 221, 0) 0%, #3cc7dd 50%, rgba(60, 199, 221, 0) 100%);
+        opacity: 0;
+      }
+
+      /* ---------- fechamento ---------- */
+      #out-glow {
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(1000px 680px at 76% 40%, rgba(45, 179, 200, 0.17) 0%, rgba(7, 9, 14, 0) 72%),
+          radial-gradient(820px 560px at 8% 86%, rgba(224, 138, 92, 0.085) 0%, rgba(7, 9, 14, 0) 70%);
+      }
+      #out-steps {
+        position: absolute;
+        right: 128px;
+        top: 300px;
+        width: 520px;
+        height: 480px;
+      }
+      #out-steps span {
+        display: block;
+        margin: 0 0 26px 0;
+        padding: 0 0 0 26px;
+        height: 30px;
+        border-left: 2px solid rgba(60, 199, 221, 0.5);
+        font-family: Inter, sans-serif;
+        font-size: 23px;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+        color: #b9c4d2;
+        opacity: 0;
+      }
+      #out-copy {
+        position: absolute;
+        left: 110px;
+        top: 336px;
+        width: 1060px;
+        height: 460px;
+      }
+      #out-line {
+        margin: 0;
+        width: 1040px;
+        height: 180px;
+        font-family: "Plus Jakarta Sans", sans-serif;
+        font-size: 76px;
+        font-weight: 700;
+        line-height: 1.08;
+        letter-spacing: -0.035em;
+        color: #ffffff;
+        opacity: 0;
+      }
+      #out-rule {
+        margin: 34px 0 0 0;
+        width: 440px;
+        height: 2px;
+        transform-origin: 0% 50%;
+        background: linear-gradient(90deg, #3cc7dd 0%, rgba(60, 199, 221, 0) 100%);
+      }
+      #out-meta {
+        margin: 30px 0 0 0;
+        width: 1040px;
+        height: 34px;
+        font-family: Inter, sans-serif;
+        font-size: 25px;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+        color: #cdd6e1;
+        opacity: 0;
+      }
+      #out-live {
+        margin: 22px 0 0 0;
+        width: 1040px;
+        height: 52px;
+        font-family: "Plus Jakarta Sans", sans-serif;
+        font-size: 40px;
+        font-weight: 600;
+        letter-spacing: -0.015em;
+        color: #4fd3e6;
+        opacity: 0;
+      }
+      #credit {
+        position: absolute;
+        left: 110px;
+        bottom: 56px;
+        width: 900px;
+        height: 20px;
+        font-family: Inter, sans-serif;
+        font-size: 15px;
+        font-weight: 400;
+        letter-spacing: 0.04em;
+        color: rgba(205, 214, 225, 0.42);
+        opacity: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-width="1920"
+      data-height="1080"
+      data-duration="70"
+      data-fps="30"
+    >
+      <div id="bg"></div>
+
+      <!-- ===================== ATO 0 — O ANTES ===================== -->
+      <section class="clip" id="s-chaos" data-start="0" data-duration="7.46" data-track-index="1">
+        <div id="chaos-field" data-layout-allow-overflow data-layout-allow-overlap></div>
+        <div id="chaos-veil"></div>
+        <div id="chaos-cap-scrim"></div>
+
+        <div class="big-cap" data-layout-allow-overlap id="chaos-cap-1">
+          <p class="kick">Antes</p>
+          <h2 data-layout-allow-overlap>Mil abas. Nenhuma resposta.</h2>
+        </div>
+        <div class="big-cap" data-layout-allow-overlap id="chaos-cap-2">
+          <p class="kick">Antes</p>
+          <h2 data-layout-allow-overlap>O briefing mudava no meio da produção.</h2>
+        </div>
+        <div class="big-cap" data-layout-allow-overlap id="chaos-cap-3">
+          <p class="kick">Antes</p>
+          <h2 data-layout-allow-overlap>E o status real estava no WhatsApp. Às 23h.</h2>
+        </div>
+
+        <div id="wipe" data-layout-allow-overflow></div>
+      </section>
+
+      <!-- ===================== ATO 1 — A VIRADA ===================== -->
+      <section class="clip" id="s-reveal" data-start="7.4" data-duration="6.06" data-track-index="2">
+        <div id="reveal-glow"></div>
+        <div id="reveal-card">
+          <img src="assets/shots/login.png" alt="Tela de acesso do Samps OS" />
+        </div>
+        <p id="reveal-note">Um acesso · o cargo decide o que abre</p>
+        <div id="reveal-copy">
+          <p id="reveal-kick">Desde 2026 com a Samps</p>
+          <h1 id="reveal-name" class="display">Samps OS</h1>
+          <p id="reveal-line" class="display">O sistema operacional da agência.</p>
+          <div id="reveal-rule"></div>
+          <p id="reveal-lema">Diagnóstico + Planejamento + Método = Resultado</p>
+        </div>
+      </section>
+
+      <!-- ===================== ATO 2 — O MÉTODO ===================== -->
+      <section class="clip shot" id="s5" data-start="13.4" data-duration="4.46" data-track-index="3">
+        <div class="view" data-layout-allow-overflow id="v5" style="transform-origin: 50% 27%">
+          <img src="assets/shots/cliente.png" alt="Ficha do cliente no Samps OS" />
+        </div>
+        <div class="edge"></div>
+        <div class="scrim"></div>
+        <div class="capbox" id="c5">
+          <div class="bar"></div>
+          <div class="inner">
+            <p class="kick">01 · Contrato</p>
+            <h2>O contrato gera a demanda.</h2>
+            <p class="sub">Cada cliente com escopo, equipe alocada e histórico no mesmo lugar.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="clip shot" id="s6" data-start="17.8" data-duration="4.46" data-track-index="4">
+        <div class="view" data-layout-allow-overflow id="v6" style="transform-origin: 26% 46%">
+          <img src="assets/shots/quadro.png" alt="Quadro do cliente com colunas e cartões" />
+        </div>
+        <div class="edge"></div>
+        <div class="scrim"></div>
+        <div class="capbox" id="c6">
+          <div class="bar"></div>
+          <div class="inner">
+            <p class="kick">02 · Quadro</p>
+            <h2>Um quadro por cliente. Nada se perde no meio.</h2>
+            <p class="sub">Colunas livres para o time; o status real continua sendo o do ciclo da demanda.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="clip shot" id="s7" data-start="22.2" data-duration="4.46" data-track-index="5">
+        <div class="view" data-layout-allow-overflow id="v7" style="transform-origin: 50% 50%">
+          <img src="assets/shots/cartao-briefing.png" alt="Aba de briefing de uma demanda, bloqueada" />
+        </div>
+        <div class="edge"></div>
+        <div class="scrim"></div>
+        <div class="capbox" id="c7">
+          <div class="bar"></div>
+          <div class="inner">
+            <p class="kick">03 · Briefing</p>
+            <h2>O briefing trava quando é concluído.</h2>
+            <p class="sub">“Briefing bloqueado em 02/10/2026 14:18” — ninguém muda o combinado no meio.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="clip shot" id="s8" data-start="26.6" data-duration="3.66" data-track-index="6">
+        <div class="view" data-layout-allow-overflow id="v8" style="transform-origin: 46% 37%">
+          <img src="assets/shots/cronometro.png" alt="Cronômetro em execução em uma demanda" />
+        </div>
+        <div class="edge"></div>
+        <div class="scrim"></div>
+        <div class="capbox" id="c8">
+          <div class="bar"></div>
+          <div class="inner">
+            <p class="kick">04 · Produção</p>
+            <h2>A produção é medida, não estimada.</h2>
+            <p class="sub">Cronômetro por demanda, dentro da fila do setor.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="clip shot" id="s9" data-start="30.2" data-duration="4.06" data-track-index="7">
+        <div class="view" data-layout-allow-overflow id="v9" style="transform-origin: 50% 52%">
+          <img src="assets/shots/cartao-producao.png" alt="Aba de produção com link do Drive e visibilidade no portal" />
+        </div>
+        <div class="edge"></div>
+        <div class="scrim"></div>
+        <div class="capbox" id="c9">
+          <div class="bar"></div>
+          <div class="inner">
+            <p class="kick">05 · Entrega</p>
+            <h2>Link do Drive na própria demanda.</h2>
+            <p class="sub">E é aqui que o time decide o que o cliente vê.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="clip shot" id="s10" data-start="34.2" data-duration="3.86" data-track-index="8">
+        <div class="view" data-layout-allow-overflow id="v10" style="transform-origin: 58% 24%">
+          <img src="assets/shots/portal.png" alt="Portal do cliente com entregas publicadas" />
+        </div>
+        <div class="edge"></div>
+        <div class="scrim"></div>
+        <div class="capbox" id="c10">
+          <div class="bar"></div>
+          <div class="inner">
+            <p class="kick">06 · Portal</p>
+            <h2>O cliente vê só o que foi liberado.</h2>
+            <p class="sub">Vitrine controlada: nada de mural, cronômetro ou ruído interno.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== ATO 3 — A OPERAÇÃO ===================== -->
+      <section class="clip shot" id="s11" data-start="38" data-duration="4.46" data-track-index="9">
+        <div class="view" data-layout-allow-overflow id="v11a" style="transform-origin: 50% 30%">
+          <img src="assets/shots/painel-design.png" alt="Meu Painel do setor de Design" />
+        </div>
+        <div class="view" data-layout-allow-overflow id="v11b" style="transform-origin: 50% 30%">
+          <img src="assets/shots/painel-social.png" alt="Meu Painel do setor de Social Media" />
+        </div>
+        <div class="view" data-layout-allow-overflow id="v11c" style="transform-origin: 50% 30%">
+          <img src="assets/shots/painel-video.png" alt="Meu Painel do setor de Vídeo" />
+        </div>
+        <div class="edge"></div>
+        <div class="scrim"></div>
+        <div class="capbox" id="c11">
+          <div class="bar"></div>
+          <div class="inner">
+            <p class="kick">07 · Setores</p>
+            <h2>Cada setor com a sua fila.</h2>
+            <p class="sub">Social, Design e Vídeo: Meu Painel abre no cargo de quem entrou.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="clip shot" id="s12" data-start="42.4" data-duration="4.16" data-track-index="10">
+        <div class="view" data-layout-allow-overflow id="v12" style="transform-origin: 56% 56%">
+          <img src="assets/shots/agenda.png" alt="Agenda da agência com prazos, entregas e reuniões" />
+        </div>
+        <div class="edge"></div>
+        <div class="scrim"></div>
+        <div class="capbox" id="c12">
+          <div class="bar"></div>
+          <div class="inner">
+            <p class="kick">08 · Agenda</p>
+            <h2>Prazo, entrega, publicação e reunião no mesmo mês.</h2>
+            <p class="sub">126 eventos em outubro, filtrados por tipo e por setor.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="clip shot" id="s13" data-start="46.5" data-duration="5.06" data-track-index="11">
+        <div class="view" data-layout-allow-overflow id="v13" style="transform-origin: 50% 16%">
+          <img src="assets/shots/painel-gestao.png" alt="Painel da gestão com indicadores da operação" />
+        </div>
+        <div class="edge"></div>
+        <div class="scrim"></div>
+        <div class="capbox" id="c13">
+          <div class="bar"></div>
+          <div class="inner">
+            <p class="kick">09 · Gestão</p>
+            <h2>Ver sem perguntar.</h2>
+            <p class="sub">57 em aberto · 3 atrasadas · 14 sem responsável · carga por pessoa e por setor.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== ATO 4 — O RESULTADO ===================== -->
+      <section class="clip shot" id="s14" data-start="51.5" data-duration="5.56" data-track-index="12">
+        <div class="view" data-layout-allow-overflow id="v14" style="transform-origin: 50% 45%">
+          <img src="assets/shots/performance-trimestre.png" alt="Performance do trimestre com indicadores" />
+        </div>
+        <div class="edge"></div>
+        <div class="scrim"></div>
+        <div class="capbox" id="c14">
+          <div class="bar"></div>
+          <div class="inner">
+            <p class="kick">10 · Performance</p>
+            <h2>Um trimestre medido pelo próprio sistema.</h2>
+            <p class="sub">307 entregas · 81% no prazo · 624 h trabalhadas — números da simulação de trimestre.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="clip shot" id="s15" data-start="57" data-duration="4.26" data-track-index="13">
+        <div class="view" data-layout-allow-overflow id="v15" style="transform-origin: 49% 38%">
+          <img src="assets/shots/okrs.png" alt="OKRs da agência com resultados-chave automáticos" />
+        </div>
+        <div class="edge"></div>
+        <div class="scrim"></div>
+        <div class="capbox" id="c15">
+          <div class="bar"></div>
+          <div class="inner">
+            <p class="kick">11 · Metas e OKRs</p>
+            <h2>Metas e OKRs que se atualizam sozinhos.</h2>
+            <p class="sub">“Entregas no prazo — automático, 81% → 95%.” Sem planilha paralela.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="clip shot" id="s16" data-start="61.2" data-duration="3.36" data-track-index="14">
+        <div class="view" data-layout-allow-overflow id="v16" style="transform-origin: 50% 30%">
+          <img src="assets/shots/painel-gestao-tema.png" alt="Painel da gestão no tema escuro" />
+        </div>
+        <div id="theme-light">
+          <img src="assets/shots/painel-claro.png" alt="Painel da gestão no tema claro" />
+        </div>
+        <div id="theme-seam"></div>
+        <div class="scrim"></div>
+        <div class="capbox" id="c16">
+          <div class="bar"></div>
+          <div class="inner">
+            <p class="kick">12 · Identidade</p>
+            <h2>Claro ou escuro. A mesma marca.</h2>
+            <p class="sub">Teal, ciano e brasa da Samps — densidade de ferramenta de mesa.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== ATO 5 — FECHAMENTO ===================== -->
+      <section class="clip" id="s17" data-start="64.5" data-duration="5.5" data-track-index="15">
+        <div id="out-glow"></div>
+        <div id="out-steps">
+          <span>Contrato</span>
+          <span>Briefing travado</span>
+          <span>Produção medida</span>
+          <span>Revisão</span>
+          <span>Publicação</span>
+          <span>Portal do cliente</span>
+        </div>
+        <div id="out-copy">
+          <h2 id="out-line" class="display">Do contrato à publicação,<br />em um só lugar.</h2>
+          <div id="out-rule"></div>
+          <p id="out-meta">Samps OS · o sistema operacional da Samps Digital</p>
+          <p id="out-live" class="display">Agora, ao vivo.</p>
+        </div>
+        <p id="credit">Trilha: “The Builder”, Kevin MacLeod (incompetech.com) · CC BY 4.0</p>
+      </section>
+
+      <div id="progress-track"></div>
+      <div id="progress"></div>
+
+      <!-- ===================== ÁUDIO ===================== -->
+      <audio
+        id="bed"
+        data-timeline-role="music"
+        data-start="0"
+        data-duration="70"
+        data-track-index="20"
+        data-volume="1"
+        data-automation='{"version":1,"lanes":[{"target":"volume","points":[{"t":0,"v":0},{"t":1.4,"v":0.3},{"t":7.3,"v":0.32},{"t":7.5,"v":0.44},{"t":30.2,"v":0.4},{"t":38,"v":0.44},{"t":46.4,"v":0.48},{"t":61,"v":0.45},{"t":64.4,"v":0.5},{"t":66.6,"v":0.36},{"t":70,"v":0}]}]}'
+        src="assets/music/the-builder-by-kevin-macleod.mp3"
+      ></audio>
+
+      <audio id="sfx-c1" data-start="0.18" data-duration="0.23" data-track-index="21" data-volume="0.3" src="assets/sfx/ui/rollover1.ogg"></audio>
+      <audio id="sfx-c2" data-start="2.64" data-duration="0.05" data-track-index="22" data-volume="0.34" src="assets/sfx/interface/select_008.ogg"></audio>
+      <audio id="sfx-c3" data-start="4.84" data-duration="0.14" data-track-index="23" data-volume="0.34" src="assets/sfx/impact/impactGeneric_light_002.ogg"></audio>
+      <audio id="sfx-wipe" data-start="7.22" data-duration="0.18" data-track-index="24" data-volume="0.5" src="assets/sfx/impact/impactSoft_medium_001.ogg"></audio>
+      <audio id="sfx-reveal" data-start="7.42" data-duration="1.48" data-track-index="25" data-volume="0.52" src="assets/sfx/impact/impactBell_heavy_000.ogg"></audio>
+      <audio id="sfx-s5" data-start="13.38" data-duration="0.11" data-track-index="26" data-volume="0.4" src="assets/sfx/interface/drop_001.ogg"></audio>
+      <audio id="sfx-s7" data-start="23.38" data-duration="0.09" data-track-index="27" data-volume="0.34" src="assets/sfx/ui/click1.ogg"></audio>
+      <audio id="sfx-s8" data-start="27.75" data-duration="0.09" data-track-index="28" data-volume="0.34" src="assets/sfx/ui/click1.ogg"></audio>
+      <audio id="sfx-s10" data-start="34.18" data-duration="0.19" data-track-index="29" data-volume="0.36" src="assets/sfx/interface/drop_002.ogg"></audio>
+      <audio id="sfx-s11" data-start="37.98" data-duration="0.11" data-track-index="30" data-volume="0.36" src="assets/sfx/interface/drop_001.ogg"></audio>
+      <audio id="sfx-s13" data-start="46.46" data-duration="0.14" data-track-index="31" data-volume="0.5" src="assets/sfx/impact/impactSoft_medium_002.ogg"></audio>
+      <audio id="sfx-s14" data-start="52.9" data-duration="0.12" data-track-index="32" data-volume="0.36" src="assets/sfx/interface/bong_001.ogg"></audio>
+      <audio id="sfx-out" data-start="64.46" data-duration="0.65" data-track-index="33" data-volume="0.5" src="assets/sfx/impact/impactBell_heavy_003.ogg"></audio>
+
+      <script>
+        (function () {
+          /* ---------- ato 0: campo de quadros fantasmas (determinístico) ---------- */
+          var LABELS = [
+            "Quadro — Social", "Quadro — Social (2)", "Cópia de Quadro — Social",
+            "Quadro — Design", "Design • outubro", "Design • outubro FINAL",
+            "Quadro — Vídeo", "Vídeo — captações", "Quadro — Tráfego",
+            "Clientes 2025", "Clientes 2026", "Stories da semana",
+            "Reels", "Feed", "Checklist", "Checklist (novo)",
+            "Briefing", "Briefing v2", "Briefing v2 FINAL",
+            "Prazos", "Pauta", "Pauta nova", "Aprovações",
+            "Links do Drive", "Drive — links 2", "Planilha de horas",
+            "Planilha de horas (2)", "Print do zap", "Áudio 7:12", "Áudio 11:48",
+            "Sem responsável", "Atrasada", "Urgente", "Revisar",
+            "Quem pegou isso?", "Cadê o briefing?",
+            "Lançamento — rascunho", "Lançamento — final", "Lançamento — final 2",
+            "Clientes (antigo)", "Arquivos", "Arquivos 2024",
+            "Pauta de vídeo", "Roteiros", "Roteiros revisados",
+            "Captação — sábado", "Captação — remarcada", "Entregas de setembro",
+            "Entregas de outubro", "Feed — aprovado?", "Stories — pendente",
+            "Reels — refazer", "Tráfego — criativos", "Criativos v3",
+            "Horas do time", "Horas (conferir)", "Cobranças",
+            "Follow-up cliente", "Ata da reunião", "Ata (rascunho)",
+            "Combinado no áudio", "Lista de prioridade", "Prioridade nova",
+            "Sem prazo", "Esqueci de passar", "Refazer amanhã"
+          ];
+          var LATE = { "Sem responsável": 1, "Atrasada": 1, "Urgente": 1, "Cadê o briefing?": 1, "Quem pegou isso?": 1 };
+
+          /* gerador linear congruente com semente fixa: mesmo layout em todo render */
+          var seed = 20261006;
+          function rnd() {
+            seed = (seed * 1103515245 + 12345) % 2147483648;
+            return seed / 2147483648;
+          }
+
+          var field = document.getElementById("chaos-field");
+          var cols = 9;
+          var rows = 7;
+          var cellW = 1980 / cols;
+          var cellH = 1030 / rows;
+          var ghosts = [];
+          /* passo 23 é coprimo de 63: cada onda cai espalhada pelo quadro inteiro,
+             em vez de preencher linha por linha e deixar metade do quadro vazio */
+          for (var i = 0; i < LABELS.length; i++) {
+            var cell = (i * 23) % (cols * rows);
+            var col = cell % cols;
+            var row = Math.floor(cell / cols);
+            var w = 158 + Math.round(rnd() * 46);
+            var h = 62 + Math.round(rnd() * 18);
+            var x = Math.round(col * cellW - 24 + rnd() * 26);
+            var y = Math.round(row * cellH + 14 + rnd() * 34);
+            var el = document.createElement("div");
+            el.className = "ghost" + (LATE[LABELS[i]] ? " late" : "");
+            el.style.left = x + "px";
+            el.style.top = y + "px";
+            el.style.width = w + "px";
+            el.style.height = h + "px";
+            el.innerHTML = '<b data-layout-allow-overlap data-layout-allow-occlusion>' + LABELS[i] + "</b><i></i><u></u>";
+            el.setAttribute("data-layout-allow-overlap", "");
+            el.setAttribute("data-layout-allow-occlusion", "");
+            field.appendChild(el);
+            ghosts.push(el);
+          }
+
+          /* ---------- timeline ---------- */
+          var root = document.querySelector("[data-composition-id]");
+          var tl = gsap.timeline({ paused: true });
+
+          /* barra de progresso */
+          tl.fromTo("#progress", { scaleX: 0 }, { scaleX: 1, duration: 70, ease: "none" }, 0);
+
+          /* ato 0 — densificação em três ondas */
+          tl.set("#chaos-field", { scale: 1.06, x: 0, y: 0 }, 0);
+          tl.to("#chaos-field", { scale: 1.015, duration: 7.4, ease: "none" }, 0);
+          tl.to(ghosts.slice(0, 21), { opacity: 1, duration: 0.5, stagger: 0.048, ease: "power2.out" }, 0.1);
+          tl.to(ghosts.slice(21, 42), { opacity: 1, duration: 0.45, stagger: 0.034, ease: "power2.out" }, 2.66);
+          tl.to(ghosts.slice(42, 63), { opacity: 1, duration: 0.4, stagger: 0.028, ease: "power2.out" }, 4.86);
+          tl.fromTo(
+            "#chaos-field",
+            { filter: "blur(0px) saturate(1)" },
+            { filter: "blur(7px) saturate(0.6)", duration: 1.5, ease: "power2.in" },
+            5.9
+          );
+          tl.fromTo("#chaos-veil", { opacity: 0 }, { opacity: 1, duration: 2.6, ease: "power1.in" }, 4.8);
+
+          function bigCap(id, at, out) {
+            tl.fromTo("#" + id, { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, at);
+            tl.to("#" + id, { opacity: 0, y: -18, duration: 0.34, ease: "power2.in" }, out);
+          }
+          bigCap("chaos-cap-1", 0.26, 2.3);
+          bigCap("chaos-cap-2", 2.66, 4.5);
+          bigCap("chaos-cap-3", 4.86, 7.1);
+
+          /* varredura teal que leva o caos embora */
+          tl.set("#wipe", { x: -2320, opacity: 0.95 }, 0);
+          tl.to("#wipe", { x: 1920, duration: 0.62, ease: "power2.in" }, 6.86);
+
+          /* ato 1 — virada */
+          tl.fromTo("#reveal-name", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, 7.52);
+          tl.fromTo("#reveal-kick", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 8.06);
+          tl.fromTo("#reveal-card", { opacity: 0, x: 90, scale: 0.955 }, { opacity: 1, x: 0, scale: 1, duration: 1.1, ease: "power3.out" }, 8.06);
+          tl.to("#reveal-card", { scale: 1.028, duration: 4.3, ease: "none" }, 9.16);
+          tl.fromTo("#reveal-note", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 9.4);
+          tl.to("#reveal-note", { opacity: 0, duration: 0.4, ease: "power2.in" }, 13.04);
+          tl.fromTo("#reveal-line", { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 8.42);
+          tl.fromTo("#reveal-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.7, ease: "power3.out" }, 9.1);
+          tl.fromTo("#reveal-lema", { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, 9.5);
+          tl.to("#reveal-copy", { opacity: 0, duration: 0.4, ease: "power2.in" }, 13.04);
+          tl.to("#reveal-card", { opacity: 0, duration: 0.4, ease: "power2.in" }, 13.04);
+
+          /* ---------- legenda padrão dos shots ---------- */
+          function cap(id, at, dur) {
+            tl.set("#" + id, { opacity: 1 }, at);
+            tl.fromTo("#" + id + " .bar", { scaleY: 0 }, { scaleY: 1, duration: 0.5, ease: "power3.out" }, at + 0.1);
+            tl.fromTo("#" + id + " .kick", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.42, ease: "power2.out" }, at + 0.12);
+            tl.fromTo("#" + id + " h2", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, at + 0.18);
+            tl.fromTo("#" + id + " .sub", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.55, ease: "power2.out" }, at + 0.34);
+            tl.to("#" + id, { opacity: 0, duration: 0.32, ease: "power2.in" }, at + dur - 0.36);
+          }
+
+          /* punch: estabelece a tela e fecha no detalhe */
+          function punch(view, at, dur, s0, s1, hold) {
+            tl.set(view, { scale: s0, x: 0, y: 0 }, at);
+            tl.to(
+              view,
+              {
+                keyframes: [
+                  { scale: s0 * 1.025, duration: Math.max(0.7, dur * 0.28), ease: "power1.out" },
+                  { scale: s1, duration: dur * 0.34, ease: "power2.inOut" },
+                  { scale: s1 * (hold || 1.012), duration: dur - Math.max(0.7, dur * 0.28) - dur * 0.34, ease: "none" }
+                ]
+              },
+              at
+            );
+          }
+
+          /* ato 2 */
+          punch("#v5", 13.4, 4.46, 1.0, 1.42);
+          cap("c5", 13.4, 4.46);
+
+          /* quadro: a câmera fica nas colunas que têm cartão e nunca entra nas vazias */
+          tl.set("#v6", { scale: 2.0, x: 140, y: 360 }, 17.8);
+          tl.to("#v6", { x: 132, y: 180, scale: 2.06, duration: 4.46, ease: "power1.inOut" }, 17.8);
+          cap("c6", 17.8, 4.46);
+
+          /* briefing: sobe o quadro para o selo "bloqueado" ficar acima da legenda */
+          tl.set("#v7", { scale: 1.0, x: 0, y: 0 }, 22.2);
+          tl.to(
+            "#v7",
+            {
+              keyframes: [
+                { scale: 1.03, duration: 1.2, ease: "power1.out" },
+                { scale: 1.5, y: -210, duration: 1.6, ease: "power2.inOut" },
+                { scale: 1.54, y: -240, duration: 1.66, ease: "none" }
+              ]
+            },
+            22.2
+          );
+          cap("c7", 22.2, 4.46);
+
+          punch("#v8", 26.6, 3.66, 1.02, 1.92);
+          cap("c8", 26.6, 3.66);
+
+          punch("#v9", 30.2, 4.06, 1.02, 1.66);
+          cap("c9", 30.2, 4.06);
+
+          punch("#v10", 34.2, 3.86, 1.02, 1.34);
+          cap("c10", 34.2, 3.86);
+
+          /* ato 3 — tríptico dos setores */
+          tl.set("#v11b", { opacity: 0 }, 38);
+          tl.set("#v11c", { opacity: 0 }, 38);
+          tl.set("#v11a", { opacity: 1, scale: 1.04, x: 0, y: 0 }, 38);
+          tl.to("#v11a", { scale: 1.12, duration: 1.5, ease: "none" }, 38);
+          tl.set("#v11b", { opacity: 1, scale: 1.04, x: 0, y: 0 }, 39.5);
+          tl.to("#v11b", { scale: 1.12, duration: 1.5, ease: "none" }, 39.5);
+          tl.set("#v11c", { opacity: 1, scale: 1.04, x: 0, y: 0 }, 41);
+          tl.to("#v11c", { scale: 1.12, duration: 1.46, ease: "none" }, 41);
+          cap("c11", 38, 4.46);
+
+          punch("#v12", 42.4, 4.16, 1.02, 1.3);
+          cap("c12", 42.4, 4.16);
+
+          /* ato 4 */
+          tl.set("#v13", { scale: 1.0, x: 0, y: 0 }, 46.5);
+          tl.to(
+            "#v13",
+            {
+              keyframes: [
+                { scale: 1.02, duration: 0.9, ease: "power1.out" },
+                { scale: 1.46, duration: 1.5, ease: "power2.inOut" },
+                { scale: 1.5, y: -150, x: 60, duration: 2.66, ease: "power1.inOut" }
+              ]
+            },
+            46.5
+          );
+          cap("c13", 46.5, 5.06);
+
+          punch("#v14", 51.5, 5.56, 1.0, 1.52);
+          cap("c14", 51.5, 5.56);
+
+          punch("#v15", 57, 4.26, 1.0, 1.62);
+          cap("c15", 57, 4.26);
+
+          /* identidade: varredura revelando o tema claro */
+          tl.set("#v16", { scale: 1.06, x: 0, y: 0 }, 61.2);
+          tl.to("#v16", { scale: 1.1, duration: 3.36, ease: "none" }, 61.2);
+          tl.fromTo(
+            "#theme-light",
+            { clipPath: "inset(0% 100% 0% 0%)" },
+            { clipPath: "inset(0% 0% 0% 0%)", duration: 1.5, ease: "power2.inOut" },
+            61.9
+          );
+          tl.fromTo("#theme-seam", { opacity: 0, x: 0 }, { opacity: 0.9, x: 1920, duration: 1.5, ease: "power2.inOut" }, 61.9);
+          tl.to("#theme-seam", { opacity: 0, duration: 0.3, ease: "power2.in" }, 63.4);
+          cap("c16", 61.2, 3.36);
+
+          /* ato 5 — fechamento */
+          tl.fromTo("#out-line", { opacity: 0, y: 44 }, { opacity: 1, y: 0, duration: 0.8, ease: "power3.out" }, 64.62);
+          tl.fromTo("#out-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.8, ease: "power3.out" }, 65.3);
+          tl.fromTo("#out-meta", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, 65.6);
+          tl.fromTo("#out-steps span", { opacity: 0, x: 26 }, { opacity: 1, x: 0, duration: 0.5, stagger: 0.11, ease: "power2.out" }, 65.1);
+          tl.fromTo("#out-live", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, 66.5);
+          tl.fromTo("#credit", { opacity: 0 }, { opacity: 1, duration: 0.8, ease: "power1.out" }, 67.2);
+
+          window.__timelines[root.dataset.compositionId] = tl;
+        })();
+      </script>
+    </div>
+  </body>
+</html>
