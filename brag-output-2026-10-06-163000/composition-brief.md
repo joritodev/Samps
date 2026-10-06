@@ -63,32 +63,35 @@ shot seguinte já está em quadro, o que evita o flash de fundo entre cortes.
 
 ## Áudio
 
-**Trilha:** `assets/music/the-builder-by-kevin-macleod.mp3`, `data-timeline-role="music"`,
-track-index 20, com uma lane de automação de volume:
+**Trilha:** `assets/music/threshold-by-jason-shaw.mp3` ("Threshold", Jason Shaw, Audionautix,
+CC BY 4.0), `data-timeline-role="music"`, track-index 20.
+
+A faixa foi escolhida pela forma, não pelo gênero. Medida em blocos de 0,25 s, ela faz sozinha o
+que a automação da versão anterior tinha de forçar:
+
+- 0–7 s: quase silêncio e depois um pulso baixo — o "antes".
+- 7,3 s: a entrada começa, 0,15 s antes do corte da virada.
+- 10,7–11,3 s: o groove chega de vez, ainda dentro do quadro "Samps OS".
+- 37,5–38,0 s: a música sai de um vale e volta no mesmo instante em que entram os setores.
+- 59 s: o pico da faixa cai na cena de OKR.
+- 64–70 s: ela mesma alivia, junto com o fecho.
+
+A automação só acompanha esses pontos e fecha o fade:
 
 ```
-0 s → 0,00   1,4 s → 0,30   7,5 s → 0,44   30,2 s → 0,40   38 s → 0,44
-46,4 s → 0,48   61 s → 0,45   64,4 s → 0,50   66,6 s → 0,36   70 s → 0,00
+0 s → 0,00   1,1 s → 0,46   7,1 s → 0,46   8,2 s → 0,54
+37,4 s → 0,52   38,3 s → 0,58   58,6 s → 0,60   64,4 s → 0,54
+67,4 s → 0,38   70 s → 0,00
 ```
-
-O filme não tem narração, então a trilha fica alta de propósito; as quedas em 30,2 s e 61 s abrem
-espaço para as duas viradas de ato que vêm logo depois.
 
 **SFX:** 13 cues, cada um em sua própria track-index (21–33), volume 0,30–0,52. Impactos nas viradas
 (7,22 / 7,42 / 46,46 / 64,46), cliques leves quando a câmera fecha em um controle (23,38 / 27,75),
 `drop` nas entradas de ato (13,38 / 34,18 / 37,98). Nada toca em cima de texto denso.
 
-**Corte travado na música.** `npx hyperframes beats` detectou 315 beats a 191,7 bpm. Todos os 17 cortes
-caem a menos de 0,25 s de um beat detectado, e as cinco viradas de ato caem em beats fortes:
-
-```
-corte  7,40 → beat  7,29 (−0,109)
-corte 13,40 → beat 13,44 (+0,044)
-corte 30,20 → beat 30,37 (+0,172)
-corte 38,00 → beat 38,20 (+0,197)
-corte 46,50 → beat 46,63 (+0,126)
-corte 64,50 → beat 64,44 (−0,065)
-```
+**O corte não foi reescrito.** As 17 cenas ficaram onde estavam; quem mudou foi a faixa, escolhida
+porque os eventos dela já caem nesses tempos. `npx hyperframes beats` leu 253 batidas a 245,9 bpm
+(incerto — é a subdivisão do groove de 99 bpm, então "perto de um beat" deixa de ser critério).
+O critério que vale é o de energia, medido acima.
 
 ## Capturas
 

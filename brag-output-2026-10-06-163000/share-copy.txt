@@ -50,9 +50,9 @@ A legenda da cena de performance diz isso em tela.
 
 --- Créditos obrigatórios ------------------------------------------------------
 
-Trilha: "The Builder", de Kevin MacLeod (incompetech.com), licenciada em CC BY 4.0.
+Trilha: "Threshold", de Jason Shaw (audionautix.com), licenciada em CC BY 4.0.
 O crédito já aparece no quadro final do vídeo. Se você reaproveitar o áudio em outro lugar,
-leve o crédito junto.
+leve o crédito junto: https://creativecommons.org/licenses/by/4.0/
 
 Efeitos sonoros: Kenney (kenney.nl), domínio público (CC0).
 

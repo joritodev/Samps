@@ -16,8 +16,9 @@ agência e nenhuma tela real do produto. Esta versão troca as três coisas:
 2. **Fotos novas, de verdade:** 20 capturas da aplicação rodando local com o banco da
    `prisma/simulate-quarter.ts` (um trimestre fechado de operação: 5 clientes, 367 demandas, 641 sessões
    de trabalho, metas e OKRs). Tema escuro, 1600×1000 @2x.
-3. **Outra trilha:** "The Builder", de Kevin MacLeod (CC BY 4.0) — build eletrônico com queda em 7,5 s,
-   quebra em 30–38 s, pico em 46,5 s e 64,5 s. O roteiro foi escrito **em cima** dessa estrutura.
+3. **Trilha:** "Threshold", de Jason Shaw (Audionautix, CC BY 4.0). Groove médio a 99 bpm, escolhida
+   porque a própria gravação acompanha o corte: pulso baixo nos primeiros 7 s, entrada em 7,3 s (a
+   virada), chegada do groove em 11 s, retomada em 38 s (os setores) e alívio a partir de 64 s (o fecho).
 
 ## Rubrica de planejamento
 
@@ -96,9 +97,10 @@ Barra de progresso teal de 2 px cresce de 0 a 1920 ao longo dos 70 s (acabamento
 
 ## Áudio
 
-- **Trilha:** `assets/music/the-builder-by-kevin-macleod.mp3`, fade-in de 1,4 s até 0,30,
-  `data-automation` levantando para 0,44 na queda (7,5 s), 0,48 no pico de 46,4 s, 0,50 em 64,4 s
-  e descendo a 0 entre 66,6 e 70 s. Não há narração, então a trilha carrega o filme.
+- **Trilha:** `assets/music/threshold-by-jason-shaw.mp3` ("Threshold", Jason Shaw, CC BY 4.0).
+  A automação não inventa dinâmica que a faixa não tem: segura em 0,46 no "antes", abre para 0,54
+  quando o groove entra (8,2 s), sobe a 0,58 na retomada dos setores (38,3 s) e a 0,60 no pico da
+  própria música (58,6 s, a cena de OKR), e desce a 0 entre 67,4 e 70 s.
 - **SFX:** 12 cues, 0,55–0,78 de volume, cada um em sua própria track-index (trilha = 10, SFX = 11+).
   Famílias: `impact/impactSoft_*` e `impactBell_heavy_*` nas viradas; `interface/drop_*`,
   `click_003`, `select_008` nas entradas de legenda; nada em cima de texto denso.
