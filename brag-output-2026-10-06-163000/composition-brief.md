@@ -125,7 +125,16 @@ A resolução de 3200 px existe por causa do zoom: a cena do quadro (S6) fecha e
 
 ## Saída
 
-`npx hyperframes render --quality delivery` → 1920×1080, 30 fps, 2100 frames, 70,000 s.
-O quadro de capa (`brag.jpg`, t = 11,0 s) é colado como frame 0 do MP4 com um `overlay` do ffmpeg
-(`enable='lt(n,1)'`), para que o primeiro quadro parado já diga o que é o produto em vez de mostrar o
-caos quase preto do segundo zero.
+`npx hyperframes render --quality delivery` → 1920×1080, 30 fps, 2100 frames, 70,0 s, H.264 + AAC
+48 kHz estéreo.
+
+Dois acabamentos em cima do render:
+
+1. **Capa no frame 0.** `brag.jpg` (t = 11,0 s) é colado como primeiro quadro com um `overlay` do
+   ffmpeg (`enable='lt(n,1)'`), para que o vídeo parado já diga o que é o produto em vez de mostrar o
+   caos quase preto do segundo zero.
+2. **Normalização de loudness.** O render sai em −23,4 LUFS com pico em −5,8 dB: alto o bastante para o
+   mixer, baixo para uma sala. Um passe de `loudnorm` em duas etapas leva para **−15,9 LUFS com pico
+   real em −0,7 dB**, que é a faixa de web/projeção. A faixa dinâmica medida (LRA 7,0) é menor que o
+   alvo, então nada foi comprimido — o intro silencioso continua silencioso. O vídeo é copiado sem
+   reencode nesse passe.
