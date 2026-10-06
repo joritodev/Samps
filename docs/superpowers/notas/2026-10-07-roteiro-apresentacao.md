@@ -68,6 +68,7 @@ Abra **duas janelas**: uma normal (admin) e uma anônima (para trocar de papel s
 - [ ] Abrir o app, entrar como admin e ver o **Painel** carregar.
 - [ ] Abrir `/performance` e conferir que **não aparece** "Não foi possível carregar" (o banco de produção precisa das migrações).
 - [ ] Ter um cliente com quadro e pelo menos 1 cartão.
+- [ ] Conferir que **Configurações → Tipos de conteúdo** abre sem erro (a correção está na branch e precisa ser mesclada; veja `2026-10-07-auditoria-completa.md`).
 - [ ] Zoom do navegador em 100–110%, janela maximizada, sem DevTools, notificações do computador desligadas.
 - [ ] Capturas do plano B abertas em uma pasta, caso o app falhe.
 - [ ] Este roteiro aberto ao lado.
@@ -261,6 +262,7 @@ O ponto alto. **Use o ambiente com a simulação ou as capturas** (veja 1.1). V�
 | Performance mostra "Não foi possível carregar" | Atualizar uma vez. Se persistir, as migrações podem não ter sido aplicadas: use as capturas e diga "a base de produção está sendo preparada" |
 | Performance vazia | É o esperado com poucos dados. Use o ambiente com simulação ou as capturas (10 a 14) |
 | Banco lento (Neon acordando) | Atualizar a página uma vez e continuar falando; a primeira carga demora |
+| **Configurações → Tipos de conteúdo** mostra erro | Há um defeito já corrigido na branch, que só vale depois do merge. Até lá, **não abra essa tela**; mostre Funções, Prioridades ou Setores no lugar |
 | Cronômetro ou ação não responde | Não insistir. Mostrar a tela e explicar o passo, seguir para o próximo |
 | Menção não notifica | Mostrar o campo e explicar; não insistir |
 | Resumo do dia não aparece | Normal se já foi fechado hoje ou se a conta é de líder; mostrar a página **Meu resumo** |
