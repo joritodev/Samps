@@ -39,7 +39,7 @@ export function CatalogSettings({
   showColor = false,
   showWeight = false,
   showFinal = false,
-  rowExtra,
+  rowExtras,
 }: {
   title: string;
   description: string;
@@ -48,7 +48,8 @@ export function CatalogSettings({
   showColor?: boolean;
   showWeight?: boolean;
   showFinal?: boolean;
-  rowExtra?: (row: CatalogRow) => ReactNode;
+  /** Conteúdo extra por linha, já renderizado no servidor (funções não cruzam para o cliente). */
+  rowExtras?: Record<string, ReactNode>;
 }) {
   const [pending, startTransition] = useTransition();
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -262,7 +263,7 @@ export function CatalogSettings({
                 />
               </div>
               </div>
-              {rowExtra?.(row)}
+              {rowExtras?.[row.id]}
             </li>
           ))}
           {rows.length === 0 && (
