@@ -95,7 +95,10 @@ export function parseGoalInput(
   };
 }
 
-export type GoalStatus = "met" | "near" | "off" | "none";
+export type GoalStatus = "met" | "pace" | "near" | "off" | "none";
+
+/** Indicadores que se somam ao longo do período: a meta só se cumpre no fim. */
+const CUMULATIVE: KpiKey[] = ["COMPLETED", "WORKED_HOURS"];
 
 export type GoalEvaluation = { status: GoalStatus; progress: number | null };
 
@@ -107,13 +110,18 @@ export function evaluateGoal(
   metric: KpiKey,
   target: number,
   warnMargin: number,
-  actual: number | null
+  actual: number | null,
+  /** Fração do período da meta já decorrida (0–1). Só pesa em indicadores acumulados. */
+  elapsed = 1
 ): GoalEvaluation {
   if (actual === null) return { status: "none", progress: null };
   if (KPI_CATALOG[metric].direction === "higher") {
     const progress = target === 0 ? 1 : Math.min(1, Math.max(0, actual / target));
     if (actual >= target) return { status: "met", progress };
-    return { status: actual >= target * (1 - warnMargin) ? "near" : "off", progress };
+    // Acumulado no meio do período: compara com a parte do alvo que já deveria ter saído.
+    const paced = CUMULATIVE.includes(metric) ? target * Math.min(1, Math.max(0, elapsed)) : target;
+    if (paced < target && actual >= paced) return { status: "pace", progress };
+    return { status: actual >= paced * (1 - warnMargin) ? "near" : "off", progress };
   }
   const progress = actual <= target ? 1 : target === 0 ? 0 : Math.max(0, target / actual);
   if (actual <= target) return { status: "met", progress };
@@ -122,6 +130,7 @@ export function evaluateGoal(
 
 export const GOAL_STATUS_LABEL: Record<GoalStatus, string> = {
   met: "Meta atingida",
+  pace: "No ritmo",
   near: "Perto da meta",
   off: "Abaixo da meta",
   none: "Sem leitura",

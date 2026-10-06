@@ -8,8 +8,14 @@ const now = new Date("2026-08-16T17:30:45.123Z");
 const iso = (r: { from: Date; to: Date }) => [r.from.toISOString(), r.to.toISOString()];
 
 describe("resolvePerformanceRange", () => {
-  it("padrão: mês atual até o fim de hoje (dias de São Paulo)", () => {
+  it("padrão: trimestre até o fim de hoje (dias de São Paulo)", () => {
     const r = resolvePerformanceRange({ now });
+    expect(r.preset).toBe("quarter");
+    expect(iso(r)).toEqual(["2026-07-01T03:00:00.000Z", "2026-08-17T02:59:59.999Z"]);
+  });
+
+  it("mês atual quando escolhido", () => {
+    const r = resolvePerformanceRange({ preset: "month", now });
     expect(r.preset).toBe("month");
     expect(iso(r)).toEqual(["2026-08-01T03:00:00.000Z", "2026-08-17T02:59:59.999Z"]);
   });
@@ -53,9 +59,9 @@ describe("resolvePerformanceRange", () => {
     expect(iso(r)).toEqual(["2026-08-01T03:00:00.000Z", "2026-08-11T02:59:59.999Z"]);
   });
 
-  it("data inválida cai no mês atual", () => {
+  it("data inválida cai no trimestre", () => {
     for (const input of [{ from: "2026-02-31", to: "2026-03-02" }, { from: "xx", to: "2026-03-02" }, { from: "2026-03-01" }]) {
-      expect(resolvePerformanceRange({ ...input, now }).preset).toBe("month");
+      expect(resolvePerformanceRange({ ...input, now }).preset).toBe("quarter");
     }
   });
 });

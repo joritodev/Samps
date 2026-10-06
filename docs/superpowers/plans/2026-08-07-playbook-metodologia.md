@@ -81,7 +81,7 @@ Responda na ordem. A primeira resposta “sim” define o caminho.
 
 - Plano inexistente ou com TBD / “implementar o óbvio”
 - Tasks que precisam mudar o design no meio do caminho
-- Sessão cujo único objetivo é pesquisa/1-pager (Fase 5)
+- Sessão cujo único objetivo é pesquisa/1-pager
 - Debug exploratório
 
 ### SDD — contrato mínimo do controller
@@ -130,7 +130,7 @@ Além disso:
 | Só docs / nota / playbook | sem Bugbot/Security; review humano opcional |
 | Headers, CI, dependências | Bugbot; Security se mudar superfície de auth |
 
-Merge só com gates verdes da fatia. Fase seguinte **não começa** antes do PR da fatia anterior estar mergeado (salvo fatias explicitamente paralelas na Fase 5).
+Merge só com gates verdes da fatia. Fase seguinte **não começa** antes do PR da fatia anterior estar mergeado.
 
 ---
 
@@ -202,14 +202,6 @@ Plano: `2026-08-04-fase4-avancado.md`
 | 4.2 Capacidade 8h | WP → SDD; só com dados reais de WorkSession |
 | 4.3 Agenda organizacional | BR (Google Calendar sim/não) → WP → SDD |
 | 4.4 Dívida técnica | DIR/SDD por item; upgrade Next 16 = WP próprio |
-
-### Fase 5 — Pesquisa (paralela, sem código de produção)  
-Plano: `2026-08-04-fase5-pesquisa-decisoes.md`
-
-| Decisão | Metodologia |
-|---------|-------------|
-| 5.1 IA / 5.2 Mobile / 5.3 SaaS | **DOC** com modelo forte + busca web de preços no dia; **proibido** SDD de feature |
-| Aceite | 1-pager em `docs/superpowers/notas/` com número, fonte e recomendação única |
 
 ---
 
@@ -287,7 +279,6 @@ Já definidas no roadmap; repetidas aqui para o agent não precisar adivinhar:
 - [ ] PR da fatia aberto/atualizado com o que testar  
 - [ ] Nenhuma task da próxima fase iniciada cedo demais  
 - [ ] Se Fase 1: Vitest+CI existem antes de prometer TDD na Fase 2  
-- [ ] Se véspera da reunião 18/08: Fase 5 1-pagers prontos mesmo que Fase 2 ainda esteja andando (Fase 5 é paralela)
 
 ---
 

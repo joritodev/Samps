@@ -49,7 +49,6 @@ Não é CRM white-label, não é Trello, não é produto para vender em 2026.
 ## 4. Fora desta spec
 
 - Colunas personalizadas, capacidade 8h, agenda organizacional (Fase 4)  
-- IA em produção, PWA/app nativo, SaaS (Fase 5 — docs já existem)  
 - Unificar as três permissões `indicators` / `productivity` / `reports` (dívida; não nesta fatia)  
 - Apagar o grupo de rotas `(app)` inteiro (redirects pontuais na 3.0 se cruzar; remoção total depois)
 

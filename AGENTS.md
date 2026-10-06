@@ -13,7 +13,6 @@ Antes de planejar ou implementar qualquer coisa neste repositório:
 - Sessão cloud dedicada a uma fatia: **executing-plans**.
 - Feature sem design: **brainstorming** → spec → **writing-plans**.
 - Bug sem causa óbvia: **systematic-debugging** (não SDD).
-- Fase 5 (pesquisa): só documentos; **sem** código de produção.
 - Schema / auth / RLS / upload / PII fora do plano → **parar** e replanejar com modelo forte.
 - Ledger: `.superpowers/sdd/progress.md`.
 - Prompt de abertura: playbook, seção 6.
