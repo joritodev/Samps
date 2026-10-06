@@ -118,6 +118,12 @@ export async function listRunningGoals(
   });
 }
 
+function elapsedOf(goal: Pick<Goal, "startsOn" | "endsOn">, now: Date): number {
+  const total = goal.endsOn.getTime() - goal.startsOn.getTime();
+  if (total <= 0) return 1;
+  return Math.min(1, Math.max(0, (now.getTime() - goal.startsOn.getTime()) / total));
+}
+
 function scopeOf(goal: Pick<Goal, "scope" | "sectorId" | "userId">): SummaryScope {
   if (goal.scope === "SECTOR") return { sectorId: goal.sectorId ?? undefined };
   if (goal.scope === "USER") return { userId: goal.userId ?? undefined };
@@ -172,7 +178,7 @@ export async function evaluateGoals(
       active: goal.active,
       state: goalPeriodState(goal, now),
       actual,
-      ...evaluateGoal(goal.metric as KpiKey, goal.target, goal.warnMargin, actual),
+      ...evaluateGoal(goal.metric as KpiKey, goal.target, goal.warnMargin, actual, elapsedOf(goal, now)),
     };
   });
 }

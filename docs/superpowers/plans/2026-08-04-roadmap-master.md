@@ -1,6 +1,6 @@
 # Samps OS — Roadmap Master (ago → set 2026)
 
-**Data:** 2026-08-04 (estado de execução atualizado em 2026-09-15)
+**Data:** 2026-08-04 (estado de execução atualizado em 2026-10-06)
 **Origem:** reunião Samps Digital 28/07/2026 + backlog técnico pendente
 **Meta do cliente:** time testando em agosto, sistema operacional em setembro
 **Próxima reunião:** a combinar (demo 18/08 feita; roteiro em `docs/superpowers/notas/2026-08-27-roteiro-reuniao.md`)
@@ -11,7 +11,7 @@ Este documento é o índice do **o quê** e da **ordem**.
 → **`docs/superpowers/plans/2026-08-07-playbook-metodologia.md`** ← leia antes de qualquer sessão de implementação.
 
 Cada fase tem um plano próprio em `docs/superpowers/plans/`.  
-Nenhuma fase de código começa antes de a anterior ter PRs mergeados e gates aprovados (Fase 5 é exceção: pesquisa paralela, sem código de produção).
+Nenhuma fase de código começa antes de a anterior ter PRs mergeados e gates aprovados.
 
 ---
 
@@ -29,20 +29,32 @@ Nenhuma fase de código começa antes de a anterior ter PRs mergeados e gates ap
 | Visual Samps | Mergeada (#36–#40) — fundação, shell, boards, gestão, portal |
 | Sunset `(app)` | Mergeada (#35) — rotas legacy removidas |
 | Criar demanda | Mergeada (#42–#43) — ciclo pronto para teste da empresa |
-| Fase 5 | Docs de decisão (IA / mobile / SaaS) |
+| Performance, KPIs, OKRs e relatórios | Mergeada (#74–#80, correções #82): Visão geral, OKRs, Metas, Indicadores, Meu resumo, modal diário, e-mails (desligados) |
+| Simulação de um trimestre | Mergeada (#82): `prisma/simulate-quarter.ts` e workflow manual; guia em `notas/2026-10-05-simulacao-trimestre.md` |
 | Playbook | `2026-08-07-playbook-metodologia.md` |
 | Produção | https://samps-os.vercel.app |
 | Acessos teste | `docs/superpowers/notas/2026-09-04-acessos-temporarios-teste.md` |
 | Spec Fase 3 | `docs/superpowers/specs/2026-08-16-fase3-gestao-agencia-design.md` |
 
-**Próxima fatia a executar:**  
-**3.5 pontuação** — bloqueada. Aguarda as regras da Samps. Sem código até o documento chegar.
+**Próxima fatia a executar:** nenhuma de código. O projeto está concluído nos itens abaixo; o que resta é operação e espera (seção "Decisões de 06/10").
 
 **Já na master:** 3.3 briefing por categoria (#60), 3.7 CSP enforce (#59), 4.3 reunião na agenda (#62), 4.4 dívida técnica fechada em 28/09.  
-**Adiado (25/09):** 3.2 anexos na demanda; 4.2 capacidade de 8h por pessoa.  
 **Fora do código:** Deployment Protection na Vercel e checks obrigatórios no GitHub (`verify`, `secrets`).  
 Nota: onda 15/09 permanece como contexto. A spec 21/09 (itens leves) foi **substituída** no ciclo de vida do item pela spec 24/09. N listas, barra, responsável e prazo ficam.  
 Nota: a antiga “3.4 visibilidade aberta” foi **redefinida** pelos áudios de 10–15/09 (hierarquia Trello, não leitura cruzada).
+
+### Decisões de 06/10
+
+| Item | Decisão |
+|------|---------|
+| 3.2 Anexos na demanda | **Não fazer.** A Samps não quer pesar o banco com arquivos; fica por link (Drive). Se mudarem de ideia, vira nova fatia. |
+| 3.5 Pontuação e bonificação | **Descartada** por enquanto. |
+| 4.2 Capacidade de 8h por pessoa | **Fora** por enquanto. |
+| Google Agenda | Será feita quando a Samps entregar o e-mail da conta. Escopo (leitura ou ida e volta; agenda inteira ou só compromissos) a definir nessa hora. |
+| E-mails de relatório | Ligam com a conta da Samps: domínio no Resend e `REPORTS_EMAIL_ENABLED=true`. |
+| Contas e dados de teste | Apagar no repasse do projeto para o e-mail da Samps (senha padrão `Samps@2026` do seed). |
+| Upgrade para Next 16 | Feito pelo responsável pelo projeto, em sessão própria (hoje há avisos no `npm audit`). |
+| Deployment Protection (Vercel) e checks obrigatórios (GitHub) | Conferir de novo na troca de conta. |
 
 ---
 
@@ -96,10 +108,9 @@ Unidade de execução = **fatia (1 PR)**, nunca a fase inteira.
 | **2** | `2026-08-04-fase2-features-reuniao.md` | 11–18/ago | SDD **por task** + merge entre elas | Entregáveis da reunião do dia 18 |
 | **3** | `2026-08-04-fase3-operacional-setembro.md` | 19/ago–05/set | WP just-in-time → SDD | Operação diária: anexos, relatórios, vídeo, visibilidade |
 | **4** | `2026-08-04-fase4-avancado.md` | 08–19/set | BR/WP → SDD | Colunas por cliente, capacidade 8h, agenda organizacional |
-| **5** | `2026-08-04-fase5-pesquisa-decisoes.md` | paralelo, até 18/ago | DOC (sem SDD de código) | IA, mobile, SaaS — 1-pagers de decisão |
 
 Matriz task-a-task: playbook seção 5.  
-Fases 0–2 detalhadas. Fases 3–4: escopo agora, plano detalhado no Opus **imediatamente antes** de executar. Fase 5: só documentos.
+Fases 0–2 detalhadas. Fases 3–4: escopo agora, plano detalhado no Opus **imediatamente antes** de executar.
 ---
 
 ## 6. Cobertura da reunião de 28/07
@@ -114,30 +125,25 @@ Fases 0–2 detalhadas. Fases 3–4: escopo agora, plano detalhado no Opus **ime
 | Cronômetro por demanda | já existe — validar na Fase 0 |
 | Relatórios de performance por usuário e por tipo | 3 |
 | Ajuste da agenda (eventos e prazos) | 2 (parcial) + 4 (agenda organizacional) |
-| Anexos nas demandas | 3 |
+| Anexos nas demandas | 3 — descartado: fica por link (06/10) |
 | Campos obrigatórios antes de criar demanda | já existe — reforço na Fase 3 (vídeo) |
 | Link do Drive obrigatório ao concluir | já existe — validar na Fase 0 |
 | Categorias padronizadas de vídeo | 3 |
 | Colunas personalizadas por cliente | 4 |
 | Cálculo de capacidade / 8h por pessoa | 4 |
-| Regras de pontuação e priorização | 3 (depende das regras que a Samps vai enviar) |
+| Regras de pontuação e priorização | 3 — priorização feita; pontuação descartada em 06/10 |
 | Comunicação centralizada (sem WhatsApp) | 3 (comentários) + backlog futuro (chat) |
 | Liberar acesso ao time para teste | 1 (com Deployment Protection) |
-| Avaliar assistente de IA | 5 |
-| Avaliar exportação como app mobile | 5 |
-| Vender o sistema / SaaS | 5 |
 
 ---
 
-## 7. Fora de escopo até setembro
+## 7. Fora de escopo
 
 - Migração para NestJS + JWT Bearer (rewrite de API)
 - Multi-tenant / white-label vendável
 - Chat em tempo real
 - App nativo em loja
-- Assistente de IA em produção
-
-Esses itens só saem de "pesquisa" depois que o operacional de setembro estiver em uso real.
+- Assistente de IA, app mobile e venda como SaaS (pesquisa descartada em 06/10)
 
 ---
 

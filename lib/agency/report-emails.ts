@@ -103,8 +103,8 @@ const BAD = "#a8441f";
 const WARN = "#a86a05";
 
 const TREND_COLOR = { better: GOOD, worse: BAD, same: MUTED, none: MUTED } as const;
-const GOAL_COLOR = { met: GOOD, near: WARN, off: BAD, none: MUTED } as const;
-const GOAL_MARK = { met: "✓", near: "!", off: "✕", none: "–" } as const;
+const GOAL_COLOR = { met: GOOD, pace: GOOD, near: WARN, off: BAD, none: MUTED } as const;
+const GOAL_MARK = { met: "✓", pace: "✓", near: "!", off: "✕", none: "–" } as const;
 
 function tile(summary: PerformanceSummary, key: KpiKey) {
   const k = summary.indicators[key];

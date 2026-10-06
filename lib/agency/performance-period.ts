@@ -43,7 +43,7 @@ function range(fromKey: string, toKey: string, preset: PerformancePreset): Perfo
 }
 
 /**
- * Período do relatório em dias de São Paulo. Sem preset válido, mês atual
+ * Período do relatório em dias de São Paulo. Sem preset válido, o trimestre
  * até hoje. "Semana" são os últimos 7 dias; "trimestre" vai do começo do
  * trimestre até hoje; datas livres (`from` e `to` válidas) ganham sempre.
  */
@@ -68,7 +68,10 @@ export function resolvePerformanceRange(
     return range(start, addDays(quarterStart(today), -1), "lastquarter");
   }
 
-  return range(`${today.slice(0, 7)}-01`, today, "month");
+  if (input.preset === "month") return range(`${today.slice(0, 7)}-01`, today, "month");
+
+  // Sem escolha, o trimestre: o mês, logo no começo, tem poucos dados para ler.
+  return range(quarterStart(today), today, "quarter");
 }
 
 /**

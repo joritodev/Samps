@@ -68,6 +68,20 @@ describe("evaluateGoal", () => {
     expect(evaluateGoal("ON_TIME_RATE", 0.85, 0.1, 0.6).status).toBe("off");
     expect(evaluateGoal("COMPLETED", 40, 0.1, 20).progress).toBe(0.5);
   });
+  it("acumulado no meio do período compara com o ritmo", () => {
+    // 11 de 320 no 5º dia de 92: no ritmo (alvo proporcional ≈ 17), ainda abaixo.
+    expect(evaluateGoal("COMPLETED", 320, 0.1, 11, 5 / 92).status).toBe("off");
+    expect(evaluateGoal("COMPLETED", 320, 0.1, 20, 5 / 92).status).toBe("pace");
+    expect(evaluateGoal("COMPLETED", 320, 0.1, 160, 0.5).status).toBe("pace");
+    expect(evaluateGoal("COMPLETED", 320, 0.1, 150, 0.5).status).toBe("near");
+    expect(evaluateGoal("COMPLETED", 320, 0.1, 100, 0.5).status).toBe("off");
+    expect(evaluateGoal("COMPLETED", 320, 0.1, 320, 0.5).status).toBe("met");
+    // Encerrada (ritmo 1): o alvo inteiro vale.
+    expect(evaluateGoal("COMPLETED", 320, 0.1, 160, 1).status).toBe("off");
+  });
+  it("taxas e médias não seguem o ritmo", () => {
+    expect(evaluateGoal("ON_TIME_RATE", 0.9, 0.1, 0.5, 0.1).status).toBe("off");
+  });
   it("menor é melhor", () => {
     expect(evaluateGoal("OVERDUE", 5, 0.2, 5).status).toBe("met");
     expect(evaluateGoal("OVERDUE", 5, 0.2, 6).status).toBe("near");
