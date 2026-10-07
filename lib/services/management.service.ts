@@ -7,6 +7,7 @@ import {
   syncDemandDelays,
 } from "@/lib/services/delay.service";
 import {
+  COMPLETED_TODAY_STATUSES,
   FLOW_STAGES,
   OPEN_EXCLUDED,
   READY_STATUSES,
@@ -37,7 +38,7 @@ export async function getManagementOverview(user: SessionUser) {
       db.demand.count({
         where: {
           ...where,
-          status: { in: [DemandStatus.DONE, DemandStatus.PUBLISHED] },
+          status: { in: COMPLETED_TODAY_STATUSES },
           updatedAt: { gte: today },
         },
       }),

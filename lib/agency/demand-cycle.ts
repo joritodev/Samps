@@ -69,6 +69,31 @@ export function internalStatusForDemandStatus(
   }
 }
 
+/** Saiu da fila do setor: aprovada, agendada, publicada ou encerrada. */
+export function hasLeftSectorQueue(status: DemandStatus) {
+  return (
+    status === DemandStatus.APPROVED ||
+    status === DemandStatus.SCHEDULED ||
+    status === DemandStatus.PUBLISHED ||
+    status === DemandStatus.DONE ||
+    status === DemandStatus.DELIVERED
+  );
+}
+
+/**
+ * "Concluídas hoje" no quadro do setor e no da social.
+ * Produção concluída hoje continua na coluna depois da aprovação e da publicação;
+ * enquanto está em revisão, também entra se a produção fechou hoje.
+ */
+export function countsAsCompletedToday(
+  status: DemandStatus,
+  productionCompletedAt: Date | null | undefined,
+  today: Date
+) {
+  if (!productionCompletedAt || productionCompletedAt < today) return false;
+  return status === DemandStatus.IN_REVIEW || hasLeftSectorQueue(status);
+}
+
 export function assignmentStatusForDemandStatus(
   status: DemandStatus,
   extras?: DemandCycleAssignmentHint

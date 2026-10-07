@@ -8,6 +8,7 @@ import {
   canRegisterPublication,
   canRequestAdjustment,
   canReviewDemand,
+  isDemandClosedForProduction,
   DEMAND_ACTION_DENIED,
   demandOriginLabel,
   demandStatusLabel,
@@ -48,6 +49,16 @@ describe("regras de acao por status", () => {
   it("libera ajuste apenas em revisao", () => {
     expect(canRequestAdjustment("IN_REVIEW")).toBe(true);
     expect(canRequestAdjustment("IN_PRODUCTION")).toBe(false);
+  });
+
+  it("fecha atribuir e iniciar depois da revisão", () => {
+    expect(isDemandClosedForProduction("IN_REVIEW")).toBe(true);
+    expect(isDemandClosedForProduction("APPROVED")).toBe(true);
+    expect(isDemandClosedForProduction("PUBLISHED")).toBe(true);
+    expect(isDemandClosedForProduction("DONE")).toBe(true);
+    expect(isDemandClosedForProduction("IN_PRODUCTION")).toBe(false);
+    expect(isDemandClosedForProduction("ADJUSTMENTS")).toBe(false);
+    expect(isDemandClosedForProduction("DEMANDED")).toBe(false);
   });
 
   it("libera publicacao em aprovado e agendado", () => {

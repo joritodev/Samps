@@ -9,6 +9,7 @@ import { db } from "@/lib/db";
 import { logAudit } from "@/lib/services/audit.service";
 import { createNotification } from "@/lib/services/notifications.service";
 import { recalculateSectorPriorities } from "@/lib/services/priority.service";
+import { assertDemandOpenForProduction } from "@/lib/agency/labels";
 import { getPanelPathForSectorSlug } from "@/types/auth";
 import type { SessionUser } from "@/types/auth";
 
@@ -41,6 +42,7 @@ export async function claimDemand(demandId: string, user: SessionUser) {
   });
   if (!demand) throw new Error("Demanda não encontrada");
   if (!demand.sectorId) throw new Error("Demanda sem setor");
+  assertDemandOpenForProduction(demand.status);
 
   const assignment = await getActiveAssignment(demandId);
   if (!assignment) throw new Error("Nenhuma atribuição disponível");
@@ -103,6 +105,7 @@ export async function assignDemand(
   const demand = await db.demand.findUnique({ where: { id: demandId } });
   if (!demand) throw new Error("Demanda não encontrada");
   if (!demand.sectorId) throw new Error("Demanda sem setor");
+  assertDemandOpenForProduction(demand.status);
 
   // O executor precisa ser alguém da equipe, ativo: nunca cliente externo nem conta desativada.
   const executor = await db.user.findFirst({

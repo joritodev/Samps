@@ -25,6 +25,15 @@ export const READY_STATUSES: DemandStatus[] = [
   DemandStatus.SCHEDULED,
 ];
 
+/** Aprovada em diante: entra em "concluídas hoje" no painel de gestão. */
+export const COMPLETED_TODAY_STATUSES: DemandStatus[] = [
+  DemandStatus.APPROVED,
+  DemandStatus.SCHEDULED,
+  DemandStatus.PUBLISHED,
+  DemandStatus.DONE,
+  DemandStatus.DELIVERED,
+];
+
 /**
  * Etapas do ciclo da demanda, na ordem em que o trabalho anda.
  * Ajuste não é etapa: é retorno da Revisão e conta dentro de Produção
@@ -98,7 +107,7 @@ export function demandFilter(
       return {
         label: "Concluídas hoje",
         where: {
-          status: { in: [DemandStatus.DONE, DemandStatus.PUBLISHED] },
+          status: { in: COMPLETED_TODAY_STATUSES },
           updatedAt: { gte: startOfToday(now) },
         },
       };
