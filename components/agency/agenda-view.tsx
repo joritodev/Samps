@@ -1,5 +1,6 @@
 "use client";
 
+import { safeHref } from "@/lib/agency/url";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
@@ -27,10 +28,10 @@ import {
 const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 const KIND_CHIP: Record<AgendaEventKind, string> = {
-  due: "bg-warning/15 text-warning",
+  due: "bg-warning/15 text-warning-ink",
   delivery: "bg-success/15 text-success",
-  publish: "bg-primary/15 text-primary",
-  birthday: "bg-brand/15 text-brand",
+  publish: "bg-primary/15 text-primary-ink",
+  birthday: "bg-brand/15 text-brand-ink",
   absence: "bg-destructive/15 text-destructive",
   meeting: "bg-foreground/10 text-foreground",
 };
@@ -45,10 +46,10 @@ const KIND_CARD: Record<AgendaEventKind, string> = {
 };
 
 const KIND_BADGE: Record<AgendaEventKind, string> = {
-  due: "border-warning/35 bg-warning/10 text-warning",
+  due: "border-warning/35 bg-warning/10 text-warning-ink",
   delivery: "border-success/35 bg-success/10 text-success",
-  publish: "border-primary/35 bg-primary/10 text-primary",
-  birthday: "border-brand/35 bg-brand/10 text-brand",
+  publish: "border-primary/35 bg-primary/10 text-primary-ink",
+  birthday: "border-brand/35 bg-brand/10 text-brand-ink",
   absence: "border-destructive/35 bg-destructive/10 text-destructive",
   meeting: "border-foreground/20 bg-foreground/10 text-foreground",
 };
@@ -431,6 +432,11 @@ export function AgendaView({
                       month === today.getMonth() &&
                       year === today.getFullYear();
 
+                    // Célula fora do mês: só preenchimento visual, não é um botão (leitor de tela lia "botão sem nome").
+                    if (!cell.day) {
+                      return <div key={cell.key} aria-hidden className="bg-muted/80" />;
+                    }
+
                     return (
                       <button
                         key={cell.key}
@@ -469,7 +475,7 @@ export function AgendaView({
                                     <span className="block truncate">
                                       {event.title}
                                     </span>
-                                    <span className="opacity-80">{p.time}</span>
+                                    <span>{p.time}</span>
                                   </div>
                                 );
                               })}
@@ -550,7 +556,7 @@ export function AgendaView({
                                 <dt className="w-20 shrink-0">Link</dt>
                                 <dd className="min-w-0">
                                   <a
-                                    href={event.meetingUrl}
+                                    href={safeHref(event.meetingUrl)}
                                     target="_blank"
                                     rel="noreferrer"
                                     className="break-all text-primary underline"

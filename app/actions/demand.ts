@@ -4,6 +4,7 @@ import { AuditAction, DemandStatus } from "@prisma/client";
 import { db } from "@/lib/db";
 import { BRIEFING_DEMAND_STATUSES } from "@/lib/agency/labels";
 import { requirePermission } from "@/lib/permissions/check";
+import { guardDemand } from "@/lib/permissions/demand-guard";
 import { revalidateOperationalViews } from "@/lib/revalidate-operational";
 import { logAudit } from "@/lib/services/audit.service";
 import { distributeDemandToSector } from "@/lib/services/distribution.service";
@@ -25,6 +26,9 @@ export async function concluirBriefing(
   if (!payload.description?.trim()) {
     return { error: "Descrição do briefing é obrigatória." };
   }
+
+  const guard = await guardDemand(actor, demandId, { permission: "demands.edit" });
+  if (!guard.ok) return { error: guard.error };
 
   const [sector, priority] = await Promise.all([
     db.sector.findFirst({

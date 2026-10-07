@@ -49,6 +49,9 @@ export const authConfig = {
       // na rota atual. Um redirect aqui aborta a action e o client recebe undefined.
       const isServerAction = request.headers.has("next-action");
 
+      // Saída forçada de conta desativada: precisa abrir para qualquer sessão, inclusive cliente externo.
+      if (pathname === "/sair") return true;
+
       if (!user) {
         // Páginas de autenticação são as únicas abertas a visitantes.
         return isAuthRoute(pathname);

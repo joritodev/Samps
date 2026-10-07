@@ -1,3 +1,4 @@
+import { safeHref } from "@/lib/agency/url";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
@@ -237,7 +238,7 @@ export function PortalArquivos({
           <div className="min-w-0">
             {file.url ? (
               <a
-                href={file.url}
+                href={safeHref(file.url)}
                 target="_blank"
                 rel="noreferrer"
                 className="font-medium text-primary underline-offset-2 hover:underline"

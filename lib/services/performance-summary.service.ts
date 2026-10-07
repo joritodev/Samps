@@ -1,5 +1,5 @@
 import { WorkSessionStage, WorkSessionStatus, type Prisma } from "@prisma/client";
-import { OPEN_EXCLUDED } from "@/lib/agency/demand-filters";
+import { OPEN_EXCLUDED, UNASSIGNED_EXCLUDED } from "@/lib/agency/demand-filters";
 import {
   buildPerformanceSummary,
   resolveComparisonRanges,
@@ -129,7 +129,9 @@ export async function getPerformanceSummary(params: {
       // Sem responsável não faz sentido no recorte de uma pessoa.
       scope.userId
         ? Promise.resolve(0)
-        : db.demand.count({ where: { ...where, ...open, assigneeId: null } }),
+        : db.demand.count({
+            where: { ...where, status: { notIn: UNASSIGNED_EXCLUDED }, assigneeId: null },
+          }),
       db.demand.groupBy({
         by: ["sectorId"],
         where: { ...where, ...open, dueDate: { lt: now } },

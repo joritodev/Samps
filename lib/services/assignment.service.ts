@@ -107,6 +107,13 @@ export async function assignDemand(
   if (!demand.sectorId) throw new Error("Demanda sem setor");
   assertDemandOpenForProduction(demand.status);
 
+  // O executor precisa ser alguém da equipe, ativo: nunca cliente externo nem conta desativada.
+  const executor = await db.user.findFirst({
+    where: { id: executorId, status: "ACTIVE", userType: { not: "EXTERNAL_CLIENT" } },
+    select: { id: true },
+  });
+  if (!executor) throw new Error("Responsável inválido");
+
   let assignment = await getActiveAssignment(demandId);
   if (!assignment) {
     assignment = await db.demandAssignment.create({

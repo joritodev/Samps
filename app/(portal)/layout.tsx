@@ -26,7 +26,7 @@ export default async function PortalLayout({
     <Providers>
       <div className="flex h-dvh overflow-hidden bg-background">
         <PortalSidebar user={user} clientName={clientName} isPreview={isPreview} />
-        <main className="flex min-w-0 flex-1 flex-col overflow-y-auto bg-background pt-14 lg:pt-0">
+        <main tabIndex={0} className="flex min-w-0 flex-1 flex-col overflow-y-auto bg-background pt-14 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring lg:pt-0">
           {isPreview ? (
             <PortalPreviewBanner>
               Você está visualizando o portal como cliente. Nada aqui reflete a
@@ -35,7 +35,7 @@ export default async function PortalLayout({
           ) : null}
           <div className="flex-1 p-6 md:p-8">{children}</div>
         </main>
-        <Toaster richColors position="top-right" />
+        <Toaster richColors position="bottom-center" />
       </div>
     </Providers>
   );

@@ -7,6 +7,7 @@ const findBoardList = vi.fn();
 const updateDemandListAndOrder = vi.fn();
 const notifyCommentMentions = vi.fn();
 const revalidatePath = vi.fn();
+const guardDemand = vi.fn();
 
 vi.mock("next/cache", () => ({
   revalidatePath: (...args: unknown[]) => revalidatePath(...args),
@@ -14,6 +15,10 @@ vi.mock("next/cache", () => ({
 
 vi.mock("@/lib/permissions/check", () => ({
   requireAuth: () => requireAuth(),
+}));
+
+vi.mock("@/lib/permissions/demand-guard", () => ({
+  guardDemand: (...args: unknown[]) => guardDemand(...args),
 }));
 
 vi.mock("@/lib/permissions/resolve", () => ({
@@ -58,6 +63,18 @@ describe("addCommentAction", () => {
     addCardComment.mockResolvedValue({ id: "c1" });
     findUnique.mockResolvedValue({ title: "Campanha X", clientId: "cli-1" });
     notifyCommentMentions.mockResolvedValue(undefined);
+    guardDemand.mockResolvedValue({ ok: true, demand: { clientId: "cli-1" } });
+  });
+
+  it("não comenta nem notifica quando a guarda recusa (sem vínculo com o cliente)", async () => {
+    guardDemand.mockResolvedValue({ ok: false, error: "Demanda não encontrada." });
+    const { addCommentAction } = await import("./cards.actions");
+
+    const result = await addCommentAction("demand-1", "cli-1", "Oi @Maria");
+
+    expect(result).toEqual({ error: "Demanda não encontrada." });
+    expect(addCardComment).not.toHaveBeenCalled();
+    expect(notifyCommentMentions).not.toHaveBeenCalled();
   });
 
   it("notifica mencoes apos criar o comentario, com titulo e clientId da demanda", async () => {
@@ -88,6 +105,29 @@ describe("moveCardAction", () => {
     vi.clearAllMocks();
     requireAuth.mockResolvedValue({ id: "u1" });
     updateDemandListAndOrder.mockResolvedValue({});
+    guardDemand.mockResolvedValue({ ok: true, demand: { clientId: "cli-1" } });
+  });
+
+  it("não move quando a guarda recusa", async () => {
+    guardDemand.mockResolvedValue({ ok: false, error: "Sem permissão para esta ação." });
+    const { moveCardAction } = await import("./cards.actions");
+
+    const result = await moveCardAction("d1", "cli-1", "list-1", 0);
+
+    expect(result).toEqual({ error: "Sem permissão para esta ação." });
+    expect(updateDemandListAndOrder).not.toHaveBeenCalled();
+  });
+
+  it("procura a coluna no quadro do cliente dono da demanda, não no clientId enviado", async () => {
+    guardDemand.mockResolvedValue({ ok: true, demand: { clientId: "cli-dono" } });
+    findBoardList.mockResolvedValue({ id: "list-1" });
+    const { moveCardAction } = await import("./cards.actions");
+
+    await moveCardAction("d1", "cli-enviado-pelo-navegador", "list-1", 0);
+
+    expect(findBoardList).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "list-1", board: { clientId: "cli-dono" } } })
+    );
   });
 
   it("recusa coluna que nao pertence ao cliente", async () => {

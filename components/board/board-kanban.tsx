@@ -76,7 +76,7 @@ function SortableDemandCard({
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <div ref={setNodeRef} style={style} {...attributes} role="group" {...listeners}>
       <DemandCard
         demand={demand}
         showOrigin
@@ -255,9 +255,9 @@ export function BoardKanban({
                     }}
                   />
                 ) : (
-                  <h3 className="truncate text-sm font-semibold text-foreground">
+                  <h2 className="truncate text-sm font-semibold text-foreground">
                     {col.title}
-                  </h3>
+                  </h2>
                 )}
                 <div className="flex shrink-0 items-center gap-1">
                   <span className="rounded-md border border-border bg-card px-2 py-0.5 text-xs font-medium text-muted-foreground">

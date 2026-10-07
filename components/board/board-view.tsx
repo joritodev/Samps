@@ -270,7 +270,7 @@ export function BoardView({
         />
       </Suspense>
 
-      <main className="min-h-0 flex-1 overflow-hidden bg-background">
+      <div className="min-h-0 flex-1 overflow-hidden bg-background">
         {view === "kanban" ? (
           <BoardKanban
             clientId={clientId}
@@ -289,7 +289,7 @@ export function BoardView({
             />
           </div>
         )}
-      </main>
+      </div>
 
       <CardDetailSheet
         clientId={clientId}

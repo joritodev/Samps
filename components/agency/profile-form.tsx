@@ -124,6 +124,20 @@ export function ProfileForm({ user }: ProfileFormProps) {
             <p className="text-xs text-muted-foreground">Mínimo 8 caracteres.</p>
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="currentPassword">Senha atual</Label>
+            <Input
+              id="currentPassword"
+              name="currentPassword"
+              type="password"
+              placeholder="Necessária para trocar e-mail ou senha"
+              autoComplete="current-password"
+            />
+            <p className="text-xs text-muted-foreground">
+              Só é pedida se você mudar o e-mail ou a senha.
+            </p>
+          </div>
+
           <div className="flex justify-end pt-2">
             <SubmitButton />
           </div>

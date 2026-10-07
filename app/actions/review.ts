@@ -8,6 +8,7 @@ import {
 } from "@/lib/agency/labels";
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/permissions/check";
+import { guardDemand } from "@/lib/permissions/demand-guard";
 import { revalidateOperationalViews } from "@/lib/revalidate-operational";
 import { logAudit } from "@/lib/services/audit.service";
 import { createNotification } from "@/lib/services/notifications.service";
@@ -18,6 +19,9 @@ export async function aprovarDemanda(demandId: string) {
   if (!canReviewDemand(actor.userType)) {
     return { error: DEMAND_ACTION_DENIED.review };
   }
+
+  const guard = await guardDemand(actor, demandId, { permission: "demands.edit" });
+  if (!guard.ok) return { error: guard.error };
 
   try {
     const previous = await db.demand.findUniqueOrThrow({
@@ -96,6 +100,9 @@ export async function solicitarAjuste(demandId: string, motivo: string) {
   if (!note) {
     return { error: "O motivo do ajuste é obrigatório." };
   }
+
+  const guard = await guardDemand(actor, demandId, { permission: "demands.edit" });
+  if (!guard.ok) return { error: guard.error };
 
   try {
     const previous = await db.demand.findUniqueOrThrow({

@@ -369,7 +369,7 @@ export function AgencySidebar({
 
   return (
     <>
-      <aside className="hidden h-full w-64 shrink-0 lg:flex print:hidden">
+      <aside aria-label="Menu principal" className="hidden h-full w-64 shrink-0 lg:flex print:hidden">
         <SidebarBody
           user={user}
           searchTypes={searchTypes}

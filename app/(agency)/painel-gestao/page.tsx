@@ -166,7 +166,7 @@ export default async function PainelGestaoPage() {
                     href={demandFilterHref("ajustes")}
                     title={`${adjustments} ${adjustments === 1 ? "demanda voltou" : "demandas voltaram"} da revisão para ajuste`}
                     aria-label={`${adjustments} ${adjustments === 1 ? "voltou" : "voltaram"} para ajuste`}
-                    className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning transition-colors hover:bg-warning/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning-ink transition-colors hover:bg-warning/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <CornerDownLeft className="size-3" aria-hidden />
                     <span className="num">{adjustments}</span>

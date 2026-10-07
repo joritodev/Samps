@@ -6,6 +6,7 @@ import {
   NotificationType,
 } from "@prisma/client";
 import { db } from "@/lib/db";
+import { INVALID_URL_MESSAGE, isHttpUrl } from "@/lib/agency/url";
 import { withChecklistComments } from "@/lib/services/checklist.service";
 import {
   assertCanRegisterPublication,
@@ -266,6 +267,7 @@ export async function registerPublicationAndComplete(
   data: { publishedUrl: string; publishedAt?: Date }
 ) {
   if (!data.publishedUrl) throw new Error("Link de publicação é obrigatório");
+  if (!isHttpUrl(data.publishedUrl)) throw new Error(INVALID_URL_MESSAGE);
 
   const card = await db.demand.findUnique({
     where: { id: cardId },

@@ -14,6 +14,12 @@ export async function getCompetenceById(id: string) {
 }
 
 export async function setCurrentCompetence(boardId: string, competenceId: string) {
+  // A competência precisa ser deste quadro: sem isso, um id de outro cliente "emprestaria" o mês.
+  const competence = await db.competence.findFirst({
+    where: { id: competenceId, boardId },
+    select: { id: true },
+  });
+  if (!competence) throw new Error("Competência não encontrada neste quadro");
   return db.clientBoard.update({
     where: { id: boardId },
     data: { currentCompetenceId: competenceId },

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidateOperationalViews } from "@/lib/revalidate-operational";import { requireAuth } from "@/lib/permissions/check";
+import { guardDemand } from "@/lib/permissions/demand-guard";
 import { hasPermission } from "@/lib/permissions/resolve";
 import {
   changeDemandDeadline as changeDeadlineService,
@@ -17,6 +18,9 @@ export async function changeDemandDeadlineAction(input: {
   if (!hasPermission(user.permissions, "demands.change_deadline")) {
     return { error: "Sem permissão para alterar prazo" as const };
   }
+
+  const guard = await guardDemand(user, input.demandId);
+  if (!guard.ok) return { error: guard.error };
 
   const parsed = new Date(input.newDate);
   if (Number.isNaN(parsed.getTime())) {
@@ -39,7 +43,9 @@ export async function changeDemandDeadlineAction(input: {
 }
 
 export async function listDemandDelaysAction(demandId: string) {
-  await requireAuth();
+  const user = await requireAuth();
+  const guard = await guardDemand(user, demandId);
+  if (!guard.ok) return [];
   const { listDemandDelaysForDemand } = await import(
     "@/lib/services/delay.service"
   );

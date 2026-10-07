@@ -187,7 +187,7 @@ export function SectorBoardView({
         </div>
       ) : null}
 
-      <main
+      <div
         className={cn(
           "mt-3 min-h-0 flex-1",
           view === "kanban" ? "overflow-hidden" : "overflow-y-auto"
@@ -203,9 +203,9 @@ export function SectorBoardView({
                   className="flex h-full w-72 shrink-0 snap-start flex-col rounded-xl border border-border/60 bg-card p-3 shadow-soft"
                 >
                   <div className="mb-2 flex shrink-0 items-center justify-between">
-                    <h3 className="text-sm font-semibold text-foreground">
+                    <h2 className="text-sm font-semibold text-foreground">
                       {col.title}
-                    </h3>
+                    </h2>
                     <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
                       {cards.length}
                     </span>
@@ -248,9 +248,9 @@ export function SectorBoardView({
                   className="rounded-xl border border-border/60 bg-card p-3 shadow-soft"
                 >
                   <div className="mb-2 flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-foreground">
+                    <h2 className="text-sm font-semibold text-foreground">
                       {col.title}
-                    </h3>
+                    </h2>
                     <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
                       {demands.length}
                     </span>
@@ -270,7 +270,7 @@ export function SectorBoardView({
             })}
           </div>
         )}
-      </main>
+      </div>
 
       {shoots && shoots.length > 0 ? (
         <div className="mt-3 shrink-0">
