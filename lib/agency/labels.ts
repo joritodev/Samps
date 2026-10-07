@@ -168,6 +168,20 @@ export function assertCanCompleteProduction(status: string) {
   }
 }
 
+/**
+ * Quem executa a demanda conclui a produção mesmo sem carteira do cliente.
+ * Quem não executa e não vê o cliente recebe "não encontrada", para não
+ * revelar a demanda. Quem vê o cliente, mas não executa, recebe a negativa real.
+ */
+export function productionCompletionBlock(input: {
+  isExecutor: boolean;
+  canSeeClient: boolean;
+}): "ok" | "hidden" | "not-executor" {
+  if (input.isExecutor) return "ok";
+  if (!input.canSeeClient) return "hidden";
+  return "not-executor";
+}
+
 export function assertCanRequestAdjustment(status: string) {
   if (!canRequestAdjustment(status)) {
     throw new Error(DEMAND_ACTION_DENIED.adjustment);

@@ -1,4 +1,5 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
+import { ReplaceTo } from "@/components/auth/replace-to";
 import { requireAuth } from "@/lib/permissions/check";
 import { hasPermission } from "@/lib/permissions/resolve";
 import { canReviewDemand } from "@/lib/agency/labels";
@@ -57,12 +58,11 @@ export default async function SectorBoardPage({
   const isLeader = sectorRow?.leaderId === user.id;
 
   if (!isMgmt && !isLeader) {
-    if (collaborator) {
-      redirect(
-        ownSlug ? `/meu-painel/${ownSlug}` : getDashboardPath(user.userType)
-      );
-    }
-    redirect(getDashboardPath(user.userType));
+    const href =
+      collaborator && ownSlug
+        ? `/meu-painel/${ownSlug}`
+        : getDashboardPath(user.userType);
+    return <ReplaceTo href={href} />;
   }
 
   // After gate: only mgmt or leader of THIS sector reach the board

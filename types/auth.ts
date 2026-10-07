@@ -120,3 +120,58 @@ export function getSectorSlugForUserType(userType: UserType): string | null {
 }
 
 export type AuthRedirectTarget = ReturnType<typeof getDashboardPath>;
+
+/**
+ * Destino quando a rota não é do papel, decidido só com o que o JWT já tem.
+ * `null` deixa a página seguir (e, no quadro do próprio setor, o servidor
+ * ainda confere se a pessoa é líder).
+ */
+export function agencyAccessRedirect(
+  pathname: string,
+  userType: UserType,
+  permissions: string[]
+): string | null {
+  const home = getDashboardPath(userType);
+  const goHome = () => (pathname === home ? null : home);
+
+  if (pathname === "/painel-gestao" || pathname.startsWith("/painel-gestao/")) {
+    if (userType !== "ADMIN" && userType !== "MANAGEMENT") return goHome();
+  }
+
+  const panelMatch = pathname.match(/^\/meu-painel\/([^/]+)/);
+  if (panelMatch) {
+    const own = getPersonalPanelPath(userType);
+    if (own !== `/meu-painel/${panelMatch[1]}`) return goHome();
+  }
+
+  const onPerformance = pathname === "/performance" || pathname.startsWith("/performance/");
+  const onMySummary =
+    pathname === "/performance/meu-resumo" || pathname.startsWith("/performance/meu-resumo/");
+  if (onPerformance && !onMySummary && !permissions.includes("productivity.view")) {
+    return goHome();
+  }
+
+  if (
+    (pathname === "/equipe" || pathname.startsWith("/equipe/")) &&
+    !permissions.includes("users.edit") &&
+    !permissions.includes("users.create")
+  ) {
+    return goHome();
+  }
+
+  if (
+    (pathname === "/historico" || pathname.startsWith("/historico/")) &&
+    !permissions.includes("history.view")
+  ) {
+    return goHome();
+  }
+
+  const sectorMatch = pathname.match(/^\/setores\/([^/]+)/);
+  if (sectorMatch) {
+    const isMgmt = userType === "ADMIN" || userType === "MANAGEMENT";
+    const own = getSectorSlugForUserType(userType);
+    if (!isMgmt && own !== sectorMatch[1]) return goHome();
+  }
+
+  return null;
+}
