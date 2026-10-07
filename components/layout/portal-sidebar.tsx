@@ -132,7 +132,7 @@ export function PortalSidebar({
 
   return (
     <>
-      <aside className="hidden h-full w-64 shrink-0 lg:flex">
+      <aside aria-label="Menu do portal" className="hidden h-full w-64 shrink-0 lg:flex">
         <SidebarBody
           user={user}
           clientName={clientName}

@@ -1,5 +1,6 @@
 "use client";
 
+import { readableInk } from "@/lib/agency/contrast";
 import Link from "next/link";
 import {
   BarChart3,
@@ -132,7 +133,10 @@ export function BoardHeader({
                   className="h-full w-full rounded-lg object-cover"
                 />
               ) : (
-                <span className="text-[11px] font-bold text-white">
+                <span
+                  className="text-[11px] font-bold"
+                  style={{ color: readableInk(brandColor) }}
+                >
                   {clientName.slice(0, 2).toUpperCase()}
                 </span>
               )}

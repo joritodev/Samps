@@ -204,7 +204,7 @@ export function LoginView({
 
           <p className="mt-8 text-pretty text-center text-sm text-muted-foreground">
             Diagnóstico + Planejamento + Método ={" "}
-            <span className="font-medium text-brand">Resultado</span>
+            <span className="font-medium text-brand-ink">Resultado</span>
           </p>
         </div>
       </main>

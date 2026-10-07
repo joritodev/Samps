@@ -475,7 +475,7 @@ export function AgendaView({
                                     <span className="block truncate">
                                       {event.title}
                                     </span>
-                                    <span className="opacity-80">{p.time}</span>
+                                    <span>{p.time}</span>
                                   </div>
                                 );
                               })}

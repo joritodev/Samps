@@ -6,6 +6,37 @@
 
 ---
 
+## 0. Situação depois das correções
+
+Corrigido em seguida (PR de segurança e acessibilidade), e conferido de novo no app compilado:
+
+| Item | Resultado |
+|------|-----------|
+| B1 Tipos de conteúdo | Corrigido (PR anterior); abre para admin e gestão |
+| S1 a S5 Controle de acesso | Corrigido: toda ação passa por uma guarda única (permissão, vínculo com o cliente, status, responsável ou setor). Repeti as mais de 80 chamadas do teste: todas as chamadas entre clientes e do cliente externo agora são negadas; os fluxos legítimos (assumir, produzir, aprovar, ajustar, publicar, comentar, atribuir) seguem funcionando |
+| S4 Conta desativada | Corrigido: perde a sessão na hora e cai no login, sem laço |
+| S6 Senha na URL | Corrigido: `method="post"` e botão só depois do carregamento |
+| S7 Links | Corrigido: só `http`/`https` ao salvar; links antigos inseguros não clicam |
+| S8 Senhas | Corrigido: mínimo de 8 no servidor (reset e primeiro acesso), limite de 3 pedidos de redefinição por 15 min, token guardado em hash |
+| S10 CSV | Corrigido: células que começam com `=`, `+`, `-`, `@` são neutralizadas |
+| S11 Perfil | Corrigido: trocar e-mail ou senha exige a senha atual |
+| B3 "Sem responsável" | Corrigido: não conta cartões ainda em briefing |
+| Acessibilidade | De 10 tipos de violação (2 críticas) para 0 nas 25 telas e 52 execuções do axe-core; sem rolagem horizontal no celular |
+| Avisos (toast) | Passaram para o rodapé central; não cobrem mais a barra de ferramentas |
+| Rotas | 280 verificações de rota por perfil: nenhuma quebrada, nenhum erro 5xx |
+
+**Continua em aberto (de propósito):**
+
+- **S9 Next 14:** o upgrade fica com você, na sua máquina.
+- **S12 CSP com `unsafe-inline`:** depende do upgrade do Next.
+- **S13 Agenda e Quadro Geral:** decisão de produto; hoje qualquer funcionário edita reuniões e vê títulos de todos os clientes no Quadro Geral.
+- **S14 Bloqueio de login:** a mensagem continua genérica.
+- **B2 Erro #310 em redirecionamentos:** é do próprio Next 14.2; sai com o upgrade.
+- **B4 Upload de capa:** exige `BLOB_READ_WRITE_TOKEN` na Vercel.
+- Sessões já abertas (JWT) não são derrubadas ao trocar a senha; só a desativação da conta corta o acesso.
+
+---
+
 ## 1. Como foi feito
 
 | Frente | O que rodei | Resultado |
