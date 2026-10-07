@@ -2,7 +2,7 @@ import type { NextAuthConfig } from "next-auth";
 import type { JWT } from "@auth/core/jwt";
 import type { UserType } from "@prisma/client";
 import type { SessionUser } from "@/types/auth";
-import { getDashboardPath } from "@/types/auth";
+import { agencyAccessRedirect, getDashboardPath } from "@/types/auth";
 import { isAuthRoute, isPortalRoute } from "@/lib/auth/redirects";
 
 /**
@@ -78,6 +78,11 @@ export const authConfig = {
         if (!user.permissions.includes("portal.view_as_client")) {
           return Response.redirect(new URL(home, nextUrl));
         }
+      }
+
+      if (!isServerAction && !isExternal) {
+        const gated = agencyAccessRedirect(pathname, user.userType, user.permissions ?? []);
+        if (gated) return Response.redirect(new URL(gated, nextUrl));
       }
 
       return true;

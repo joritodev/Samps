@@ -141,6 +141,7 @@ export function SectorCardSheet({
   const canProduce = !readOnly && canCompleteProduction(card.status);
   const canAdjust = !readOnly && canRequestAdjustment(card.status);
   const canPublish = !readOnly && canRegisterPublication(card.status);
+  const showPublishForm = canPublish && canReview;
   const showProductionActions =
     !readOnly &&
     !isDemandClosedForProduction(card.status) &&
@@ -191,7 +192,7 @@ export function SectorCardSheet({
 
           {isDemandClosedForProduction(card.status) &&
           !isSocialReview &&
-          !canPublish ? (
+          !showPublishForm ? (
             <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
               Demanda finalizada. Não dá para atribuir nem iniciar de novo.
             </p>
@@ -473,7 +474,7 @@ export function SectorCardSheet({
             </div>
           )}
 
-          {canPublish && canReview && (
+          {showPublishForm && (
             <div className="space-y-2 rounded-lg border border-emerald-200 bg-emerald-50/80 p-3">
               <Label>Link da publicação</Label>
               <Input

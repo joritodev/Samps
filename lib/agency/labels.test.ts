@@ -9,6 +9,7 @@ import {
   canRequestAdjustment,
   canReviewDemand,
   isDemandClosedForProduction,
+  productionCompletionBlock,
   DEMAND_ACTION_DENIED,
   demandOriginLabel,
   demandStatusLabel,
@@ -94,5 +95,25 @@ describe("assertCan*", () => {
     expect(() => assertCanRegisterPublication("PLANNING")).toThrow(
       DEMAND_ACTION_DENIED.publication
     );
+  });
+});
+
+describe("conclusão de produção sem carteira do cliente", () => {
+  it("deixa o executor concluir mesmo sem ver o cliente", () => {
+    expect(
+      productionCompletionBlock({ isExecutor: true, canSeeClient: false })
+    ).toBe("ok");
+  });
+
+  it("esconde a demanda de quem não executa e não vê o cliente", () => {
+    expect(
+      productionCompletionBlock({ isExecutor: false, canSeeClient: false })
+    ).toBe("hidden");
+  });
+
+  it("nega com clareza quem vê o cliente mas não é o executor", () => {
+    expect(
+      productionCompletionBlock({ isExecutor: false, canSeeClient: true })
+    ).toBe("not-executor");
   });
 });

@@ -5,6 +5,8 @@ import {
   type SearchHit,
   type SearchType,
 } from "@/lib/agency/search-types";
+import { buildDemandVisibilityWhere } from "@/lib/permissions/demand-visibility";
+import { listLedSectorIds } from "@/lib/permissions/led-sectors";
 import { hasPermission } from "@/lib/permissions/resolve";
 import type { SessionUser } from "@/types/auth";
 
@@ -18,6 +20,24 @@ function contains(term: string): Prisma.StringFilter {
 function scope(user: SessionUser) {
   if (hasPermission(user.permissions, "clients.view_all")) return undefined;
   return { in: user.clientIds };
+}
+
+/**
+ * Demandas na busca seguem a mesma visibilidade da lista: gestão vê tudo,
+ * líder vê o setor, colaborador vê as que executa ou pediu — mesmo sem
+ * vínculo de carteira com o cliente.
+ */
+export function demandSearchWhere(
+  user: SessionUser,
+  term: string,
+  ledSectorIds: string[]
+): Prisma.DemandWhereInput {
+  return {
+    AND: [
+      buildDemandVisibilityWhere(user, { ledSectorIds }),
+      { OR: [{ title: contains(term) }, { description: contains(term) }] },
+    ],
+  };
 }
 
 /** Tipos que o usuário pode pesquisar, dado o conjunto de permissões dele. */
@@ -46,6 +66,9 @@ export async function globalSearch(
   );
 
   const clientId = scope(user);
+  const ledSectorIds = hasPermission(user.permissions, "clients.view_all")
+    ? []
+    : await listLedSectorIds(user.id);
   const hits: SearchHit[] = [];
 
   const tasks: Promise<void>[] = [];
@@ -84,10 +107,7 @@ export async function globalSearch(
     tasks.push(
       db.demand
         .findMany({
-          where: {
-            clientId,
-            OR: [{ title: contains(term) }, { description: contains(term) }],
-          },
+          where: demandSearchWhere(user, term, ledSectorIds),
           select: {
             id: true,
             title: true,

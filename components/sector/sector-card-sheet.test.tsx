@@ -119,4 +119,32 @@ describe("SectorCardSheet checklist", () => {
     expect(screen.queryByRole("button", { name: "Assumir demanda" })).toBeNull();
     expect(screen.getByText(/Demanda finalizada/)).toBeTruthy();
   });
+
+  it("aprovada sem permissão de revisão não reabre produção", () => {
+    render(
+      <SectorCardSheet
+        open
+        onOpenChange={() => undefined}
+        currentUserId="designer-1"
+        canAssign
+        canReview={false}
+        sectorUsers={[{ id: "designer-1", name: "João Lima" }]}
+        card={{
+          id: "demand-2",
+          title: "Story aprovado",
+          status: "APPROVED",
+          clientId: "cli-1",
+          assignee: { id: "designer-1", name: "João Lima" },
+          assignments: [
+            { status: "IN_REVIEW", executorId: "designer-1", executor: { id: "designer-1", name: "João Lima" } },
+          ],
+        }}
+      />
+    );
+
+    expect(screen.queryByRole("button", { name: "Atribuir" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Iniciar produção" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Registrar publicação" })).toBeNull();
+    expect(screen.getByText(/Demanda finalizada/)).toBeTruthy();
+  });
 });

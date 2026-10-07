@@ -9,6 +9,7 @@ import {
 import {
   assertCanCompleteProduction,
   assertDemandOpenForProduction,
+  productionCompletionBlock,
 } from "@/lib/agency/labels";
 import { db } from "@/lib/db";
 import { canAccessClient } from "@/lib/permissions/resolve";
@@ -222,13 +223,15 @@ export async function completeWorkSession(
     },
   });
   if (!demand) throw new Error("Demanda não encontrada");
-  if (!canAccessClient(user.permissions, user.clientIds, demand.clientId)) {
-    throw new Error("Demanda não encontrada");
-  }
-  assertCanCompleteProduction(demand.status);
 
   const assignment = await getActiveAssignment(demandId);
-  if (!assignment || assignment.executorId !== user.id) {
+  const block = productionCompletionBlock({
+    isExecutor: assignment?.executorId === user.id,
+    canSeeClient: canAccessClient(user.permissions, user.clientIds, demand.clientId),
+  });
+  if (block === "hidden") throw new Error("Demanda não encontrada");
+  assertCanCompleteProduction(demand.status);
+  if (block === "not-executor" || !assignment) {
     throw new Error("Só o executor da demanda pode concluir a produção");
   }
 
