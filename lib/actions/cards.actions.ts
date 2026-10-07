@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/permissions/check";
+import { guardDemand } from "@/lib/permissions/demand-guard";
 import { canAccessClient, hasPermission } from "@/lib/permissions/resolve";
 import { revalidateOperationalViews } from "@/lib/revalidate-operational";
 import {
@@ -59,6 +60,8 @@ export async function demandBriefingAction(
   data: Parameters<typeof completeBriefingAndDemand>[2]
 ) {
   const user = await requireAuth();
+  const guard = await guardDemand(user, cardId, { permission: "demands.edit" });
+  if (!guard.ok) return { error: guard.error };
   try {
     await completeBriefingAndDemand(cardId, user, data);
     revalidateOperationalViews(clientId);
@@ -76,6 +79,13 @@ export async function completeProductionAction(
   materialUrl: string
 ) {
   const user = await requireAuth();
+  const guard = await guardDemand(user, cardId, {
+    permission: "demands.edit",
+    who: "assignee",
+    statuses: ["IN_PRODUCTION", "ADJUSTMENTS"],
+    statusError: "Só dá para concluir a produção de demandas em produção ou em ajuste.",
+  });
+  if (!guard.ok) return { error: guard.error };
   try {
     await completeProductionAndReview(cardId, user, materialUrl);
     revalidateOperationalViews(clientId);
@@ -93,6 +103,8 @@ export async function registerPublicationAction(
   data: { publishedUrl: string; publishedAt?: Date }
 ) {
   const user = await requireAuth();
+  const guard = await guardDemand(user, cardId, { permission: "demands.edit" });
+  if (!guard.ok) return { error: guard.error };
   try {
     await registerPublicationAndComplete(cardId, user, data);
     revalidateOperationalViews(clientId);
@@ -110,9 +122,12 @@ export async function moveCardAction(
   listId: string,
   sortOrder: number
 ) {
-  await requireAuth();
+  const user = await requireAuth();
+  const guard = await guardDemand(user, demandId, { permission: "demands.edit" });
+  if (!guard.ok) return { error: guard.error };
+  // A coluna precisa ser do quadro do cliente DONO da demanda, não do `clientId` enviado.
   const list = await db.boardList.findFirst({
-    where: { id: listId, board: { clientId } },
+    where: { id: listId, board: { clientId: guard.demand.clientId } },
     select: { id: true },
   });
   if (!list) {
@@ -140,6 +155,8 @@ export async function updateVisibilityAction(
   visibleFields?: string[]
 ) {
   const user = await requireAuth();
+  const guard = await guardDemand(user, cardId, { permission: "demands.edit" });
+  if (!guard.ok) return { error: guard.error };
   await updateCardVisibility(cardId, user, visible, visibleFields);
   revalidatePath(`/clientes/${clientId}/quadro`);
   return { success: true };
@@ -152,13 +169,15 @@ export async function addCommentAction(
   commentType?: "GENERAL" | "BRIEFING_CHANGE" | "ADJUSTMENT_REQUEST"
 ) {
   const user = await requireAuth();
-  await addCardComment(cardId, user.id, text, commentType);
+  const guard = await guardDemand(user, cardId, { permission: "demands.edit" });
+  if (!guard.ok) return { error: guard.error };
+  if (typeof text !== "string" || !text.trim()) return { error: "Escreva o comentário." };
+  await addCardComment(cardId, user.id, text.trim(), commentType);
 
   const demand = await db.demand.findUnique({
     where: { id: cardId },
     select: { title: true, clientId: true },
   });
-
   await notifyCommentMentions({
     text,
     authorUserId: user.id,

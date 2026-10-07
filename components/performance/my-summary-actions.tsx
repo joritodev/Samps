@@ -2,14 +2,10 @@
 
 import { Download, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { csvCell } from "@/lib/agency/csv";
 import { formatKpiValue } from "@/lib/agency/performance-format";
 import type { PerformanceSummary } from "@/lib/agency/performance-summary";
 import { dayKey } from "@/lib/agency/sp-calendar";
-
-function csvCell(value: string | number) {
-  const text = String(value);
-  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
-}
 
 /** Baixar PDF = impressão do navegador (com estilo próprio); CSV monta no cliente. */
 export function MySummaryActions({ summary }: { summary: PerformanceSummary }) {

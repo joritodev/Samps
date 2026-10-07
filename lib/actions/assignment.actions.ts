@@ -2,6 +2,7 @@
 
 import { AssignmentMethod } from "@prisma/client";
 import { requireAuth } from "@/lib/permissions/check";
+import { guardDemand } from "@/lib/permissions/demand-guard";
 import { hasPermission } from "@/lib/permissions/resolve";
 import { revalidateOperationalViews } from "@/lib/revalidate-operational";
 import { db } from "@/lib/db";
@@ -13,6 +14,13 @@ import {
 
 export async function claimDemandAction(demandId: string, clientId: string) {
   const user = await requireAuth();
+  const guard = await guardDemand(user, demandId, {
+    permission: "demands.edit",
+    who: "sector",
+    statuses: ["DEMANDED", "AVAILABLE"],
+    statusError: "Só dá para assumir demandas disponíveis para o setor.",
+  });
+  if (!guard.ok) return { error: guard.error };
   try {
     await claimDemand(demandId, user);
     revalidateOperationalViews(clientId);
@@ -29,6 +37,9 @@ export async function assignDemandAction(
   method: AssignmentMethod = AssignmentMethod.MANAGEMENT
 ) {
   const user = await requireAuth();
+
+  const guard = await guardDemand(user, demandId);
+  if (!guard.ok) return { error: guard.error };
 
   const demand = await db.demand.findUnique({
     where: { id: demandId },
@@ -60,6 +71,8 @@ export async function setScheduledExecutionAction(
   scheduledAt: string
 ) {
   const user = await requireAuth();
+  const guard = await guardDemand(user, demandId, { permission: "demands.edit", who: "assignee" });
+  if (!guard.ok) return { error: guard.error };
   try {
     await setScheduledExecution(demandId, new Date(scheduledAt), user);
     revalidateOperationalViews(clientId);

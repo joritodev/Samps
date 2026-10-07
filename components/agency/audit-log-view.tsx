@@ -138,7 +138,7 @@ export function AuditLogView({
             value={filters.action || ALL}
             onValueChange={(v) => setFilter("action", v)}
           >
-            <SelectTrigger className="w-56">
+            <SelectTrigger aria-label="Filtrar por ação" className="w-56">
               <SelectValue placeholder="Todas as ações" />
             </SelectTrigger>
             <SelectContent>
@@ -155,7 +155,7 @@ export function AuditLogView({
             value={filters.user || ALL}
             onValueChange={(v) => setFilter("user", v)}
           >
-            <SelectTrigger className="w-52">
+            <SelectTrigger aria-label="Filtrar por autor" className="w-52">
               <SelectValue placeholder="Todos os autores" />
             </SelectTrigger>
             <SelectContent>
@@ -172,7 +172,7 @@ export function AuditLogView({
             value={filters.period}
             onValueChange={(v) => setFilter("period", v)}
           >
-            <SelectTrigger className="w-48">
+            <SelectTrigger aria-label="Filtrar por período" className="w-48">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

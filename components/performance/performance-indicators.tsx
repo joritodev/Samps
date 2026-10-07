@@ -1,5 +1,6 @@
 "use client";
 
+import { csvFromRows } from "@/lib/agency/csv";
 import { useState } from "react";
 import { Download } from "lucide-react";
 import { PerformanceFilters, type PerformanceFiltersProps } from "@/components/performance/performance-filters";
@@ -33,15 +34,6 @@ function percentage(value: number | null) {
 }
 
 type ReportTab = "pessoas" | "tipos";
-
-function csvCell(value: string | number) {
-  const text = String(value);
-  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
-}
-
-function csvFromRows(rows: (string | number)[][]) {
-  return rows.map((row) => row.map(csvCell).join(",")).join("\r\n");
-}
 
 function SmallSampleBadge() {
   return <Badge variant="warning">Amostra pequena</Badge>;

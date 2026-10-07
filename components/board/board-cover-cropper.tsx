@@ -1,5 +1,6 @@
 "use client";
 
+import { readableInk } from "@/lib/agency/contrast";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -187,8 +188,8 @@ export function BoardCoverCropper({
             <div className="flex items-center gap-2.5 border-t border-border bg-card px-3 py-2">
               <span
                 aria-hidden
-                className="grid size-8 place-items-center rounded-lg text-[11px] font-bold text-white"
-                style={{ backgroundColor: logoColor ?? "hsl(var(--primary))" }}
+                className="grid size-8 place-items-center rounded-lg text-[11px] font-bold"
+                style={{ backgroundColor: logoColor ?? "hsl(var(--primary))", color: readableInk(logoColor) }}
               >
                 {clientName.slice(0, 2).toUpperCase()}
               </span>

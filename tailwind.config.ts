@@ -28,6 +28,10 @@ const config: Config = {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
         },
+        "primary-ink": "var(--primary-ink)",
+        "success-ink": "var(--success-ink)",
+        "warning-ink": "var(--warning-ink)",
+        "brand-ink": "var(--brand-ink)",
         brand: {
           DEFAULT: "hsl(var(--brand))",
           foreground: "hsl(var(--brand-foreground))",

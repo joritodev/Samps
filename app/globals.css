@@ -52,6 +52,11 @@
     --warning: 32 95% 34%;
     --warning-foreground: 32 76% 97%;
     --info: 189 85% 31%;
+    /* Texto pequeno sobre fundo tingido: versões mais escuras para chegar a 4,5:1 (WCAG AA). No escuro o texto claro já passa. */
+    --primary-ink: color-mix(in srgb, hsl(var(--primary)) 78%, black);
+    --success-ink: color-mix(in srgb, hsl(var(--success)) 80%, black);
+    --warning-ink: color-mix(in srgb, hsl(var(--warning)) 82%, black);
+    --brand-ink: color-mix(in srgb, hsl(var(--brand)) 58%, black);
 
     /* Elevação em camadas (ref.: Vercel Geist / Amie) — sombras curtas e
        empilhadas em vez de uma única sombra difusa. */
@@ -113,6 +118,10 @@
     --warning: 32 90% 55%;
     --warning-foreground: 32 76% 97%;
     --info: 188 70% 58%;
+    --primary-ink: hsl(var(--primary));
+    --success-ink: hsl(var(--success));
+    --warning-ink: hsl(var(--warning));
+    --brand-ink: hsl(var(--brand));
 
     --shadow-color: 222 50% 2%;
     --shadow-xs: 0 1px 2px 0 hsl(var(--shadow-color) / 0.4);

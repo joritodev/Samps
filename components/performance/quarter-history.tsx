@@ -7,7 +7,7 @@ export function QuarterHistory({ rows }: { rows: QuarterRow[] }) {
   return (
     <section className="rounded-xl border border-border/80 bg-card p-4 shadow-xs">
       <h2 className="text-sm font-semibold text-foreground">Trimestre a trimestre</h2>
-      <div className="mt-3 overflow-x-auto">
+      <div className="mt-3 overflow-x-auto" tabIndex={0} role="region" aria-label="Histórico por trimestre">
         <table className="w-full min-w-[480px] text-sm">
           <thead>
             <tr className="text-left text-xs text-muted-foreground">

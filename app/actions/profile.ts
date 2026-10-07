@@ -13,6 +13,7 @@ const updateProfileSchema = z.object({
   email: z.string().trim().email("E-mail inválido."),
   avatar: z.string().trim(),
   password: z.string(),
+  currentPassword: z.string(),
 }).superRefine((data, ctx) => {
   if (data.avatar && !/^https?:\/\//i.test(data.avatar)) {
     ctx.addIssue({
@@ -46,14 +47,26 @@ export async function updateCurrentUser(
     email: formData.get("email"),
     avatar: formData.get("avatar") ?? "",
     password: formData.get("password") ?? "",
+    currentPassword: formData.get("currentPassword") ?? "",
   });
 
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
   }
 
-  const { name, email, avatar, password } = parsed.data;
+  const { name, email, avatar, password, currentPassword } = parsed.data;
   const normalizedEmail = email.toLowerCase();
+
+  // Trocar e-mail ou senha exige a senha atual: uma sessão esquecida aberta não basta para tomar a conta.
+  const account = await db.user.findUniqueOrThrow({
+    where: { id: current.id },
+    select: { email: true, passwordHash: true },
+  });
+  if (normalizedEmail !== account.email || password) {
+    if (!currentPassword || !(await bcrypt.compare(currentPassword, account.passwordHash))) {
+      return { error: "Informe a senha atual para trocar o e-mail ou a senha." };
+    }
+  }
 
   const emailTaken = await db.user.findFirst({
     where: {

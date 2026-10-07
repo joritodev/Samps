@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { AuditAction, DemandStatus } from "@prisma/client";
 import { db } from "@/lib/db";
+import { isHttpUrl, INVALID_URL_MESSAGE } from "@/lib/agency/url";
 import { requireAuth, requirePermission } from "@/lib/permissions/check";
+import { guardDemand } from "@/lib/permissions/demand-guard";
 import { logAudit } from "@/lib/services/audit.service";
 
 /**
@@ -13,6 +15,14 @@ import { logAudit } from "@/lib/services/audit.service";
  */
 export async function assumirDemanda(demandId: string) {
   const actor = await requireAuth();
+
+  const guard = await guardDemand(actor, demandId, {
+    permission: "demands.edit",
+    who: "sector",
+    statuses: [DemandStatus.DEMANDED, DemandStatus.AVAILABLE],
+    statusError: "Só dá para assumir demandas disponíveis para o setor.",
+  });
+  if (!guard.ok) return { error: guard.error };
 
   try {
     const previous = await db.demand.findUniqueOrThrow({
@@ -61,6 +71,15 @@ export async function concluirProducao(demandId: string, materialUrl: string) {
   if (!url) {
     return { error: "O link do material é obrigatório" };
   }
+  if (!isHttpUrl(url)) return { error: INVALID_URL_MESSAGE };
+
+  const guard = await guardDemand(actor, demandId, {
+    permission: "demands.edit",
+    who: "assignee",
+    statuses: [DemandStatus.IN_PRODUCTION, DemandStatus.ADJUSTMENTS],
+    statusError: "Só dá para concluir a produção de demandas em produção ou em ajuste.",
+  });
+  if (!guard.ok) return { error: guard.error };
 
   try {
     const previous = await db.demand.findUniqueOrThrow({

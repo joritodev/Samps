@@ -88,7 +88,7 @@ function ObjectiveCard({
     <article className={cn("rounded-xl border border-border/80 bg-card p-4 shadow-xs", closed && "opacity-80")}>
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <h3 className="text-base font-semibold text-foreground">{objective.title}</h3>
+          <h2 className="text-base font-semibold text-foreground">{objective.title}</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {objectiveSubject(objective)} · {shortDay(dayKey(new Date(objective.startsOn)))} a{" "}
             {shortDay(dayKey(new Date(objective.endsOn)))} · dono: {objective.ownerName}

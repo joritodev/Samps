@@ -1,5 +1,6 @@
 "use client";
 
+import { safeHref } from "@/lib/agency/url";
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import {
@@ -191,7 +192,7 @@ export function ClientDetailView({
                   className={cn(
                     "font-normal",
                     client.active
-                      ? "border-success/35 bg-success/10 text-success"
+                      ? "border-success/35 bg-success/10 text-success-ink"
                       : "border-warning/35 bg-warning/10 text-warning"
                   )}
                 >
@@ -436,7 +437,7 @@ export function ClientDetailView({
                         {client.contractDocUrl ? (
                           <Button asChild variant="outline" size="sm">
                             <a
-                              href={client.contractDocUrl}
+                              href={safeHref(client.contractDocUrl)}
                               target="_blank"
                               rel="noopener noreferrer"
                             >
@@ -448,7 +449,7 @@ export function ClientDetailView({
                         {client.studyDocUrl ? (
                           <Button asChild variant="outline" size="sm">
                             <a
-                              href={client.studyDocUrl}
+                              href={safeHref(client.studyDocUrl)}
                               target="_blank"
                               rel="noopener noreferrer"
                             >

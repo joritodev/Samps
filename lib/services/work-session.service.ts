@@ -11,6 +11,7 @@ import {
   assertDemandOpenForProduction,
 } from "@/lib/agency/labels";
 import { db } from "@/lib/db";
+import { INVALID_URL_MESSAGE, isHttpUrl } from "@/lib/agency/url";
 import { canAccessClient } from "@/lib/permissions/resolve";
 import { logAudit } from "@/lib/services/audit.service";
 import { getActiveAssignment } from "@/lib/services/assignment.service";
@@ -211,6 +212,7 @@ export async function completeWorkSession(
   materialUrl: string
 ) {
   if (!materialUrl?.trim()) throw new Error("Link do material é obrigatório");
+  if (!isHttpUrl(materialUrl)) throw new Error(INVALID_URL_MESSAGE);
 
   const demand = await db.demand.findUnique({
     where: { id: demandId },

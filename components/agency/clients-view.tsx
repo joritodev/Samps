@@ -418,7 +418,7 @@ export function ClientsView({
                         className={cn(
                           "font-normal",
                           client.active
-                            ? "border-success/35 bg-success/10 text-success"
+                            ? "border-success/35 bg-success/10 text-success-ink"
                             : "border-warning/35 bg-warning/10 text-warning"
                         )}
                       >
