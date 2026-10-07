@@ -19,6 +19,39 @@ Três ideias para repetir ao longo da apresentação:
 
 ---
 
+## 0.1 Estado atual do projeto (07/10, depois dos PRs #86, #88 e #89)
+
+| Área | Situação |
+|------|----------|
+| Operação (clientes, quadros, demandas, setores, agenda, projetos, captações) | Pronta e na produção |
+| Fluxo da demanda | Briefing → Produção → Revisão → Aprovação → Publicação, com dono e prazo em cada etapa. O quadro geral segue o mesmo ciclo dos quadros de setor |
+| Performance (indicadores, metas "no ritmo", OKRs, resumo do dia) | Pronta |
+| Portal do cliente | Pronto: só vê o que foi aprovado ou publicado |
+| Segurança | Revisada em auditoria completa: permissões conferidas em cada ação, conta desativada perde o acesso na hora, links só http/https, senha mínima de 8, perfil pede a senha atual |
+| Acessibilidade e celular | 0 violações no axe-core em 25 telas, desktop e celular |
+| Testes | 761 automáticos, verificação obrigatória no GitHub a cada alteração |
+| **Fora desta entrega (decisão de vocês)** | Pontuação, capacidade de 8h por pessoa, anexos de arquivo (só link) |
+| **Depende do repasse** | E-mails de relatório (Resend), Google Agenda, proteções da Vercel e do GitHub na conta nova |
+| **Pendência técnica minha** | Atualizar o Next (14 para 16) antes do uso com clientes reais |
+
+## 0.2 Benefícios para a Samps (use no início e no fim)
+
+| Para quem | O que muda | Como provar na demo |
+|-----------|-----------|---------------------|
+| **Gestão** | Enxerga o dia em segundos, sem perguntar no grupo. Sabe quem está sobrecarregado | Bloco 1 (Painel, carga por pessoa) |
+| **Gestão** | Decide com número: entregas no prazo, retrabalho, tempo por tipo de conteúdo | Bloco 5 (Indicadores) |
+| **Gestão** | Metas e OKRs do trimestre acompanhados sem planilha | Bloco 5 (Metas, OKRs) |
+| **Líderes de setor** | Fila organizada, nada sem responsável, aprovação separada de quem executa | Blocos 3 e 4 |
+| **Executores** | Sabem o que fazer agora; o tempo trabalhado é registrado sozinho | Bloco 3 (Meu painel) |
+| **Todos** | Menos retrabalho: briefing trava ao concluir, ajuste volta com comentário | Bloco 3 |
+| **Clientes** | Acompanham calendário, entregas e materiais sem cobrar a agência | Bloco 7 |
+| **A agência** | Histórico de quem fez o quê; o conhecimento sai da cabeça das pessoas e do WhatsApp | Bloco 8 (Histórico) |
+| **Negócio** | Custo baixo de operação (planos iniciais de hospedagem e banco) e base pronta para crescer | Perguntas |
+
+Três números que vale citar (confira o Painel na hora): demandas em aberto, atrasadas e concluídas hoje.
+
+---
+
 ## 1. Antes de apresentar (faça na véspera e de manhã)
 
 ### 1.1 Escolha onde apresentar
@@ -68,7 +101,8 @@ Abra **duas janelas**: uma normal (admin) e uma anônima (para trocar de papel s
 - [ ] Abrir o app, entrar como admin e ver o **Painel** carregar.
 - [ ] Abrir `/performance` e conferir que **não aparece** "Não foi possível carregar" (o banco de produção precisa das migrações).
 - [ ] Ter um cliente com quadro e pelo menos 1 cartão.
-- [ ] Conferir que **Configurações → Tipos de conteúdo** abre sem erro (a correção está na branch e precisa ser mesclada; veja `2026-10-07-auditoria-completa.md`).
+- [ ] Conferir que **Configurações → Tipos de conteúdo** abre sem erro (corrigido no PR #86; se ainda der erro, não abra essa tela).
+- [ ] Passar rapidamente por Painel da Gestão, Performance, um quadro de cliente, Meu painel e Portal, para garantir que o deploy mais recente está saudável.
 - [ ] Zoom do navegador em 100–110%, janela maximizada, sem DevTools, notificações do computador desligadas.
 - [ ] Capturas do plano B abertas em uma pasta, caso o app falhe.
 - [ ] Este roteiro aberto ao lado.
@@ -132,7 +166,7 @@ Este é o coração da apresentação. Mostre **uma demanda do começo ao fim**,
 | 3.4 | Designer | Meu Painel | Pausar (escolher um motivo) e retomar; depois **entregar para revisão** com o link do material | "Pausa com motivo. A entrega exige o link do material." |
 | 3.5 | Social (`social@`) | **Meu Painel** | Abrir a demanda em revisão e **Solicitar ajuste** (ou **Aprovar**) | "Quem revisa nunca é o executor. O ajuste volta para o designer com o comentário." |
 | 3.6 | Social | Mesma demanda | Depois de aprovada, registrar a publicação com o link | "Só publica depois de aprovada. Cada passo fica no histórico." |
-| 3.7 | Gestão | **Demandas** | Mostrar o quadro geral com a demanda na coluna certa | "A gestão não precisa perguntar onde está: o quadro mostra." |
+| 3.7 | Gestão | **Demandas** | Mostrar o quadro geral com a demanda na coluna certa (aprovada fica em *Aguardando publicação*, publicada em *Concluídas*) | "A gestão não precisa perguntar onde está: o quadro mostra, e a demanda concluída não reabre sozinha." |
 
 *Capturas de apoio:* `05-demandas.png`, `17-meu-painel-designer.png`
 
@@ -223,6 +257,19 @@ O ponto alto. **Use o ambiente com a simulação ou as capturas** (veja 1.1). V�
 
 ---
 
+### Bloco 9 — Segurança e confiança (2 min, opcional)
+
+| # | O que falar |
+|---|-------------|
+| 9.1 | "Cada ação confere quem você é, se você tem permissão e se o cliente é seu. Quem não atende um cliente nem sabe que a demanda existe." |
+| 9.2 | "Se desativamos uma conta, ela perde o acesso na hora, não depois de dias." |
+| 9.3 | "Trocar e-mail ou senha pede a senha atual. Links só aceitam http/https." |
+| 9.4 | "Fizemos uma auditoria completa: mais de 80 tentativas de acesso indevido, todas negadas, e as telas passaram em acessibilidade." |
+
+Não detalhe vulnerabilidades corrigidas; foque no resultado.
+
+---
+
 ### Fechamento (2 min)
 
 > "Resumindo: a operação roda do briefing à publicação com dono e prazo em cada etapa; a gestão vê o dia em segundos; e, a cada trimestre, indicadores, metas e OKRs mostram se estamos melhorando. O que falta agora é do lado de vocês: a conta de e-mail e hospedagem para eu fazer o repasse, a validação do envio de relatórios e a agenda do Google."
@@ -247,6 +294,7 @@ O ponto alto. **Use o ambiente com a simulação ou as capturas** (veja 1.1). V�
 | "Integra com o Google Agenda?" | "Vai ser feito quando a conta de vocês estiver pronta, depois de definirmos o que sincroniza." |
 | "O que o cliente vê?" | "Só o que foi aprovado ou publicado, só da empresa dele." |
 | "É seguro? Quem vê o quê?" | "Cada função tem permissões, ajustáveis pela gestão. Há registro de histórico e proteção contra tentativas de login em excesso." |
+| "E se um funcionário sair?" | "Desativa-se a conta e o acesso cai na hora. O histórico do que ele fez continua." |
 | "Esses dados são reais?" | "São de demonstração. Antes do uso real, apagamos as contas e dados de teste." |
 | "Funciona no celular?" | "Sim, as telas se adaptam. Foi revisado em tela de celular." |
 | "Quanto custa manter?" | "Hoje roda em planos gratuitos/iniciais de hospedagem e banco. O custo cresce com o uso. Posso detalhar depois." |
@@ -262,7 +310,7 @@ O ponto alto. **Use o ambiente com a simulação ou as capturas** (veja 1.1). V�
 | Performance mostra "Não foi possível carregar" | Atualizar uma vez. Se persistir, as migrações podem não ter sido aplicadas: use as capturas e diga "a base de produção está sendo preparada" |
 | Performance vazia | É o esperado com poucos dados. Use o ambiente com simulação ou as capturas (10 a 14) |
 | Banco lento (Neon acordando) | Atualizar a página uma vez e continuar falando; a primeira carga demora |
-| **Configurações → Tipos de conteúdo** mostra erro | Há um defeito já corrigido na branch, que só vale depois do merge. Até lá, **não abra essa tela**; mostre Funções, Prioridades ou Setores no lugar |
+| **Configurações → Tipos de conteúdo** mostra erro | Corrigido no PR #86. Se aparecer, atualize uma vez; se persistir, mostre Funções, Prioridades ou Setores |
 | Cronômetro ou ação não responde | Não insistir. Mostrar a tela e explicar o passo, seguir para o próximo |
 | Menção não notifica | Mostrar o campo e explicar; não insistir |
 | Resumo do dia não aparece | Normal se já foi fechado hoje ou se a conta é de líder; mostrar a página **Meu resumo** |
@@ -282,7 +330,8 @@ O ponto alto. **Use o ambiente com a simulação ou as capturas** (veja 1.1). V�
 | 34–37 | Resumo do dia e relatórios |
 | 37–40 | Portal do cliente |
 | 40–42 | Equipe e configurações |
-| 42–44 | Fechamento e próximos passos |
+| 42–44 | Segurança e confiança (opcional) |
+| 44–46 | Fechamento e próximos passos |
 
 Se precisar encurtar para 25 minutos: faça Blocos 1, 3 (resumido), 5 e Fechamento, e só **cite** os demais.
 
