@@ -30,12 +30,16 @@ describe("demandFilter", () => {
     expect(producao?.statuses).toContain("ADJUSTMENTS");
   });
 
-  it("concluídas hoje: a partir da meia-noite local", () => {
+  it("concluídas hoje: a partir da meia-noite local, da aprovação em diante", () => {
     const where = demandFilter("concluidas-hoje", now)?.where as {
       updatedAt: { gte: Date };
+      status: { in: string[] };
     };
     expect(where.updatedAt.gte.getHours()).toBe(0);
     expect(where.updatedAt.gte.getDate()).toBe(29);
+    expect(where.status.in).toEqual(
+      expect.arrayContaining(["APPROVED", "SCHEDULED", "PUBLISHED", "DONE"])
+    );
   });
 
   it("cada etapa do fluxo vira filtro por status", () => {

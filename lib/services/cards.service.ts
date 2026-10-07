@@ -1,4 +1,10 @@
-import { AuditAction, DemandOrigin, DemandStatus, NotificationType } from "@prisma/client";
+import {
+  AssignmentStatus,
+  AuditAction,
+  DemandOrigin,
+  DemandStatus,
+  NotificationType,
+} from "@prisma/client";
 import { db } from "@/lib/db";
 import { withChecklistComments } from "@/lib/services/checklist.service";
 import {
@@ -281,8 +287,17 @@ export async function registerPublicationAndComplete(
       status: DemandStatus.PUBLISHED,
       internalStatus: "Publicado",
       externalStatus: "Publicado",
+      boardColumn: "done",
       visibleToClient: true,
     },
+  });
+
+  await db.demandAssignment.updateMany({
+    where: {
+      demandId: cardId,
+      status: { not: AssignmentStatus.DONE },
+    },
+    data: { status: AssignmentStatus.DONE },
   });
 
   await logAudit({

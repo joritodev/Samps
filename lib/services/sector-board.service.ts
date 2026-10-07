@@ -7,6 +7,10 @@ import { db } from "@/lib/db";
 import { getTop5ForSector } from "@/lib/services/priority.service";
 import { formatElapsed } from "@/lib/services/work-session.service";
 import { syncDemandDelays } from "@/lib/services/delay.service";
+import {
+  countsAsCompletedToday,
+  hasLeftSectorQueue,
+} from "@/lib/agency/demand-cycle";
 
 export type SectorSlug = "design" | "video" | "trafego";
 
@@ -229,12 +233,19 @@ export async function getSectorBoardData(
   for (const d of enriched) {
     const assignment = d.assignments[0];
 
-    const doneTodayEligible =
-      !!d.productionCompletedAt &&
-      d.productionCompletedAt >= today &&
-      (d.status === DemandStatus.IN_REVIEW || d.status === DemandStatus.DONE);
+    const doneTodayEligible = countsAsCompletedToday(
+      d.status,
+      d.productionCompletedAt,
+      today
+    );
+    const leftQueue = hasLeftSectorQueue(d.status);
 
     if (isCollaborator && userId) {
+      if (leftQueue) {
+        if (isMine(d, userId) && doneTodayEligible) grouped.done_today.push(d);
+        continue;
+      }
+
       if (isAvailablePool(d)) {
         grouped.available.push(d);
         continue;
@@ -249,6 +260,11 @@ export async function getSectorBoardData(
       }
 
       pushToOperationalColumn(grouped, d, assignment);
+      continue;
+    }
+
+    if (leftQueue) {
+      if (doneTodayEligible) grouped.done_today.push(d);
       continue;
     }
 

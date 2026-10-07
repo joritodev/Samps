@@ -92,4 +92,31 @@ describe("SectorCardSheet checklist", () => {
       screen.getByRole("button", { name: "Concluir demanda" })
     ).toBeTruthy();
   });
+
+  it("publicada não oferece atribuir nem iniciar produção", () => {
+    render(
+      <SectorCardSheet
+        open
+        onOpenChange={() => undefined}
+        currentUserId="designer-1"
+        canAssign
+        sectorUsers={[{ id: "designer-1", name: "João Lima" }]}
+        card={{
+          id: "demand-1",
+          title: "Feed de outubro",
+          status: "PUBLISHED",
+          clientId: "cli-1",
+          assignee: { id: "designer-1", name: "João Lima" },
+          assignments: [
+            { status: "IN_REVIEW", executorId: "designer-1", executor: { id: "designer-1", name: "João Lima" } },
+          ],
+        }}
+      />
+    );
+
+    expect(screen.queryByRole("button", { name: "Atribuir" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Iniciar produção" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Assumir demanda" })).toBeNull();
+    expect(screen.getByText(/Demanda finalizada/)).toBeTruthy();
+  });
 });
