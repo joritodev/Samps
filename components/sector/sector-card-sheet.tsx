@@ -33,6 +33,7 @@ import {
   canCompleteProduction,
   canRegisterPublication,
   canRequestAdjustment,
+  isDemandClosedForProduction,
 } from "@/lib/agency/labels";
 import { toast } from "sonner";
 
@@ -137,15 +138,12 @@ export function SectorCardSheet({
       isExecutor ||
       (isAvailable && card.assignee?.id === currentUserId));
   const isSocialReview = card.status === "IN_REVIEW";
-  const isAwaitingPublication =
-    card.status === "APPROVED" || card.status === "SCHEDULED";
   const canProduce = !readOnly && canCompleteProduction(card.status);
   const canAdjust = !readOnly && canRequestAdjustment(card.status);
   const canPublish = !readOnly && canRegisterPublication(card.status);
   const showProductionActions =
     !readOnly &&
-    (!isSocialReview || canProduce) &&
-    !isAwaitingPublication &&
+    !isDemandClosedForProduction(card.status) &&
     (isAvailable || isExecutor || canAssign);
 
   function run(
@@ -191,6 +189,13 @@ export function SectorCardSheet({
             {assignment?.executor?.name ?? card.assignee?.name ?? "—"}
           </p>
 
+          {isDemandClosedForProduction(card.status) &&
+          !isSocialReview &&
+          !canPublish ? (
+            <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+              Demanda finalizada. Não dá para atribuir nem iniciar de novo.
+            </p>
+          ) : null}
           {readOnly ? (
             <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
               Somente leitura. As ações de produção ficam no Meu painel do seu

@@ -3,7 +3,9 @@ import { describe, expect, it } from "vitest";
 import {
   assignmentStatusForDemandStatus,
   boardColumnForDemandStatus,
+  countsAsCompletedToday,
   demandCycleViolations,
+  hasLeftSectorQueue,
   internalStatusForDemandStatus,
 } from "./demand-cycle";
 
@@ -25,6 +27,33 @@ describe("boardColumnForDemandStatus", () => {
     );
     expect(boardColumnForDemandStatus(DemandStatus.APPROVED)).toBe("review");
     expect(boardColumnForDemandStatus(DemandStatus.PUBLISHED)).toBe("done");
+  });
+});
+
+describe("concluídas hoje depois da revisão", () => {
+  const today = new Date("2026-10-07T00:00:00");
+  const producedToday = new Date("2026-10-07T14:00:00");
+  const producedYesterday = new Date("2026-10-06T14:00:00");
+
+  it("aprovada hoje continua em concluídas hoje", () => {
+    expect(
+      countsAsCompletedToday(DemandStatus.APPROVED, producedToday, today)
+    ).toBe(true);
+    expect(hasLeftSectorQueue(DemandStatus.APPROVED)).toBe(true);
+  });
+
+  it("publicada hoje continua em concluídas hoje e sai da fila", () => {
+    expect(
+      countsAsCompletedToday(DemandStatus.PUBLISHED, producedToday, today)
+    ).toBe(true);
+    expect(hasLeftSectorQueue(DemandStatus.PUBLISHED)).toBe(true);
+    expect(hasLeftSectorQueue(DemandStatus.IN_REVIEW)).toBe(false);
+  });
+
+  it("produção de ontem não entra em concluídas hoje", () => {
+    expect(
+      countsAsCompletedToday(DemandStatus.APPROVED, producedYesterday, today)
+    ).toBe(false);
   });
 });
 

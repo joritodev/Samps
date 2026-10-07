@@ -116,6 +116,19 @@ export function canRequestAdjustment(status: string) {
   return status === DemandStatus.IN_REVIEW;
 }
 
+/** Não volta para atribuir nem para iniciar produção. */
+export function isDemandClosedForProduction(status: string) {
+  return (
+    status === DemandStatus.IN_REVIEW ||
+    status === DemandStatus.APPROVED ||
+    status === DemandStatus.SCHEDULED ||
+    status === DemandStatus.PUBLISHED ||
+    status === DemandStatus.DONE ||
+    status === DemandStatus.DELIVERED ||
+    status === DemandStatus.CANCELLED
+  );
+}
+
 export function canRegisterPublication(status: string) {
   return (
     status === DemandStatus.APPROVED ||
@@ -139,7 +152,15 @@ export const DEMAND_ACTION_DENIED = {
   publication:
     "Só é possível registrar publicação em demandas aprovadas ou agendadas.",
   review: "Sem permissão para revisar esta demanda.",
+  closed:
+    "Demanda aprovada, publicada ou encerrada não volta para produção.",
 } as const;
+
+export function assertDemandOpenForProduction(status: string) {
+  if (isDemandClosedForProduction(status)) {
+    throw new Error(DEMAND_ACTION_DENIED.closed);
+  }
+}
 
 export function assertCanCompleteProduction(status: string) {
   if (!canCompleteProduction(status)) {

@@ -6,7 +6,10 @@ import {
   WorkSessionStage,
   WorkSessionStatus,
 } from "@prisma/client";
-import { assertCanCompleteProduction } from "@/lib/agency/labels";
+import {
+  assertCanCompleteProduction,
+  assertDemandOpenForProduction,
+} from "@/lib/agency/labels";
 import { db } from "@/lib/db";
 import { canAccessClient } from "@/lib/permissions/resolve";
 import { logAudit } from "@/lib/services/audit.service";
@@ -51,6 +54,13 @@ export async function startWorkSession(
   user: SessionUser,
   stage: WorkSessionStage = WorkSessionStage.PRODUCTION
 ) {
+  const demand = await db.demand.findUnique({
+    where: { id: demandId },
+    select: { status: true },
+  });
+  if (!demand) throw new Error("Demanda não encontrada");
+  assertDemandOpenForProduction(demand.status);
+
   const existing = await getActiveSessionForUser(user.id);
   if (existing) {
     throw new Error(

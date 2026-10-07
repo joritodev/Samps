@@ -4,6 +4,7 @@ import { getTop5ForSector } from "@/lib/services/priority.service";
 import { formatElapsed } from "@/lib/services/work-session.service";
 import type { SessionUser } from "@/types/auth";
 import { hasPermission } from "@/lib/permissions/resolve";
+import { countsAsCompletedToday } from "@/lib/agency/demand-cycle";
 
 const demandInclude = {
   client: { select: { id: true, name: true, brandColor: true, socialMediaId: true } },
@@ -116,13 +117,7 @@ export async function getSocialBoardData(
   };
 
   for (const d of enriched) {
-    if (
-      d.productionCompletedAt &&
-      d.productionCompletedAt >= today &&
-      (d.status === DemandStatus.DONE ||
-        d.status === DemandStatus.PUBLISHED ||
-        d.status === DemandStatus.IN_REVIEW)
-    ) {
+    if (countsAsCompletedToday(d.status, d.productionCompletedAt, today)) {
       grouped.done_today.push(d);
     }
 
