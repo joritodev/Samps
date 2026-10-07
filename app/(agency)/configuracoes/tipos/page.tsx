@@ -6,7 +6,6 @@ import { listContentTypes } from "@/lib/services/settings.service";
 export default async function TiposSettingsPage() {
   await requireSettingsSection("/configuracoes/tipos");
   const rows = await listContentTypes(true);
-  const byId = new Map(rows.map((row) => [row.id, row]));
 
   return (
     <CatalogSettings
@@ -20,11 +19,11 @@ export default async function TiposSettingsPage() {
         sortOrder: r.sortOrder,
         isActive: r.isActive,
       }))}
-      rowExtra={(row) => {
-        const contentType = byId.get(row.id);
-        if (!contentType) return null;
-        return (
+      rowExtras={Object.fromEntries(
+        rows.map((contentType) => [
+          contentType.id,
           <ContentTypeRequirementsForm
+            key={contentType.id}
             contentType={{
               id: contentType.id,
               name: contentType.name,
@@ -34,9 +33,9 @@ export default async function TiposSettingsPage() {
               requiresReference: contentType.requiresReference,
               requiresRawDelivery: contentType.requiresRawDelivery,
             }}
-          />
-        );
-      }}
+          />,
+        ])
+      )}
     />
   );
 }
