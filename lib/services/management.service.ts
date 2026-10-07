@@ -10,6 +10,7 @@ import {
   FLOW_STAGES,
   OPEN_EXCLUDED,
   READY_STATUSES,
+  UNASSIGNED_EXCLUDED,
 } from "@/lib/agency/demand-filters";
 import { attentionLabel, rankByAttention } from "@/lib/agency/attention";
 
@@ -40,7 +41,9 @@ export async function getManagementOverview(user: SessionUser) {
           updatedAt: { gte: today },
         },
       }),
-      db.demand.count({ where: { ...openWhere, assigneeId: null } }),
+      db.demand.count({
+        where: { ...where, status: { notIn: UNASSIGNED_EXCLUDED }, assigneeId: null },
+      }),
       db.demand.groupBy({ by: ["status"], where: openWhere, _count: { _all: true } }),
       db.demand.groupBy({
         by: ["sectorId"],

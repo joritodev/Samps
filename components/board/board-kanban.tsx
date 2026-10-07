@@ -76,7 +76,7 @@ function SortableDemandCard({
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <div ref={setNodeRef} style={style} {...attributes} role="group" {...listeners}>
       <DemandCard
         demand={demand}
         showOrigin

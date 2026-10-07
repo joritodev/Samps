@@ -1,5 +1,6 @@
 "use client";
 
+import { safeHref } from "@/lib/agency/url";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { MorphWindow } from "@/components/ui/morph-window";
 import { Button } from "@/components/ui/button";
@@ -403,7 +404,7 @@ export function SectorCardSheet({
               </p>
               {card.materialUrl && (
                 <a
-                  href={card.materialUrl}
+                  href={safeHref(card.materialUrl)}
                   target="_blank"
                   rel="noreferrer"
                   className="block truncate text-xs text-primary underline"
@@ -457,7 +458,7 @@ export function SectorCardSheet({
               ajuste.
               {card.materialUrl ? (
                 <a
-                  href={card.materialUrl}
+                  href={safeHref(card.materialUrl)}
                   target="_blank"
                   rel="noreferrer"
                   className="mt-2 block truncate text-primary underline"

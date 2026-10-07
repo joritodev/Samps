@@ -1,6 +1,7 @@
 "use server";
 
 import { requireAuth } from "@/lib/permissions/check";
+import { guardDemand } from "@/lib/permissions/demand-guard";
 import { revalidateOperationalViews } from "@/lib/revalidate-operational";
 import { registerPublicationAndComplete } from "@/lib/services/cards.service";
 
@@ -11,6 +12,8 @@ export async function publicarDemanda(demandId: string, postUrl: string) {
   if (!url) {
     return { error: "O link da publicação é obrigatório" };
   }
+  const guard = await guardDemand(user, demandId, { permission: "demands.edit" });
+  if (!guard.ok) return { error: guard.error };
 
   try {
     const demand = await registerPublicationAndComplete(demandId, user, {

@@ -1,6 +1,7 @@
 "use server";
 
 import { requireAuth } from "@/lib/permissions/check";
+import { guardDemand } from "@/lib/permissions/demand-guard";
 import { revalidateOperationalViews } from "@/lib/revalidate-operational";
 import {
   completeWorkSession,
@@ -11,6 +12,8 @@ import {
 
 export async function startWorkSessionAction(demandId: string, clientId: string) {
   const user = await requireAuth();
+  const guard = await guardDemand(user, demandId, { permission: "demands.edit", who: "assignee" });
+  if (!guard.ok) return { error: guard.error };
   try {
     await startWorkSession(demandId, user);
     revalidateOperationalViews(clientId);
@@ -53,6 +56,8 @@ export async function completeProductionSectorAction(
   materialUrl: string
 ) {
   const user = await requireAuth();
+  const guard = await guardDemand(user, demandId, { permission: "demands.edit", who: "assignee" });
+  if (!guard.ok) return { error: guard.error };
   try {
     await completeWorkSession(demandId, user, materialUrl);
     revalidateOperationalViews(clientId);

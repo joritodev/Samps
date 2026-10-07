@@ -90,7 +90,7 @@ function SidebarBody({
       <div className="space-y-1 border-t border-sidebar-border p-4">
         <div className="mb-3 flex items-center gap-3">
           <Avatar className="h-8 w-8">
-            <AvatarFallback className="bg-secondary text-primary">
+            <AvatarFallback className="bg-secondary text-primary-ink">
               {initials}
             </AvatarFallback>
           </Avatar>

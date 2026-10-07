@@ -1,5 +1,6 @@
 "use client";
 
+import { safeHref } from "@/lib/agency/url";
 import { useState, useTransition, useEffect, useRef } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -560,7 +561,7 @@ export function CardDetailSheet({
                       {card.attachments!.map((a) => (
                         <li key={a.id} className="truncate text-sm">
                           <a
-                            href={a.url}
+                            href={safeHref(a.url)}
                             target="_blank"
                             rel="noreferrer"
                             className="text-primary underline"

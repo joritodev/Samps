@@ -46,6 +46,12 @@ export function LoginView({
   const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Antes de o JavaScript carregar o formulário não pode enviar: sem isso o navegador mandaria e-mail e senha na URL.
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    setReady(true);
+  }, []);
 
   useEffect(() => {
     if (defaultEmail) return;
@@ -116,6 +122,8 @@ export function LoginView({
           </div>
 
           <form
+            method="post"
+            action="/login"
             onSubmit={handleSubmit}
             className="mt-8 space-y-4"
             aria-busy={loading}
@@ -187,7 +195,7 @@ export function LoginView({
             <Button
               type="submit"
               size="lg"
-              disabled={loading}
+              disabled={loading || !ready}
               className="w-full bg-gradient-to-r from-[hsl(var(--brand))] to-[hsl(var(--primary))] text-primary-foreground hover:opacity-95"
             >
               {loading ? "Entrando..." : "Entrar"}

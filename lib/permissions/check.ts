@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import {
   canAccessClient,
@@ -18,17 +19,28 @@ import { getDashboardPath } from "@/types/auth";
  */
 const freshScope = cache(refreshUserPermissions);
 
-export async function getSessionUser() {
+/**
+ * Sessão do request. O JWT vale 7 dias, então o status da conta é relido do
+ * banco: quem foi desativado ou bloqueado perde o acesso na hora, não só no
+ * próximo login. `revoked` separa "nunca entrou" de "entrou e perdeu a conta".
+ */
+async function loadSession() {
   const session = await auth();
-  if (!session?.user?.id) return null;
+  if (!session?.user?.id) return { user: null, revoked: false };
 
-  const { permissions, clientIds } = await freshScope(session.user.id);
-  return { ...session.user, permissions, clientIds };
+  const { permissions, clientIds, active } = await freshScope(session.user.id);
+  if (!active) return { user: null, revoked: true };
+  return { user: { ...session.user, permissions, clientIds }, revoked: false };
+}
+
+export async function getSessionUser() {
+  return (await loadSession()).user;
 }
 
 export async function requireAuth() {
-  const user = await getSessionUser();
-  if (!user) redirect("/login");
+  const { user, revoked } = await loadSession();
+  // `/sair` encerra o cookie; mandar direto a `/login` entraria em laço (logado → home → login).
+  if (!user) redirect(revoked ? "/sair" : "/login");
   return user;
 }
 
@@ -69,9 +81,10 @@ export function clientScopeFilter(user: {
 }
 
 export async function refreshUserPermissions(userId: string) {
-  const [permissions, clientIds] = await Promise.all([
+  const [permissions, clientIds, account] = await Promise.all([
     resolveUserPermissions(userId),
     resolveUserClientIds(userId),
+    db.user.findUnique({ where: { id: userId }, select: { status: true } }),
   ]);
-  return { permissions, clientIds };
+  return { permissions, clientIds, active: account?.status === "ACTIVE" };
 }

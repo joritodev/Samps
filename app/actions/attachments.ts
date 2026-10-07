@@ -1,7 +1,9 @@
 "use server";
 
 import { z } from "zod";
+import { INVALID_URL_MESSAGE, isHttpUrl } from "@/lib/agency/url";
 import { requireAuth } from "@/lib/permissions/check";
+import { guardDemand } from "@/lib/permissions/demand-guard";
 import { hasPermission } from "@/lib/permissions/resolve";
 import { revalidateOperationalViews } from "@/lib/revalidate-operational";
 import { addDriveAttachment } from "@/lib/services/attachments.service";
@@ -14,6 +16,7 @@ const schema = z.object({
     .string()
     .trim()
     .url("Informe um link válido (Drive, Figma, etc.).")
+    .refine(isHttpUrl, INVALID_URL_MESSAGE)
     .max(2000),
   visibleToClient: z.boolean().optional(),
 });
@@ -36,6 +39,9 @@ export async function addDriveAttachmentAction(input: {
   ) {
     return { error: "Sem permissão para anexar arquivos." };
   }
+
+  const guard = await guardDemand(user, input.demandId);
+  if (!guard.ok) return { error: guard.error };
 
   const parsed = schema.safeParse(input);
   if (!parsed.success) {

@@ -16,10 +16,15 @@ describe("demandFilter", () => {
     expect(f?.where.status).toMatchObject({ notIn: ["DONE", "CANCELLED", "PUBLISHED"] });
   });
 
-  it("sem responsável: assigneeId nulo, com a mesma regra de aberto", () => {
+  it("sem responsável: assigneeId nulo, só de demanda já demandada (briefing não conta)", () => {
     expect(demandFilter("sem-responsavel", now)?.where).toEqual({
       assigneeId: null,
-      status: { notIn: ["DONE", "CANCELLED", "PUBLISHED"] },
+      status: {
+        notIn: [
+          "DONE", "CANCELLED", "PUBLISHED",
+          "BACKLOG", "PENDING_PLANNING", "PLANNING", "OPEN",
+        ],
+      },
     });
   });
 

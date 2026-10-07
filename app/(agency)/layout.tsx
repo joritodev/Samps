@@ -56,7 +56,7 @@ export default async function AgencyLayout({
         <Suspense fallback={null}>
           <DailySummaryGate />
         </Suspense>
-        <Toaster className="print:hidden" richColors position="top-right" visibleToasts={3} />
+        <Toaster className="print:hidden" richColors position="bottom-center" visibleToasts={3} />
       </div>
     </Providers>
   );

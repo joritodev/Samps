@@ -7,6 +7,18 @@ export const OPEN_EXCLUDED: DemandStatus[] = [
   DemandStatus.PUBLISHED,
 ];
 
+/**
+ * "Sem responsável" só vale para demanda já demandada ao setor: cartão ainda em
+ * briefing não tem executor por definição, e contá-lo escondia o que importa.
+ */
+export const UNASSIGNED_EXCLUDED: DemandStatus[] = [
+  ...OPEN_EXCLUDED,
+  DemandStatus.BACKLOG,
+  DemandStatus.PENDING_PLANNING,
+  DemandStatus.PLANNING,
+  DemandStatus.OPEN,
+];
+
 /** Já passaram da produção; só pedem ação se o prazo venceu. */
 export const READY_STATUSES: DemandStatus[] = [
   DemandStatus.APPROVED,
@@ -80,7 +92,7 @@ export function demandFilter(
     case "sem-responsavel":
       return {
         label: "Sem responsável",
-        where: { assigneeId: null, status: { notIn: OPEN_EXCLUDED } },
+        where: { assigneeId: null, status: { notIn: UNASSIGNED_EXCLUDED } },
       };
     case "concluidas-hoje":
       return {

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { toast } from "sonner";
+import { safeHref } from "@/lib/agency/url";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -136,7 +137,7 @@ function PublishSheet({
             </h3>
             {sd.materialUrl ? (
               <a
-                href={sd.materialUrl}
+                href={safeHref(sd.materialUrl)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 rounded-lg border border-teal-200 bg-teal-50 px-4 py-3 text-sm font-medium text-teal-800 transition-colors hover:bg-teal-100"
@@ -197,7 +198,7 @@ export function SocialBoard({ columns }: { columns: BoardColumn[] }) {
         </Button>
       </header>
 
-      <main className="min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden bg-background">
+      <div className="min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden bg-background">
         <div className="flex h-full min-h-0 min-w-max gap-4 p-6">
           {columns.map((column) => (
             <div key={column.id} className="snap-start">
@@ -208,7 +209,7 @@ export function SocialBoard({ columns }: { columns: BoardColumn[] }) {
             </div>
           ))}
         </div>
-      </main>
+      </div>
 
       <PublishSheet demand={selected} open={open} onOpenChange={setOpen} />
     </div>

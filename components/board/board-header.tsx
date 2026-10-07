@@ -139,7 +139,7 @@ export function BoardHeader({
             </div>
           </Link>
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
+            <h1 className="flex items-center gap-2">
               <Link
                 href={`/clientes/${clientId}`}
                 className="truncate text-base font-semibold tracking-tight text-foreground outline-none hover:opacity-90 focus-visible:underline"
@@ -151,7 +151,7 @@ export function BoardHeader({
                   {contractStatus}
                 </Badge>
               ) : null}
-            </div>
+            </h1>
             <p className="text-xs text-muted-foreground">
               <Link href="/clientes" className="hover:text-foreground">
                 Clientes
@@ -168,12 +168,14 @@ export function BoardHeader({
               variant="ghost"
               size="icon"
               className="h-7 w-7"
+              aria-label="Mês anterior"
               disabled={pending || currentIndex <= 0}
               onClick={() => shiftCompetence(-1)}
             >
               <ChevronLeft className="h-3.5 w-3.5" />
             </Button>
             <select
+              aria-label="Mês de referência do quadro"
               className="h-7 min-w-32 border-0 bg-transparent text-center text-xs font-medium outline-none"
               value={currentCompetenceId}
               disabled={pending}
@@ -189,6 +191,7 @@ export function BoardHeader({
               variant="ghost"
               size="icon"
               className="h-7 w-7"
+              aria-label="Próximo mês"
               disabled={pending || currentIndex >= competences.length - 1}
               onClick={() => shiftCompetence(1)}
             >
