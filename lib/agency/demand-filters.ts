@@ -24,8 +24,8 @@ export const COMPLETED_TODAY_STATUSES: DemandStatus[] = [
 
 /**
  * Etapas do ciclo da demanda, na ordem em que o trabalho anda.
- * Ajuste não é etapa: é retorno da Revisão e conta dentro de Produção
- * (a pessoa está refazendo), igual ao Kanban geral.
+ * Ajuste não é etapa deste resumo: é retorno da revisão.
+ * Nos quadros, ele fica na coluna Ajustes.
  */
 export const FLOW_STAGES = [
   {

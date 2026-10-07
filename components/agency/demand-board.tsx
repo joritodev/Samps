@@ -11,6 +11,9 @@ import {
   DemandCard,
   DemandDetailSheet,
 } from "@/components/agency/demand-card";
+import { SectorCardSheet, type SectorCardDetail } from "@/components/sector/sector-card-sheet";
+import { loadOperationalCardAction } from "@/lib/actions/operational-card.actions";
+import { canDemandBriefing } from "@/lib/agency/labels";
 import { NewDemandSheet } from "@/components/agency/new-demand-sheet";
 import { BoardFilterPopover } from "@/components/agency/board-filter-popover";
 import {
@@ -75,6 +78,10 @@ export function DemandBoard({
   canCreate = false,
   filterLabel,
   openDemandId,
+  currentUserId = "",
+  canAssign = false,
+  canReview = false,
+  canChangeDeadline = false,
 }: {
   title: string;
   subtitle: string;
@@ -86,9 +93,15 @@ export function DemandBoard({
   filterLabel?: string;
   /** Abre o detalhe desta demanda ao carregar (`?abrir=`). */
   openDemandId?: string;
+  currentUserId?: string;
+  canAssign?: boolean;
+  canReview?: boolean;
+  canChangeDeadline?: boolean;
 }) {
   const [selected, setSelected] = useState<BoardDemand | null>(null);
   const [open, setOpen] = useState(false);
+  const [operational, setOperational] = useState<SectorCardDetail | null>(null);
+  const [sectorUsers, setSectorUsers] = useState<{ id: string; name: string }[]>([]);
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -99,8 +112,7 @@ export function DemandBoard({
       .flatMap((c) => c.cards)
       .find((card) => card.id === openDemandId);
     if (target) {
-      setSelected(target);
-      setOpen(true);
+      void openCard(target);
     } else {
       toast.message("Essa demanda não está neste quadro.", {
         description: "Ela pode ter sido concluída ou estar fora do filtro atual.",
@@ -121,7 +133,30 @@ export function DemandBoard({
 
   function handleSheetChange(value: boolean) {
     setOpen(value);
-    if (!value) clearOpenParam();
+    if (!value) {
+      setOperational(null);
+      clearOpenParam();
+      router.refresh();
+    }
+  }
+
+  async function openCard(demand: BoardDemand) {
+    if (canDemandBriefing(demand.status, demand.briefingLockedAt)) {
+      setOperational(null);
+      setSelected(demand);
+      setOpen(true);
+      return;
+    }
+
+    const result = await loadOperationalCardAction(demand.id);
+    if ("error" in result) {
+      toast.error(result.error);
+      return;
+    }
+    setSelected(null);
+    setSectorUsers(result.sectorUsers);
+    setOperational(result.card);
+    setOpen(true);
   }
   const [createOpen, setCreateOpen] = useState(false);
   const [filters, setFilters] = useState<BoardFilters>(() =>
@@ -149,8 +184,7 @@ export function DemandBoard({
   }
 
   function handleOpenCard(demand: BoardDemand) {
-    setSelected(demand);
-    setOpen(true);
+    void openCard(demand);
   }
 
   return (
@@ -209,8 +243,18 @@ export function DemandBoard({
       <DemandDetailSheet
         demand={selected}
         taxonomy={taxonomy}
-        open={open}
+        open={open && !!selected}
         onOpenChange={handleSheetChange}
+      />
+      <SectorCardSheet
+        card={operational}
+        open={open && !!operational}
+        onOpenChange={handleSheetChange}
+        currentUserId={currentUserId}
+        canAssign={canAssign}
+        canReview={canReview}
+        canChangeDeadline={canChangeDeadline}
+        sectorUsers={sectorUsers}
       />
       {canCreate ? (
         <NewDemandSheet

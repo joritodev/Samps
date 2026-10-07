@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { loadOperationalCardAction } from "@/lib/actions/operational-card.actions";
 import { DemandBoard } from "./demand-board";
 
 vi.mock("next/navigation", () => ({
@@ -15,6 +16,44 @@ vi.mock("@/app/actions/demand", () => ({
 
 vi.mock("@/app/actions/create-demand", () => ({
   createDemandAction: vi.fn(),
+}));
+
+vi.mock("@/lib/actions/operational-card.actions", () => ({
+  loadOperationalCardAction: vi.fn(),
+}));
+
+vi.mock("@/lib/actions/assignment.actions", () => ({
+  claimDemandAction: vi.fn(),
+  assignDemandAction: vi.fn(),
+  setScheduledExecutionAction: vi.fn(),
+}));
+
+vi.mock("@/lib/actions/work-session.actions", () => ({
+  startWorkSessionAction: vi.fn(),
+  pauseWorkSessionAction: vi.fn(),
+  resumeWorkSessionAction: vi.fn(),
+  completeProductionSectorAction: vi.fn(),
+}));
+
+vi.mock("@/lib/actions/adjustment.actions", () => ({
+  requestAdjustmentAction: vi.fn(),
+}));
+
+vi.mock("@/lib/actions/cards.actions", () => ({
+  registerPublicationAction: vi.fn(),
+}));
+
+vi.mock("@/app/actions/review", () => ({
+  aprovarDemanda: vi.fn(),
+}));
+
+vi.mock("@/app/actions/checklist", () => ({
+  completeChecklistItemAction: vi.fn(),
+}));
+
+vi.mock("@/lib/actions/deadline.actions", () => ({
+  listDemandDelaysAction: vi.fn().mockResolvedValue([]),
+  changeDemandDeadlineAction: vi.fn(),
 }));
 
 afterEach(() => {
@@ -54,5 +93,65 @@ describe("DemandBoard empty columns", () => {
     );
 
     expect(screen.getByRole("button", { name: /Nova Demanda/i })).toBeTruthy();
+  });
+
+  it("abre o mesmo painel operacional numa demanda publicada", async () => {
+    vi.mocked(loadOperationalCardAction).mockResolvedValue({
+      card: {
+        id: "d1",
+        title: "Feed publicado",
+        status: "PUBLISHED",
+        clientId: "c1",
+        client: { name: "Clínica" },
+        assignee: { id: "u1", name: "Helena" },
+        assignments: [
+          {
+            status: "DONE",
+            executorId: "u1",
+            executor: { id: "u1", name: "Helena" },
+          },
+        ],
+      },
+      sectorUsers: [],
+    });
+
+    render(
+      <DemandBoard
+        title="Demandas"
+        subtitle="Quadro"
+        currentUserId="u1"
+        canAssign
+        canReview
+        columns={[
+          {
+            id: "done",
+            title: "Concluídas",
+            cards: [
+              {
+                id: "d1",
+                title: "Feed publicado",
+                description: null,
+                status: "PUBLISHED",
+                priority: "Alta",
+                sector: "Design",
+                dueDate: null,
+                materialUrl: null,
+                publishedUrl: "https://example.com/feed",
+                briefingLockedAt: "2026-10-07T00:00:00.000Z",
+                clientName: "Clínica",
+                clientId: "c1",
+              },
+            ],
+          },
+        ]}
+        taxonomy={{ sectors: [], priorities: [] }}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Feed publicado/ }));
+
+    expect(await screen.findByText(/Demanda finalizada/)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Atribuir" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Iniciar produção" })).toBeNull();
   });
 });

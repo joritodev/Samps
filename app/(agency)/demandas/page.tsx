@@ -1,4 +1,4 @@
-import { ClientStatus, DemandStatus, Prisma } from "@prisma/client";
+import { ClientStatus, Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { DemandBoard } from "@/components/agency/demand-board";
 import { boardDemandSelect, toBoardDemand } from "@/lib/agency/board-mapper";
@@ -7,62 +7,9 @@ import { buildDemandVisibilityWhere } from "@/lib/permissions/demand-visibility"
 import { listLedSectorIds } from "@/lib/permissions/led-sectors";
 import { hasPermission } from "@/lib/permissions/resolve";
 import { demandFilter } from "@/lib/agency/demand-filters";
-import type { BoardColumn, BoardDemand } from "@/types/board-ui";
-
-/** Colunas do Kanban global — por status operacional, não por entregável. */
-function groupIntoStatusColumns(demands: BoardDemand[]): BoardColumn[] {
-  return [
-    {
-      id: "planning",
-      title: "A planejar",
-      cards: demands.filter(
-        (d) =>
-          d.status === DemandStatus.PENDING_PLANNING ||
-          d.status === DemandStatus.PLANNING ||
-          d.status === DemandStatus.BACKLOG ||
-          d.status === DemandStatus.OPEN
-      ),
-    },
-    {
-      id: "todo",
-      title: "Demandadas / A fazer",
-      cards: demands.filter(
-        (d) =>
-          d.status === DemandStatus.AVAILABLE ||
-          d.status === DemandStatus.DEMANDED
-      ),
-    },
-    {
-      id: "production",
-      title: "Em Produção",
-      cards: demands.filter(
-        (d) =>
-          d.status === DemandStatus.IN_PRODUCTION ||
-          d.status === DemandStatus.ADJUSTMENTS
-      ),
-    },
-    {
-      id: "review",
-      title: "Aguardando Revisão",
-      cards: demands.filter(
-        (d) =>
-          d.status === DemandStatus.IN_REVIEW ||
-          d.status === DemandStatus.APPROVED ||
-          d.status === DemandStatus.SCHEDULED
-      ),
-    },
-    {
-      id: "done",
-      title: "Concluídas",
-      cards: demands.filter(
-        (d) =>
-          d.status === DemandStatus.DONE ||
-          d.status === DemandStatus.PUBLISHED ||
-          d.status === DemandStatus.DELIVERED
-      ),
-    },
-  ];
-}
+import { groupIntoStatusColumns } from "@/lib/agency/demand-columns";
+import { canReviewDemand } from "@/lib/agency/labels";
+import type { BoardDemand } from "@/types/board-ui";
 
 export default async function DemandasPage({
   searchParams,
@@ -150,6 +97,12 @@ export default async function DemandasPage({
       canCreate={canCreate}
       filterLabel={filterLabel}
       openDemandId={searchParams.abrir}
+      currentUserId={user.id}
+      canAssign={
+        hasPermission(user.permissions, "demands.assign") || ledSectorIds.length > 0
+      }
+      canReview={canReviewDemand(user.userType)}
+      canChangeDeadline={hasPermission(user.permissions, "demands.change_deadline")}
     />
   );
 }
