@@ -3,6 +3,8 @@
 **Data:** 2026-09-26  
 **Aceite:** 2026-09-28. Sem Google Calendar. A reunião precisa de nome, horário, link, descrição e o que acompanha um compromisso (fim, local, tipo). Sem convite de participantes e sem sincronizar outra agenda.
 
+**Atualização 2026-09-28:** a fatia 4.3 continua sem Google. O vínculo com a conta da agência e o pop-up de abertura estão em `docs/superpowers/specs/2026-09-28-google-agenda-abertura-design.md`.
+
 ---
 
 ## Decisão proposta
