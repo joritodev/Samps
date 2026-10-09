@@ -1428,7 +1428,7 @@ model PlanCard {
   templateId    String?
   title         String
   category      String         @default("Outro")
-  durationHours Decimal        @db.Decimal(5, 2)
+  durationHours Decimal        @db.Decimal(7, 4)
   status        PlanCardStatus @default(NAO_ALOCADO)
   pinned        Boolean        @default(false)
   required      Boolean        @default(false)
@@ -1490,7 +1490,7 @@ model PlanPreset {
   id        String  @id @default(cuid())
   sectorId  String
   label     String
-  hours     Decimal @db.Decimal(4, 2)
+  hours     Decimal @db.Decimal(6, 4)
   sortOrder Int     @default(0)
 
   sector Sector @relation(fields: [sectorId], references: [id], onDelete: Restrict)

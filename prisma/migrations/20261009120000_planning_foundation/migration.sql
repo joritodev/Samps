@@ -27,7 +27,7 @@ CREATE TABLE "PlanTemplate" (
     "title" TEXT NOT NULL,
     "kind" TEXT NOT NULL,
     "category" TEXT NOT NULL DEFAULT 'Outro',
-    "durationHours" DECIMAL(5,2) NOT NULL,
+    "durationHours" DECIMAL(7,4) NOT NULL,
     "weeklyQuantity" INTEGER NOT NULL DEFAULT 1,
     "preferredMemberId" TEXT,
     "preferredWeekday" SMALLINT,
@@ -55,7 +55,7 @@ CREATE TABLE "PlanCard" (
     "templateId" TEXT,
     "title" TEXT NOT NULL,
     "category" TEXT NOT NULL DEFAULT 'Outro',
-    "durationHours" DECIMAL(5,2) NOT NULL,
+    "durationHours" DECIMAL(7,4) NOT NULL,
     "status" "PlanCardStatus" NOT NULL DEFAULT 'NAO_ALOCADO',
     "pinned" BOOLEAN NOT NULL DEFAULT false,
     "required" BOOLEAN NOT NULL DEFAULT false,
@@ -102,7 +102,7 @@ CREATE TABLE "PlanPreset" (
     "id" TEXT NOT NULL,
     "sectorId" TEXT NOT NULL,
     "label" TEXT NOT NULL,
-    "hours" DECIMAL(4,2) NOT NULL,
+    "hours" DECIMAL(6,4) NOT NULL,
     "sortOrder" INTEGER NOT NULL DEFAULT 0,
 
     CONSTRAINT "PlanPreset_pkey" PRIMARY KEY ("id")

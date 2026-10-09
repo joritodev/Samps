@@ -38,7 +38,7 @@ Checklist do que **aparece nos frames** (rota `/planejamento-semanal-video`, sem
 | Cards: título (cliente), duração (1h/2h), tipo ("Vídeo 1"), chip de categoria (Orgânico/Captação), chip de status (Concluído/Programado), ícones de ação no rodapé, faixa lateral colorida | 3, 4 |
 | Rodapé da coluna: barra azul de ocupação + "Capacidade 6h / Ocupado / Livre" + sugestões de combinação de vídeos | 2, 3 |
 | Área inferior de demandas não alocadas (backlog) | 3, 4 |
-| Cartão flutuante "Semana" (resumo da semana, canto inferior direito) | 6 |
+| Cartão escuro "Total da semana" (Disponível/Ocupado/Livre e totais por tipo) e um cartão por pessoa, na faixa inferior | 3 |
 | Diálogo "Sugestão de distribuição": linhas "Vídeo 2 — COCO BAMBU: QUA • Mabelly → SEX • Mabelly", botões "Manter como está", "Outra sugestão", "Aplicar" | 6 |
 | Cards fixos/recorrentes (cadeado), arrastar entre pessoa/dia | 4, 5 |
 
@@ -140,3 +140,5 @@ Não executar nada disto antes de a Fatia 0 aprovar a spec. Nenhuma fatia pode m
   - O painel original calcula errado a segunda-feira da semana 1 quando 1º de janeiro cai de sexta a domingo (2027 começa em 04/01). Corrigido ancorando em 4 de janeiro, com teste de ida e volta de 2025 a 2028. Fidelidade ao vídeo não inclui bugs.
   - `AgencySettings.holidays` não é usado em lugar nenhum do código; feriados ficam em `PlanDayBlock`. A spec dizia o contrário; vale o `PlanDayBlock`.
   - `capacityFor` e `suggestDistribution` recebem `isAbsent(memberId, "AAAA-MM-DD")` para zerar o dia de quem tem `Absence`; o serviço da Fatia 3 monta essa função com `isAbsentOn`.
+- **Fatia 3** (quadro somente leitura): rota `/planejamento-semanal/[setor]`, gate `planning.view`, item "Planejamento" no menu, serviço de leitura e quadro com o visual do original. Correção de Tailwind: `content` passou a varrer `lib/agency/planning/**` e a cor `cyan` do projeto (sobrescrita por variável CSS) não tem escala, então o chip "Fixo semanal" usa hex.
+- **Fatia 4** (cards): criar, editar, concluir, duplicar, excluir (gestão), mover por arrastar e por diálogo, histórico. Escrita em `lib/services/planning-cards.service.ts` com as travas da revisão de segurança: setor vem da rota, responsável do mesmo setor, cliente e demanda validados pelo escopo do Samps (`canAccessClient`, `guardDemand`), nome do cliente vindo do banco. 23 testes de serviço. Durações passaram a `DECIMAL(7,4)` (tempos de 7 min do Design). Verificado no navegador (gestor, designer e cliente externo).

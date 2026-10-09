@@ -4,15 +4,39 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  closestCorners,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragOverEvent,
+  type DragStartEvent,
+} from "@dnd-kit/core";
+import { arrayMove } from "@dnd-kit/sortable";
+import {
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
+  History,
   Loader2,
   Lock,
   Maximize,
+  Plus,
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
+import { toast } from "sonner";
+import {
+  createPlanCardAction,
+  deletePlanCardAction,
+  duplicatePlanCardAction,
+  movePlanCardAction,
+  movePlanCardToDateAction,
+  togglePlanCardCompleteAction,
+  updatePlanCardAction,
+} from "@/lib/actions/planning.actions";
 import {
   BACKLOG,
   COL_WIDTH_DEFAULT,
@@ -25,8 +49,10 @@ import {
   fittedColumnWidth,
   formatWeekParam,
   groupCards,
+  parseContainerKey,
   zoomPercent,
 } from "@/lib/agency/planning/board";
+import { canDragCard, statusAfterMove } from "@/lib/agency/planning/card-input";
 import { capacityFor, slotSuggestions } from "@/lib/agency/planning/capacity";
 import { PLAN_SECTOR_CONFIG } from "@/lib/agency/planning/config";
 import type { IsoWeek, PlanCardData } from "@/lib/agency/planning/types";
@@ -41,6 +67,10 @@ import {
 } from "@/lib/agency/planning/week";
 import type { PlanningBoardData } from "@/lib/services/planning.service";
 import { PlanCardView } from "./plan-card-view";
+import { PlanColumn } from "./plan-column";
+import { CardDialog, cardToDraft, draftToInput, emptyDraft, type CardDraft } from "./card-dialog";
+import { HistoryDialog } from "./history-dialog";
+import { MoveCardDialog } from "./move-card-dialog";
 
 const widthKey = (slug: string) => `samps:planning:col-width:${slug}`;
 const modeKey = (slug: string) => `samps:planning:col-mode:${slug}`;
@@ -72,7 +102,20 @@ export function PlanningBoard({
   const router = useRouter();
   const pathname = usePathname();
   const [navigating, startNavigation] = useTransition();
-  const [cards] = useState<PlanCardData[]>(data.cards);
+  const [cards, setCards] = useState<PlanCardData[]>(data.cards);
+  const [draft, setDraft] = useState<CardDraft | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [moving, setMoving] = useState<PlanCardData | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [overContainer, setOverContainer] = useState<string | null>(null);
+  const canEdit = access.canEdit;
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+
+  // Depois de salvar, o servidor devolve o quadro atualizado.
+  useEffect(() => {
+    setCards(data.cards);
+  }, [data.cards]);
   const [columnWidth, setColumnWidth] = useState(COL_WIDTH_DEFAULT);
   const [fitMode, setFitMode] = useState(true);
   const boardRef = useRef<HTMLDivElement>(null);
@@ -138,6 +181,152 @@ export function PlanningBoard({
   );
   const presetHours = useMemo(() => data.presets.map((p) => p.hours), [data.presets]);
   const sectorQuery = `?semana=${formatWeekParam(week)}`;
+  const activeCard = cards.find((c) => c.id === activeId) ?? null;
+
+  function containerOf(id: string) {
+    if (id === BACKLOG || parseContainerKey(id)) return id;
+    const card = cards.find((c) => c.id === id);
+    if (!card) return BACKLOG;
+    return card.memberId && card.weekday ? containerKey(card.memberId, card.weekday) : BACKLOG;
+  }
+
+  function onDragStart(event: DragStartEvent) {
+    setActiveId(String(event.active.id));
+  }
+
+  function onDragOver(event: DragOverEvent) {
+    setOverContainer(event.over ? containerOf(String(event.over.id)) : null);
+  }
+
+  async function onDragEnd(event: DragEndEvent) {
+    setActiveId(null);
+    setOverContainer(null);
+    const { active, over } = event;
+    if (!over || !canEdit) return;
+    const cardId = String(active.id);
+    const card = cards.find((c) => c.id === cardId);
+    if (!card || !canDragCard(card)) return;
+
+    const from = containerOf(cardId);
+    const to = containerOf(String(over.id));
+    const fromList = [...(grouped.get(from) ?? [])];
+    const toList = from === to ? fromList : [...(grouped.get(to) ?? [])];
+    const oldIndex = fromList.findIndex((c) => c.id === cardId);
+    let newIndex = toList.findIndex((c) => c.id === String(over.id));
+    if (newIndex === -1) newIndex = toList.length;
+
+    let nextTo: PlanCardData[];
+    if (from === to) {
+      nextTo = arrayMove(fromList, oldIndex, Math.min(newIndex, fromList.length - 1));
+    } else {
+      fromList.splice(oldIndex, 1);
+      nextTo = [...toList];
+      nextTo.splice(newIndex, 0, card);
+    }
+    if (from === to && nextTo.every((c, i) => c.id === fromList[i]?.id)) return;
+
+    const target = parseContainerKey(to);
+    const previous = cards;
+    const positions = new Map<string, number>();
+    nextTo.forEach((c, index) => positions.set(c.id, index));
+    if (from !== to) fromList.forEach((c, index) => positions.set(c.id, index));
+    setCards((current) =>
+      current.map((c) => {
+        const position = positions.get(c.id);
+        if (position === undefined) return c;
+        if (c.id !== cardId) return { ...c, position };
+        return {
+          ...c,
+          position,
+          memberId: target ? target.memberId : c.memberId,
+          weekday: target ? target.weekday : null,
+          isoYear: target ? week.year : c.isoYear,
+          isoWeek: target ? week.week : c.isoWeek,
+          status: statusAfterMove(c.status, Boolean(target)),
+        };
+      }),
+    );
+
+    const result = await movePlanCardAction({
+      cardId,
+      to: target ? { ...target, isoYear: week.year, isoWeek: week.week } : null,
+      orderedIds: nextTo.map((c) => c.id),
+      fromOrderedIds: from === to ? [] : fromList.map((c) => c.id),
+    });
+    if ("error" in result) {
+      setCards(previous);
+      toast.error(result.error);
+      return;
+    }
+    router.refresh();
+  }
+
+  async function saveDraft() {
+    if (!draft) return;
+    setSaving(true);
+    const input = draftToInput(draft);
+    const result = draft.id
+      ? await updatePlanCardAction(draft.id, week, input)
+      : await createPlanCardAction(sector.slug, week, input);
+    setSaving(false);
+    if ("error" in result) {
+      toast.error(result.error);
+      return;
+    }
+    setDraft(null);
+    router.refresh();
+  }
+
+  async function toggleComplete(card: PlanCardData) {
+    const previous = cards;
+    const reopened = card.weekday && card.memberId ? "PROGRAMADO" : "NAO_ALOCADO";
+    const next = card.status === "CONCLUIDO" ? reopened : "CONCLUIDO";
+    setCards((current) => current.map((c) => (c.id === card.id ? { ...c, status: next } : c)));
+    const result = await togglePlanCardCompleteAction(card.id);
+    if ("error" in result) {
+      setCards(previous);
+      toast.error("Não foi possível atualizar a conclusão.");
+      return;
+    }
+    router.refresh();
+  }
+
+  async function duplicate(card: PlanCardData) {
+    const result = await duplicatePlanCardAction(card.id, week);
+    if ("error" in result) {
+      toast.error(result.error);
+      return;
+    }
+    toast.success("Cópia criada em Demandas não alocadas");
+    router.refresh();
+  }
+
+  async function remove(card: PlanCardData) {
+    if (!access.canManage) {
+      toast.error("Apenas o gestor pode excluir cards.");
+      return;
+    }
+    if (!window.confirm(`Excluir o card "${card.title}"?`)) return;
+    const previous = cards;
+    setCards((current) => current.filter((c) => c.id !== card.id));
+    const result = await deletePlanCardAction(card.id);
+    if ("error" in result) {
+      setCards(previous);
+      toast.error(result.error);
+      return;
+    }
+    router.refresh();
+  }
+
+  async function moveTo(card: PlanCardData, dateKey: string | null, memberId: string | null) {
+    const result = await movePlanCardToDateAction(card.id, dateKey, memberId);
+    if ("error" in result) {
+      toast.error(result.error);
+      return;
+    }
+    setMoving(null);
+    router.refresh();
+  }
 
   return (
     <div className="-m-1 min-h-full rounded-xl bg-slate-200/70 pb-8 text-slate-900 sm:-m-2">
@@ -247,6 +436,22 @@ export function PlanningBoard({
               <Maximize className="mr-1 h-4 w-4" /> Semana inteira
             </button>
           </div>
+          {canEdit && (
+            <button
+              type="button"
+              className="flex h-9 items-center rounded-md bg-[#1d4ed8] px-3 text-sm font-medium text-white hover:bg-[#1e40af]"
+              onClick={() => setDraft(emptyDraft(sector.slug))}
+            >
+              <Plus className="mr-1 h-4 w-4" /> Novo card
+            </button>
+          )}
+          <button
+            type="button"
+            className="flex h-9 items-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50"
+            onClick={() => setHistoryOpen(true)}
+          >
+            <History className="mr-1 h-4 w-4" /> Histórico
+          </button>
           {navigating && <Loader2 className="h-4 w-4 animate-spin text-slate-500" aria-label="Carregando" />}
         </div>
         {!access.canManage && (
@@ -258,6 +463,13 @@ export function PlanningBoard({
         )}
       </header>
 
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCorners}
+        onDragStart={onDragStart}
+        onDragOver={onDragOver}
+        onDragEnd={(event) => void onDragEnd(event)}
+      >
       <div className="flex w-full flex-col gap-4 px-3 py-4 sm:px-4 lg:flex-row">
         <aside className="w-full shrink-0 lg:w-[clamp(14rem,16vw,20rem)]">
           <div className="rounded-xl border-2 border-amber-300 bg-amber-50 p-3 shadow-sm">
@@ -267,11 +479,16 @@ export function PlanningBoard({
             <p className="mb-2 text-xs font-medium text-amber-700">
               {(grouped.get(BACKLOG) ?? []).length} card(s)
             </p>
-            <div className="min-h-[80px] space-y-2 rounded-md p-1">
-              {(grouped.get(BACKLOG) ?? []).map((card) => (
-                <PlanCardView key={card.id} card={card} members={members} kinds={config.kinds} />
-              ))}
-            </div>
+            <PlanColumn
+              id={BACKLOG}
+              cards={grouped.get(BACKLOG) ?? []}
+              members={members}
+                kinds={config.kinds}
+                canEdit={canEdit}
+                onEdit={(card) => setDraft(cardToDraft(card))}
+                onDuplicate={duplicate}
+                onToggleComplete={toggleComplete}
+            />
           </div>
         </aside>
 
@@ -326,6 +543,10 @@ export function PlanningBoard({
                         const capacity = capacityFor(member, week, day.value, overrides, blocks, isAbsent);
                         const used = list.reduce((s, c) => s + c.durationHours, 0);
                         const free = capacity - used;
+                        const incoming =
+                          activeCard && overContainer === key && containerOf(activeCard.id) !== key
+                            ? activeCard.durationHours
+                            : 0;
                         const memberBlocked = blocks.some(
                           (b) => b.weekday === day.value && b.memberId === member.id,
                         );
@@ -354,16 +575,16 @@ export function PlanningBoard({
                               </span>
                               <Lock className="h-3.5 w-3.5 text-slate-400" aria-hidden />
                             </div>
-                            <div className="min-h-[80px] space-y-2 rounded-md p-1">
-                              {list.map((card) => (
-                                <PlanCardView
-                                  key={card.id}
-                                  card={card}
-                                  members={members}
-                                  kinds={config.kinds}
-                                />
-                              ))}
-                            </div>
+                            <PlanColumn
+                              id={key}
+                              cards={list}
+                              members={members}
+                kinds={config.kinds}
+                canEdit={canEdit}
+                onEdit={(card) => setDraft(cardToDraft(card))}
+                onDuplicate={duplicate}
+                onToggleComplete={toggleComplete}
+                            />
                             <div className="mt-2 border-t border-slate-200 pt-2 text-sm font-medium text-slate-700">
                               <div className="mb-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
                                 <div
@@ -395,6 +616,17 @@ export function PlanningBoard({
                                   </p>
                                 )}
                               </div>
+                              {incoming > 0 && (
+                                <p
+                                  className={
+                                    used + incoming > capacity
+                                      ? "font-semibold text-rose-600"
+                                      : "font-semibold text-blue-700"
+                                  }
+                                >
+                                  Ao soltar: {formatHours(used + incoming)} / {formatHours(capacity)}
+                                </p>
+                              )}
                               {free > 0 && (
                                 <p className="text-slate-400">
                                   Pode receber: {slotSuggestions(free, presetHours).join(" • ")}
@@ -412,6 +644,11 @@ export function PlanningBoard({
           )}
         </div>
       </div>
+
+      <DragOverlay>
+        {activeCard ? <PlanCardView card={activeCard} kinds={config.kinds} dragging /> : null}
+      </DragOverlay>
+      </DndContext>
 
       <section className="mt-2 w-full px-3 sm:px-4">
         <div className="grid gap-3 md:grid-cols-3">
@@ -477,6 +714,48 @@ export function PlanningBoard({
           </div>
         </div>
       </section>
+
+      {draft && (
+        <CardDialog
+          draft={draft}
+          sector={sector.slug}
+          members={members}
+          clients={data.clients}
+          presets={data.presets}
+          saving={saving}
+          canDelete={access.canManage}
+          onChange={setDraft}
+          onClose={() => setDraft(null)}
+          onSave={() => void saveDraft()}
+          onDelete={() => {
+            const card = cards.find((c) => c.id === draft.id);
+            if (!card) return;
+            setDraft(null);
+            void remove(card);
+          }}
+          onMove={() => {
+            const card = cards.find((c) => c.id === draft.id);
+            if (!card) return;
+            setDraft(null);
+            setMoving(card);
+          }}
+        />
+      )}
+      {moving && (
+        <MoveCardDialog
+          card={moving}
+          members={members}
+          overrides={overrides}
+          blocks={blocks}
+          cards={cards}
+          isAbsent={isAbsent}
+          onConfirm={(dateKey, memberId) => moveTo(moving, dateKey, memberId)}
+          onClose={() => setMoving(null)}
+        />
+      )}
+      {historyOpen && (
+        <HistoryDialog slug={sector.slug} week={week} onClose={() => setHistoryOpen(false)} />
+      )}
     </div>
   );
 }

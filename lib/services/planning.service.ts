@@ -1,4 +1,4 @@
-import { UserStatus } from "@prisma/client";
+import { ClientStatus, DemandStatus, UserStatus } from "@prisma/client";
 import { assertPlanning, type PlanningAccess } from "@/lib/agency/planning/access";
 import { isAbsentOn } from "@/lib/agency/absences";
 import { isPlanSectorSlug } from "@/lib/agency/planning/config";
@@ -14,6 +14,7 @@ import type {
 } from "@/lib/agency/planning/types";
 import { WEEKDAYS, dayDate, dayKeyOfWeek } from "@/lib/agency/planning/week";
 import { db } from "@/lib/db";
+import { canAccessClient, hasPermission } from "@/lib/permissions/resolve";
 import type { SessionUser } from "@/types/auth";
 
 export type PlanningBoardData = {
@@ -27,6 +28,8 @@ export type PlanningBoardData = {
   presets: PlanPresetData[];
   /** memberId → dias `AAAA-MM-DD` da semana em que a pessoa está ausente. */
   absentDays: Record<string, string[]>;
+  /** Clientes ativos que a pessoa enxerga (escopo do Samps). */
+  clients: { id: string; name: string }[];
   access: PlanningAccess;
 };
 
@@ -121,7 +124,7 @@ export async function getPlanningBoard(
   const lastDay = dayDate(week, WEEKDAYS.length);
   const rangeEnd = new Date(lastDay.getTime() + 24 * 60 * 60 * 1000 - 1);
 
-  const [weekCards, backlog, blocks, overrides, presets, absences] = await Promise.all([
+  const [weekCards, backlog, blocks, overrides, presets, absences, clients] = await Promise.all([
     db.planCard.findMany({
       where: {
         sectorId: sector.id,
@@ -155,6 +158,16 @@ export async function getPlanningBoard(
           select: { userId: true, startsAt: true, endsAt: true, canceledAt: true },
         })
       : Promise.resolve([]),
+    db.client.findMany({
+      where: {
+        status: ClientStatus.ACTIVE,
+        ...(hasPermission(user.permissions, "clients.view_all")
+          ? {}
+          : { id: { in: user.clientIds } }),
+      },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
   ]);
 
   const unique = new Map<string, CardRow>();
@@ -198,6 +211,44 @@ export async function getPlanningBoard(
       sortOrder: p.sortOrder,
     })),
     absentDays,
+    clients,
     access,
   };
 }
+
+export type LinkableDemand = {
+  id: string;
+  title: string;
+  status: DemandStatus;
+  dueDate: string | null;
+};
+
+const CLOSED_DEMAND_STATUSES: DemandStatus[] = [
+  DemandStatus.DONE,
+  DemandStatus.PUBLISHED,
+  DemandStatus.DELIVERED,
+  DemandStatus.CANCELLED,
+];
+
+/** Demandas abertas do cliente para vincular a um card (mesmo escopo de cliente do resto do Samps). */
+export async function listLinkableDemands(
+  user: SessionUser,
+  clientId: string,
+): Promise<LinkableDemand[]> {
+  assertPlanning(user, "edit");
+  if (typeof clientId !== "string" || !clientId) return [];
+  if (!canAccessClient(user.permissions, user.clientIds, clientId)) return [];
+  const rows = await db.demand.findMany({
+    where: { clientId, status: { notIn: CLOSED_DEMAND_STATUSES }, isChecklistItem: false },
+    select: { id: true, title: true, status: true, dueDate: true },
+    orderBy: [{ dueDate: "asc" }, { createdAt: "desc" }],
+    take: 60,
+  });
+  return rows.map((d) => ({
+    id: d.id,
+    title: d.title,
+    status: d.status,
+    dueDate: d.dueDate ? d.dueDate.toISOString().slice(0, 10) : null,
+  }));
+}
+
