@@ -71,3 +71,21 @@ O schema da master tem `DemandDelay`, `DemandDelayResolution` e `User.notificati
 ## Fora desta fatia (não fazer)
 
 Rotas, sidebar, gate em `types/auth.ts`, serviço, actions e qualquer UI. O item de menu só entra na Fatia 3, quando existir página.
+
+## Revisão de segurança da fatia (09/10, manual)
+
+O skill `security-review` não rodou (repo sem `origin/HEAD`); a revisão foi feita sobre `git diff origin/master`.
+
+| Verificação | Resultado |
+|---|---|
+| 6 tabelas com `ENABLE` + `FORCE ROW LEVEL SECURITY` e policy `internal_only` (`USING` e `WITH CHECK`) | Confirmado em `pg_class` e no SQL |
+| `app_user` com SELECT/INSERT/UPDATE/DELETE nas 6 tabelas (default privileges) | Confirmado |
+| Cliente externo: leitura 0 linhas e escrita bloqueada (`42501`) | `npm run check:rls` |
+| Migration sem `GRANT`, `SECURITY DEFINER`, `DROP`, `DELETE` ou `UPDATE` em dados existentes | Confirmado (só `INSERT … WHERE NOT EXISTS` em permissões) |
+| Permissões novas idempotentes e restritas (`manage` só Administrador/Gestão; Cliente Externo nunca) | Confirmado |
+
+**Riscos que passam para as próximas fatias (obrigatórios nos planos delas):**
+
+1. `PlanCard.demandId` aceita qualquer `Demand` no nível do banco. Na Fatia 4, a action deve validar o vínculo com `guardDemand`/`requireClientAccess` (`lib/permissions/demand-guard.ts`), senão repete o achado S5 da auditoria de 07/10 (usuário ligando card a demanda de cliente sem vínculo). O mesmo vale para `clientId`.
+2. `planning.edit` permite mover qualquer card dos dois setores (premissa A2). Se o time quiser restringir por setor, a regra entra no serviço; a RLS atual não separa setores.
+3. Toda action de escrita precisa de `requirePermission` e de checagem de `EXTERNAL_CLIENT` no serviço; o RLS é a segunda barreira, não a primeira.
