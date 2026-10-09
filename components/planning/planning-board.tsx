@@ -24,6 +24,9 @@ import {
   Lock,
   Maximize,
   Plus,
+  Settings,
+  Unlock,
+  Users,
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
@@ -32,8 +35,11 @@ import {
   createPlanCardAction,
   deletePlanCardAction,
   duplicatePlanCardAction,
+  duplicatePreviousWeekAction,
   movePlanCardAction,
   movePlanCardToDateAction,
+  syncPlanWeekAction,
+  toggleDayBlockAction,
   togglePlanCardCompleteAction,
   updatePlanCardAction,
 } from "@/lib/actions/planning.actions";
@@ -67,7 +73,9 @@ import {
 } from "@/lib/agency/planning/week";
 import type { PlanningBoardData } from "@/lib/services/planning.service";
 import { PlanCardView } from "./plan-card-view";
+import { ClientsDialog } from "./clients-dialog";
 import { PlanColumn } from "./plan-column";
+import { SettingsDialog } from "./settings-dialog";
 import { CardDialog, cardToDraft, draftToInput, emptyDraft, type CardDraft } from "./card-dialog";
 import { HistoryDialog } from "./history-dialog";
 import { MoveCardDialog } from "./move-card-dialog";
@@ -107,6 +115,8 @@ export function PlanningBoard({
   const [saving, setSaving] = useState(false);
   const [moving, setMoving] = useState<PlanCardData | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [clientsOpen, setClientsOpen] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overContainer, setOverContainer] = useState<string | null>(null);
   const canEdit = access.canEdit;
@@ -116,6 +126,24 @@ export function PlanningBoard({
   useEffect(() => {
     setCards(data.cards);
   }, [data.cards]);
+
+  // A gestão, ao abrir uma semana a partir da atual, completa os cards das demandas fixas.
+  const canManage = access.canManage;
+  const notInPast =
+    week.year * 100 + week.week >= todayWeek.year * 100 + todayWeek.week;
+  useEffect(() => {
+    if (!canManage || !notInPast) return;
+    let cancelled = false;
+    void syncPlanWeekAction(sector.slug, week).then((result) => {
+      if (cancelled || "error" in result) return;
+      if (result.generated || result.duplicated) router.refresh();
+    });
+    return () => {
+      cancelled = true;
+    };
+    // roda uma vez por montagem: o quadro é remontado a cada troca de semana ou setor
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [columnWidth, setColumnWidth] = useState(COL_WIDTH_DEFAULT);
   const [fitMode, setFitMode] = useState(true);
   const boardRef = useRef<HTMLDivElement>(null);
@@ -318,6 +346,27 @@ export function PlanningBoard({
     router.refresh();
   }
 
+  async function toggleBlock(weekday: number, memberId: string | null) {
+    const result = await toggleDayBlockAction(sector.slug, week, weekday, memberId);
+    if ("error" in result) {
+      toast.error(result.error);
+      return;
+    }
+    router.refresh();
+  }
+
+  async function duplicatePrevious() {
+    const result = await duplicatePreviousWeekAction(sector.slug, week);
+    if ("error" in result) {
+      toast.error(result.error);
+      return;
+    }
+    toast.success(
+      result.created ? `${result.created} card(s) copiados da semana anterior` : "Nada para duplicar",
+    );
+    if (result.created) router.refresh();
+  }
+
   async function moveTo(card: PlanCardData, dateKey: string | null, memberId: string | null) {
     const result = await movePlanCardToDateAction(card.id, dateKey, memberId);
     if ("error" in result) {
@@ -452,6 +501,39 @@ export function PlanningBoard({
           >
             <History className="mr-1 h-4 w-4" /> Histórico
           </button>
+          {access.canManage && (
+            <>
+              <button
+                type="button"
+                className="h-9 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50"
+                onClick={() => setClientsOpen(true)}
+              >
+                Clientes
+              </button>
+              <button
+                type="button"
+                className="h-9 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50"
+                onClick={() => void duplicatePrevious()}
+              >
+                Duplicar semana anterior
+              </button>
+              <Link
+                href="/equipe"
+                className="flex h-9 items-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50"
+              >
+                <Users className="mr-1 h-4 w-4" /> Acessos
+              </Link>
+              <button
+                type="button"
+                aria-label="Configurações da equipe e capacidade"
+                title="Configurações da equipe e capacidade"
+                className="grid h-9 w-9 place-items-center rounded-md border border-slate-200 bg-white text-slate-800 hover:bg-slate-50"
+                onClick={() => setSettingsOpen(true)}
+              >
+                <Settings className="h-4 w-4" />
+              </button>
+            </>
+          )}
           {navigating && <Loader2 className="h-4 w-4 animate-spin text-slate-500" aria-label="Carregando" />}
         </div>
         {!access.canManage && (
@@ -525,7 +607,23 @@ export function PlanningBoard({
                           {formatShortDate(dayDate(week, day.value))}
                         </p>
                       </div>
-                      <Lock className="h-4 w-4 text-white/70" aria-hidden />
+                      {access.canManage ? (
+                        <button
+                          type="button"
+                          aria-label={dayBlocked ? `Desbloquear ${day.label}` : `Bloquear ${day.label}`}
+                          title={dayBlocked ? "Desbloquear o dia" : "Bloquear o dia (feriado)"}
+                          className="rounded-md p-1 hover:bg-white/10"
+                          onClick={() => void toggleBlock(day.value, null)}
+                        >
+                          {dayBlocked ? (
+                            <Unlock className="h-4 w-4 text-white" />
+                          ) : (
+                            <Lock className="h-4 w-4 text-white/70" />
+                          )}
+                        </button>
+                      ) : (
+                        <Lock className="h-4 w-4 text-white/70" aria-hidden />
+                      )}
                     </div>
                     {dayBlocked && (
                       <p className="mx-3 mb-2 rounded-md bg-rose-100 px-2 py-1 text-center text-xs font-semibold uppercase tracking-wide text-rose-700">
@@ -573,7 +671,27 @@ export function PlanningBoard({
                               >
                                 {member.name}
                               </span>
-                              <Lock className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+                              {access.canManage ? (
+                                <button
+                                  type="button"
+                                  aria-label={
+                                    memberBlocked
+                                      ? `Desbloquear ${member.name} em ${day.label}`
+                                      : `Bloquear ${member.name} em ${day.label}`
+                                  }
+                                  className="text-slate-400 hover:text-rose-600"
+                                  onClick={() => void toggleBlock(day.value, member.id)}
+                                  title="Bloquear profissional neste dia"
+                                >
+                                  {memberBlocked ? (
+                                    <Unlock className="h-3.5 w-3.5 text-rose-600" />
+                                  ) : (
+                                    <Lock className="h-3.5 w-3.5" />
+                                  )}
+                                </button>
+                              ) : (
+                                <Lock className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+                              )}
                             </div>
                             <PlanColumn
                               id={key}
@@ -751,6 +869,27 @@ export function PlanningBoard({
           isAbsent={isAbsent}
           onConfirm={(dateKey, memberId) => moveTo(moving, dateKey, memberId)}
           onClose={() => setMoving(null)}
+        />
+      )}
+      {settingsOpen && (
+        <SettingsDialog
+          slug={sector.slug}
+          members={members}
+          overrides={overrides}
+          week={week}
+          onClose={() => setSettingsOpen(false)}
+          onChanged={() => router.refresh()}
+        />
+      )}
+      {clientsOpen && (
+        <ClientsDialog
+          slug={sector.slug}
+          week={week}
+          clients={data.clients}
+          members={members}
+          presets={data.presets}
+          onClose={() => setClientsOpen(false)}
+          onChanged={() => router.refresh()}
         />
       )}
       {historyOpen && (

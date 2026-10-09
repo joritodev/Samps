@@ -2,8 +2,28 @@
 
 import { revalidatePath } from "next/cache";
 import type { PlanCardInput, PlanCardMoveInput } from "@/lib/agency/planning/card-input";
-import type { IsoWeek } from "@/lib/agency/planning/types";
+import type {
+  CapacityOverrideInput,
+  MemberSettingsInput,
+  PresetInput,
+  TemplateInput,
+} from "@/lib/agency/planning/config-input";
+import type { IsoWeek, PlanTemplateData } from "@/lib/agency/planning/types";
 import { requirePermission } from "@/lib/permissions/check";
+import {
+  addPlanMember,
+  createPreset,
+  deactivatePlanMember,
+  deletePreset,
+  duplicatePreviousWeek,
+  listEligibleMembers,
+  listPlanTemplates,
+  saveClientTemplates,
+  saveMemberSettings,
+  setCapacityOverride,
+  syncPlanWeek,
+  toggleDayBlock,
+} from "@/lib/services/planning-config.service";
 import { listLinkableDemands, type LinkableDemand } from "@/lib/services/planning.service";
 import {
   createPlanCard,
@@ -130,4 +150,118 @@ export async function listLinkableDemandsAction(
   } catch (error) {
     return fail(error);
   }
+}
+
+/* ---- Configuração do quadro (planning.manage) ---- */
+
+async function manage<T extends object>(work: (user: Awaited<ReturnType<typeof requirePermission>>) => Promise<T>) {
+  const user = await requirePermission("planning.manage");
+  try {
+    const result = await work(user);
+    refresh();
+    return { success: true as const, ...result };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function listEligibleMembersAction(
+  slug: string,
+): Promise<{ people: { id: string; name: string }[] } | Failure> {
+  const user = await requirePermission("planning.manage");
+  try {
+    return { people: await listEligibleMembers(user, slug) };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function addPlanMemberAction(slug: string, userId: string, week: IsoWeek) {
+  return manage(async (user) => {
+    await addPlanMember(user, slug, userId, week);
+    return {};
+  });
+}
+
+export async function saveMemberSettingsAction(slug: string, week: IsoWeek, inputs: MemberSettingsInput[]) {
+  return manage(async (user) => {
+    await saveMemberSettings(user, slug, week, inputs);
+    return {};
+  });
+}
+
+export async function deactivatePlanMemberAction(slug: string, id: string, week: IsoWeek) {
+  return manage(async (user) => {
+    await deactivatePlanMember(user, slug, id, week);
+    return {};
+  });
+}
+
+export async function setCapacityOverrideAction(slug: string, week: IsoWeek, input: CapacityOverrideInput) {
+  return manage(async (user) => {
+    await setCapacityOverride(user, slug, week, input);
+    return {};
+  });
+}
+
+export async function toggleDayBlockAction(
+  slug: string,
+  week: IsoWeek,
+  weekday: number,
+  memberId: string | null,
+) {
+  return manage((user) => toggleDayBlock(user, slug, week, weekday, memberId));
+}
+
+export async function createPresetAction(slug: string, week: IsoWeek, input: PresetInput) {
+  return manage(async (user) => {
+    await createPreset(user, slug, week, input);
+    return {};
+  });
+}
+
+export async function deletePresetAction(slug: string, week: IsoWeek, id: string) {
+  return manage(async (user) => {
+    await deletePreset(user, slug, week, id);
+    return {};
+  });
+}
+
+export async function listPlanTemplatesAction(
+  slug: string,
+): Promise<{ templates: PlanTemplateData[] } | Failure> {
+  const user = await requirePermission("planning.manage");
+  try {
+    return { templates: await listPlanTemplates(user, slug) };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function saveClientTemplatesAction(
+  slug: string,
+  week: IsoWeek,
+  clientId: string,
+  inputs: TemplateInput[],
+) {
+  return manage(async (user) => {
+    await saveClientTemplates(user, slug, week, clientId, inputs);
+    return {};
+  });
+}
+
+/** Chamada ao abrir a semana: só atualiza a tela quando algo foi criado. */
+export async function syncPlanWeekAction(slug: string, week: IsoWeek) {
+  const user = await requirePermission("planning.manage");
+  try {
+    const result = await syncPlanWeek(user, slug, week);
+    if (result.generated || result.duplicated) refresh();
+    return { success: true as const, ...result };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function duplicatePreviousWeekAction(slug: string, week: IsoWeek) {
+  return manage((user) => duplicatePreviousWeek(user, slug, week));
 }
