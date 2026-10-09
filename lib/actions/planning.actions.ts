@@ -11,6 +11,12 @@ import type {
 import type { IsoWeek, PlanTemplateData } from "@/lib/agency/planning/types";
 import { requirePermission } from "@/lib/permissions/check";
 import {
+  applyDistribution,
+  previewDistribution,
+  type DistributionParams,
+  type DistributionPreview,
+} from "@/lib/services/planning-distribution.service";
+import {
   addPlanMember,
   createPreset,
   deactivatePlanMember,
@@ -264,4 +270,33 @@ export async function syncPlanWeekAction(slug: string, week: IsoWeek) {
 
 export async function duplicatePreviousWeekAction(slug: string, week: IsoWeek) {
   return manage((user) => duplicatePreviousWeek(user, slug, week));
+}
+
+/* ---- Distribuição automática (planning.edit) ---- */
+
+export async function previewDistributionAction(
+  slug: string,
+  params: DistributionParams,
+): Promise<{ preview: DistributionPreview } | { empty: true } | Failure> {
+  const user = await requirePermission("planning.edit");
+  try {
+    const result = await previewDistribution(user, slug, params);
+    return "empty" in result ? result : { preview: result };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function applyDistributionAction(
+  slug: string,
+  params: DistributionParams & { signature: string },
+) {
+  const user = await requirePermission("planning.edit");
+  try {
+    const result = await applyDistribution(user, slug, params);
+    refresh();
+    return { success: true as const, ...result };
+  } catch (error) {
+    return fail(error);
+  }
 }

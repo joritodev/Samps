@@ -25,6 +25,7 @@ import {
   Maximize,
   Plus,
   Settings,
+  Sparkles,
   Unlock,
   Users,
   ZoomIn,
@@ -32,12 +33,14 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import {
+  applyDistributionAction,
   createPlanCardAction,
   deletePlanCardAction,
   duplicatePlanCardAction,
   duplicatePreviousWeekAction,
   movePlanCardAction,
   movePlanCardToDateAction,
+  previewDistributionAction,
   syncPlanWeekAction,
   toggleDayBlockAction,
   togglePlanCardCompleteAction,
@@ -71,12 +74,14 @@ import {
   weekRangeLabel,
   weeksInIsoYear,
 } from "@/lib/agency/planning/week";
+import type { DistributionPreview } from "@/lib/services/planning-distribution.service";
 import type { PlanningBoardData } from "@/lib/services/planning.service";
 import { PlanCardView } from "./plan-card-view";
 import { ClientsDialog } from "./clients-dialog";
 import { PlanColumn } from "./plan-column";
 import { SettingsDialog } from "./settings-dialog";
 import { CardDialog, cardToDraft, draftToInput, emptyDraft, type CardDraft } from "./card-dialog";
+import { DistributionDialog } from "./distribution-dialog";
 import { HistoryDialog } from "./history-dialog";
 import { MoveCardDialog } from "./move-card-dialog";
 
@@ -117,6 +122,8 @@ export function PlanningBoard({
   const [historyOpen, setHistoryOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [clientsOpen, setClientsOpen] = useState(false);
+  const [distribution, setDistribution] = useState<DistributionPreview | null>(null);
+  const [suggesting, setSuggesting] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overContainer, setOverContainer] = useState<string | null>(null);
   const canEdit = access.canEdit;
@@ -346,6 +353,44 @@ export function PlanningBoard({
     router.refresh();
   }
 
+  async function runDistribution(variant: number, relaxed: boolean) {
+    setSuggesting(true);
+    const result = await previewDistributionAction(sector.slug, { variant, relaxed });
+    setSuggesting(false);
+    if ("error" in result) {
+      toast.error(result.error);
+      return;
+    }
+    if ("empty" in result) {
+      toast.info("Não existem demandas não alocadas");
+      return;
+    }
+    setDistribution(result.preview);
+  }
+
+  async function applyDistribution() {
+    if (!distribution) return;
+    if (!distribution.moves.length) {
+      setDistribution(null);
+      toast.info("Nada a reorganizar — a semana já está equilibrada");
+      return;
+    }
+    setSuggesting(true);
+    const result = await applyDistributionAction(sector.slug, {
+      variant: distribution.variant,
+      relaxed: distribution.relaxed,
+      signature: distribution.signature,
+    });
+    setSuggesting(false);
+    if ("error" in result) {
+      toast.error(result.error);
+      return;
+    }
+    toast.success(`${result.applied} card(s) reorganizados`);
+    setDistribution(null);
+    router.refresh();
+  }
+
   async function toggleBlock(weekday: number, memberId: string | null) {
     const result = await toggleDayBlockAction(sector.slug, week, weekday, memberId);
     if ("error" in result) {
@@ -492,6 +537,21 @@ export function PlanningBoard({
               onClick={() => setDraft(emptyDraft(sector.slug))}
             >
               <Plus className="mr-1 h-4 w-4" /> Novo card
+            </button>
+          )}
+          {canEdit && (
+            <button
+              type="button"
+              className="flex h-9 items-center rounded-md bg-violet-600 px-3 text-sm font-medium text-white hover:bg-violet-700 disabled:opacity-60"
+              onClick={() => void runDistribution(0, false)}
+              disabled={suggesting}
+            >
+              {suggesting ? (
+                <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+              ) : (
+                <Sparkles className="mr-1 h-4 w-4" />
+              )}
+              Sugerir distribuição
             </button>
           )}
           <button
@@ -890,6 +950,17 @@ export function PlanningBoard({
           presets={data.presets}
           onClose={() => setClientsOpen(false)}
           onChanged={() => router.refresh()}
+        />
+      )}
+      {distribution && (
+        <DistributionDialog
+          data={distribution}
+          members={members}
+          busy={suggesting}
+          onVariant={() => void runDistribution(distribution.variant + 1, distribution.relaxed)}
+          onRelax={() => void runDistribution(0, true)}
+          onApply={() => void applyDistribution()}
+          onClose={() => setDistribution(null)}
         />
       )}
       {historyOpen && (

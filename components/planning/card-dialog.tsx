@@ -29,6 +29,7 @@ import type {
   PlanSectorSlug,
 } from "@/lib/agency/planning/types";
 import { WEEKDAYS } from "@/lib/agency/planning/week";
+import { DesignCalculator } from "./design-calculator";
 import type { LinkableDemand } from "@/lib/services/planning.service";
 
 export type CardDraft = {
@@ -295,8 +296,15 @@ export function CardDialog({
               onChange={(e) => onChange({ ...draft, title: e.target.value })}
             />
           </div>
+          {sector === "design" && (
+            <DesignCalculator
+              kind={draft.kind}
+              presets={presets}
+              onApply={(hours) => onChange({ ...draft, durationHours: hours })}
+            />
+          )}
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
+            <div className={`space-y-1 ${sector === "design" ? "hidden" : ""}`}>
               <Label htmlFor="plan-duration">Duração</Label>
               <select
                 id="plan-duration"

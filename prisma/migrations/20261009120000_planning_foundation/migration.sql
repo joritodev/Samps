@@ -256,6 +256,32 @@ WHERE p."code" = 'planning.manage'
     WHERE rp."roleId" = r."id" AND rp."permissionId" = p."id"
   );
 
+-- Tipos de produção iniciais de cada setor (idempotente). Em produção o seed não roda,
+-- então os tempos-padrão do Design e as durações do Vídeo nascem aqui.
+INSERT INTO "PlanPreset" ("id", "sectorId", "label", "hours", "sortOrder")
+SELECT 'plp_' || substr(md5(s."slug" || '|' || v."label"), 1, 24), s."id", v."label", v."hours"::numeric(6,4), v."sortOrder"
+FROM "Sector" s
+JOIN (VALUES
+  ('video', '30 minutos', 0.5, 0),
+  ('video', 'Reel simples', 1, 1),
+  ('video', 'Vídeo intermediário', 2, 2),
+  ('video', 'Vídeo complexo', 3, 3),
+  ('video', 'Vídeo elaborado', 6, 4),
+  ('design', 'Criativo estático (por criativo)', 0.25, 0),
+  ('design', 'Carrossel (por slide)', 0.25, 1),
+  ('design', 'PDF / apresentação (por página)', 0.0833, 2),
+  ('design', 'Sequência de stories (~5)', 0.3333, 3),
+  ('design', 'Landing page (6–7 seções)', 2.5, 4),
+  ('design', 'Identidade visual simples', 1.5, 5),
+  ('design', 'Identidade visual completa', 2.5, 6),
+  ('design', 'Criação de template de vídeo', 0.3333, 7),
+  ('design', 'Vídeo com template pronto (por vídeo)', 0.1167, 8),
+  ('design', 'Adicional: sem identidade visual definida', 1.5, 9)
+) AS v("slug", "label", "hours", "sortOrder") ON v."slug" = s."slug"
+WHERE NOT EXISTS (
+  SELECT 1 FROM "PlanPreset" p WHERE p."sectorId" = s."id" AND p."label" = v."label"
+);
+
 -- Dados internos da equipe: cliente externo não lê nem grava.
 -- app_rls_active() = false → migrations, seed e scripts admin passam sem recorte.
 ALTER TABLE "PlanMember" ENABLE ROW LEVEL SECURITY;
