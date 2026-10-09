@@ -6,6 +6,7 @@ import { signOut } from "next-auth/react";
 import {
   Building2,
   CalendarDays,
+  CalendarRange,
   Camera,
   FolderKanban,
   History,
@@ -77,6 +78,12 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/demandas", label: "Demandas", icon: ListTodo },
   { href: "/setores", label: "Setores", icon: Layers },
   { href: "/agenda", label: "Agenda", icon: CalendarDays },
+  {
+    href: "/planejamento-semanal",
+    label: "Planejamento",
+    icon: CalendarRange,
+    anyOf: ["planning.view"],
+  },
   { href: "/projetos", label: "Projetos", icon: FolderKanban },
   { href: "/captacoes", label: "Captações", icon: Camera },
   {
