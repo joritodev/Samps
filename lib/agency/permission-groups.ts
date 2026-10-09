@@ -46,6 +46,10 @@ export const PERMISSION_GROUPS: { label: string; codes: PermissionCode[] }[] = [
     ],
   },
   {
+    label: "Planejamento semanal",
+    codes: ["planning.view", "planning.edit", "planning.manage"],
+  },
+  {
     label: "Administração",
     codes: ["settings.access", "roles.manage"],
   },

@@ -28,3 +28,21 @@ describe("agencyAccessRedirect", () => {
     expect(agencyAccessRedirect("/equipe", "MANAGEMENT", perms)).toBeNull();
   });
 });
+
+describe("agencyAccessRedirect: planejamento semanal", () => {
+  it("sem planning.view volta para a home do perfil", () => {
+    expect(agencyAccessRedirect("/planejamento-semanal", "DESIGNER", ["demands.edit"])).toBe(
+      "/meu-painel/design",
+    );
+    expect(agencyAccessRedirect("/planejamento-semanal/video", "VIDEOMAKER", [])).toBe(
+      "/meu-painel/video",
+    );
+  });
+
+  it("com planning.view entra nos dois setores", () => {
+    const perms = ["planning.view"];
+    expect(agencyAccessRedirect("/planejamento-semanal", "DESIGNER", perms)).toBeNull();
+    expect(agencyAccessRedirect("/planejamento-semanal/video", "DESIGNER", perms)).toBeNull();
+    expect(agencyAccessRedirect("/planejamento-semanal/design", "VIDEOMAKER", perms)).toBeNull();
+  });
+});

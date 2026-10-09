@@ -166,6 +166,13 @@ export function agencyAccessRedirect(
     return goHome();
   }
 
+  if (
+    (pathname === "/planejamento-semanal" || pathname.startsWith("/planejamento-semanal/")) &&
+    !permissions.includes("planning.view")
+  ) {
+    return goHome();
+  }
+
   const sectorMatch = pathname.match(/^\/setores\/([^/]+)/);
   if (sectorMatch) {
     const isMgmt = userType === "ADMIN" || userType === "MANAGEMENT";

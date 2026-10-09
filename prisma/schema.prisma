@@ -222,6 +222,14 @@ enum AuditAction {
   OBJECTIVE_UPDATED
   OBJECTIVE_DELETED
   KEY_RESULT_CHECKED_IN
+  PLAN_CARD_CREATED
+  PLAN_CARD_UPDATED
+  PLAN_CARD_MOVED
+  PLAN_CARD_DELETED
+  PLAN_WEEK_GENERATED
+  PLAN_WEEK_DUPLICATED
+  PLAN_DISTRIBUTION_APPLIED
+  PLAN_SETTINGS_UPDATED
   LOGIN
   LOGIN_FAILED
   OTHER
@@ -348,6 +356,8 @@ model User {
   agendaMeetings         AgendaMeeting[]          @relation("AgendaMeetingAuthor")
   goalsAbout             Goal[]                   @relation("GoalUser")
   goalsCreated           Goal[]                   @relation("GoalCreator")
+  planMember             PlanMember?
+  planCardsCreated       PlanCard[]               @relation("PlanCardCreator")
   reportsSeen            ReportSeen[]             @relation("ReportSeenUser")
   reportDeliveries       ReportDelivery[]         @relation("ReportDeliveryUser")
   objectivesOwned        Objective[]              @relation("ObjectiveOwner")
@@ -691,6 +701,11 @@ model Sector {
   designBoards   ClientBoard[]      @relation("BoardDesignSector")
   videoBoards    ClientBoard[]      @relation("BoardVideoSector")
   goals          Goal[]
+  planMembers    PlanMember[]
+  planCards      PlanCard[]
+  planTemplates  PlanTemplate[]
+  planDayBlocks  PlanDayBlock[]
+  planPresets    PlanPreset[]
   objectives     Objective[]
 }
 
@@ -777,6 +792,8 @@ model Client {
   userLinks            UserClientLink[]
   contracts            Contract[]
   demands              Demand[]
+  planCards            PlanCard[]
+  planTemplates        PlanTemplate[]
   projects             Project[]
   shoots               Shoot[]
   attachments          Attachment[]
@@ -927,6 +944,7 @@ model Demand {
   checklists          Checklist[]
   linkedChecklistItem ChecklistItem?
   comments            Comment[]
+  planCards           PlanCard[]
   attachments         Attachment[]
   assignments         DemandAssignment[]
   workSessions        WorkSession[]
@@ -1331,4 +1349,151 @@ model AccessAttemptLog {
   createdAt DateTime @default(now())
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+// ---------------------------------------------------------------------------
+// Planejamento semanal de produção (Design e Vídeo)
+// Spec: docs/superpowers/specs/2026-10-09-planejamento-semanal-design.md
+// CHECKs, RLS e permissões vivem na migration 20261009120000_planning_foundation.
+// ---------------------------------------------------------------------------
+
+enum PlanCardStatus {
+  NAO_ALOCADO
+  PROGRAMADO
+  EM_EDICAO
+  REVISAO
+  CONCLUIDO
+}
+
+/// Pessoa que aparece como linha do quadro: configuração própria (cor, capacidade).
+model PlanMember {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  sectorId             String
+  color                String   @default("#1d4ed8")
+  defaultCapacityHours Decimal  @default(6) @db.Decimal(4, 2)
+  sortOrder            Int      @default(0)
+  active               Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  user      User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sector    Sector                 @relation(fields: [sectorId], references: [id], onDelete: Restrict)
+  cards     PlanCard[]
+  templates PlanTemplate[]
+  blocks    PlanDayBlock[]
+  overrides PlanCapacityOverride[]
+
+  @@index([sectorId, active, sortOrder])
+}
+
+/// Modelo de demanda recorrente: gera cards toda semana.
+model PlanTemplate {
+  id                String   @id @default(cuid())
+  sectorId          String
+  clientId          String?
+  title             String
+  kind              String
+  category          String   @default("Outro")
+  durationHours     Decimal  @db.Decimal(5, 2)
+  weeklyQuantity    Int      @default(1)
+  preferredMemberId String?
+  preferredWeekday  Int?     @db.SmallInt
+  required          Boolean  @default(true)
+  active            Boolean  @default(true)
+  sortOrder         Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  sector          Sector      @relation(fields: [sectorId], references: [id], onDelete: Restrict)
+  client          Client?     @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  preferredMember PlanMember? @relation(fields: [preferredMemberId], references: [id], onDelete: SetNull)
+  cards           PlanCard[]
+
+  @@index([sectorId, active, sortOrder])
+}
+
+/// Card do quadro semanal. Sem dia ou sem pessoa = backlog ("não alocado").
+model PlanCard {
+  id            String         @id @default(cuid())
+  sectorId      String
+  isoYear       Int
+  isoWeek       Int
+  weekday       Int?           @db.SmallInt
+  memberId      String?
+  kind          String
+  clientId      String?
+  clientName    String?
+  demandId      String?
+  templateId    String?
+  title         String
+  category      String         @default("Outro")
+  durationHours Decimal        @db.Decimal(7, 4)
+  status        PlanCardStatus @default(NAO_ALOCADO)
+  pinned        Boolean        @default(false)
+  required      Boolean        @default(false)
+  recurring     Boolean        @default(false)
+  dueDate       DateTime?      @db.Date
+  notes         String?
+  position      Int            @default(0)
+  createdById   String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  sector    Sector        @relation(fields: [sectorId], references: [id], onDelete: Restrict)
+  member    PlanMember?   @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  client    Client?       @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  demand    Demand?       @relation(fields: [demandId], references: [id], onDelete: SetNull)
+  template  PlanTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  createdBy User?         @relation("PlanCardCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([sectorId, isoYear, isoWeek])
+  @@index([memberId, isoYear, isoWeek])
+  @@index([demandId])
+}
+
+/// Bloqueio de dia (feriado, evento). memberId nulo = setor inteiro.
+model PlanDayBlock {
+  id        String   @id @default(cuid())
+  sectorId  String
+  isoYear   Int
+  isoWeek   Int
+  weekday   Int      @db.SmallInt
+  memberId  String?
+  reason    String   @default("Bloqueado")
+  createdAt DateTime @default(now())
+
+  sector Sector      @relation(fields: [sectorId], references: [id], onDelete: Restrict)
+  member PlanMember? @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([sectorId, isoYear, isoWeek])
+}
+
+/// Capacidade diferente do padrão: por dia da semana (fixo) ou por dia de uma semana específica.
+/// Sem unique no banco (colunas nulas); o serviço substitui a linha em transação.
+model PlanCapacityOverride {
+  id        String   @id @default(cuid())
+  memberId  String
+  weekday   Int?     @db.SmallInt
+  isoYear   Int?
+  isoWeek   Int?
+  hours     Decimal  @db.Decimal(4, 2)
+  createdAt DateTime @default(now())
+
+  member PlanMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([memberId])
+}
+
+/// Durações rápidas por setor ("Tipos de produção"; no Design, os tempos-padrão das peças).
+model PlanPreset {
+  id        String  @id @default(cuid())
+  sectorId  String
+  label     String
+  hours     Decimal @db.Decimal(6, 4)
+  sortOrder Int     @default(0)
+
+  sector Sector @relation(fields: [sectorId], references: [id], onDelete: Restrict)
+
+  @@unique([sectorId, label])
 }

@@ -132,6 +132,71 @@ async function main() {
     `${foreignAttachments.length} estrangeiros / ${attachments.length} total`
   );
 
+  // Planejamento semanal: dado interno da equipe, cliente externo não vê nada.
+  const planVideo = await prisma.sector.findUniqueOrThrow({
+    where: { slug: "video" },
+  });
+  const planFixture = await prisma.planCard.create({
+    data: {
+      sectorId: planVideo.id,
+      isoYear: 2026,
+      isoWeek: 1,
+      kind: "video",
+      title: "check-rls (fixture, removida ao final)",
+      durationHours: 1,
+    },
+  });
+  try {
+    const planTables = {
+      planMember: (tx: typeof prisma) => tx.planMember.count(),
+      planTemplate: (tx: typeof prisma) => tx.planTemplate.count(),
+      planCard: (tx: typeof prisma) => tx.planCard.count(),
+      planDayBlock: (tx: typeof prisma) => tx.planDayBlock.count(),
+      planCapacityOverride: (tx: typeof prisma) =>
+        tx.planCapacityOverride.count(),
+      planPreset: (tx: typeof prisma) => tx.planPreset.count(),
+    };
+    for (const [name, count] of Object.entries(planTables)) {
+      const total = await count(prisma);
+      const seenByCliente = await withUserScope(cliente.id, (tx) =>
+        count(tx as unknown as typeof prisma)
+      );
+      const seenByGestor = await withUserScope(gestor.id, (tx) =>
+        count(tx as unknown as typeof prisma)
+      );
+      report(
+        `${name} invisível ao cliente externo`,
+        seenByCliente === 0,
+        `cliente=${seenByCliente} total=${total}`
+      );
+      report(
+        `${name} visível por inteiro à gestão`,
+        seenByGestor === total,
+        `gestor=${seenByGestor} total=${total}`
+      );
+    }
+    const writeAsCliente = await withUserScope(cliente.id, (tx) =>
+      tx.planCard
+        .create({
+          data: {
+            sectorId: planVideo.id,
+            isoYear: 2026,
+            isoWeek: 1,
+            kind: "video",
+            title: "escrita indevida",
+            durationHours: 1,
+          },
+        })
+        .then(() => true)
+        .catch(() => false)
+    );
+    report("cliente externo não grava PlanCard", writeAsCliente === false);
+  } finally {
+    await prisma.planCard.deleteMany({ where: { title: { startsWith: "check-rls" } } });
+    await prisma.planCard.deleteMany({ where: { title: "escrita indevida" } });
+    void planFixture;
+  }
+
   console.log(
     `\nsem escopo:        ${unscoped} demandas\n` +
       `gestão (view_all): ${asGestor} demandas\n` +
