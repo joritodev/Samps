@@ -45,15 +45,20 @@ async function audit(
   description: string,
   previousValue?: Prisma.InputJsonValue,
 ) {
-  await logAudit({
-    userId: user.id,
-    action,
-    entityType: "PlanCard",
-    entityId: card.id,
-    previousValue,
-    newValue: { sector, isoYear: week.year, isoWeek: week.week, description },
-    origin: "planning",
-  });
+  try {
+    await logAudit({
+      userId: user.id,
+      action,
+      entityType: "PlanCard",
+      entityId: card.id,
+      previousValue,
+      newValue: { sector, isoYear: week.year, isoWeek: week.week, description },
+      origin: "planning",
+    });
+  } catch (error) {
+    // O histórico não pode desfazer nem mascarar uma alteração que já foi gravada.
+    console.error("[planejamento] falha ao registrar histórico", error);
+  }
 }
 
 /** Pessoa do quadro precisa existir, estar ativa e ser do mesmo setor do card. */
@@ -73,11 +78,17 @@ async function requireMember(memberId: string, sectorId: string) {
 async function resolveLinks(
   user: SessionUser,
   value: { clientId: string | null; demandId: string | null; clientName: string | null },
+  current?: { clientId: string | null; demandId: string | null; clientName: string | null },
 ) {
   let clientId = value.clientId;
   let clientName = value.clientName;
 
-  if (value.demandId) {
+  // Vínculo que o card já tinha não é revalidado: quem só quer corrigir a observação de um card
+  // de outro cliente não deve esbarrar no escopo. Qualquer vínculo novo passa pela guarda.
+  const sameClient = (value.clientId ?? current?.clientId ?? null) === (current?.clientId ?? null);
+  const demandUnchanged = Boolean(value.demandId) && value.demandId === current?.demandId && sameClient;
+
+  if (value.demandId && !demandUnchanged) {
     const guard = await guardDemand(user, value.demandId, {});
     if (!guard.ok) throw new Error(guard.error);
     if (clientId && clientId !== guard.demand.clientId) {
@@ -86,15 +97,19 @@ async function resolveLinks(
     clientId = guard.demand.clientId;
   }
   if (clientId) {
-    if (!canAccessClient(user.permissions, user.clientIds, clientId)) {
-      throw new Error("Cliente não encontrado.");
+    if (current?.clientId === clientId && current.clientName) {
+      clientName = current.clientName;
+    } else {
+      if (!canAccessClient(user.permissions, user.clientIds, clientId)) {
+        throw new Error("Cliente não encontrado.");
+      }
+      const client = await db.client.findUnique({
+        where: { id: clientId },
+        select: { id: true, name: true },
+      });
+      if (!client) throw new Error("Cliente não encontrado.");
+      clientName = client.name;
     }
-    const client = await db.client.findUnique({
-      where: { id: clientId },
-      select: { id: true, name: true },
-    });
-    if (!client) throw new Error("Cliente não encontrado.");
-    clientName = client.name;
   }
   return { clientId, clientName, demandId: value.demandId };
 }
@@ -190,7 +205,11 @@ export async function updatePlanCard(
   const value = parsed.value;
 
   const member = value.memberId ? await requireMember(value.memberId, sector.id) : null;
-  const links = await resolveLinks(user, value);
+  const links = await resolveLinks(user, value, {
+    clientId: card.clientId,
+    demandId: card.demandId,
+    clientName: card.clientName,
+  });
   const allocated = Boolean(value.weekday && member);
   const wasAllocated = Boolean(card.weekday && card.memberId);
   const targetWeek: IsoWeek =

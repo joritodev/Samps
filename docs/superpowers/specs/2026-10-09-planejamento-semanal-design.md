@@ -1,6 +1,6 @@
 # Planejamento semanal de produção (Design e Vídeo)
 
-**Data:** 2026-10-09 · **Status:** spec da Fatia 0, aguardando aprovação · **Roadmap de fatias:** `docs/superpowers/plans/2026-10-09-planejamento-semanal-roadmap.md`
+**Data:** 2026-10-09 · **Status:** implementado (fatias 0 a 7); guia em `docs/superpowers/notas/2026-10-09-planejamento-semanal-guia.md` · **Roadmap de fatias:** `docs/superpowers/plans/2026-10-09-planejamento-semanal-roadmap.md`
 **Origem:** painel externo (Lovable/Supabase, repo `sampsdigital2023/boost-forge-platform`) mostrado em vídeo de reunião (11/09/2026) e entregue como zip `Painel_Design_Video`. O áudio do vídeo **não foi transcrito**; esta spec cobre o que a tela e o código mostram.
 
 ## Problema
@@ -22,7 +22,7 @@ Hoje a Samps planeja a produção semanal de Design e Vídeo num painel separado
 
 | # | Premissa | Fatia que depende |
 |---|---|---|
-| A1 | Sábado entra no quadro, como no original (Seg–Sáb, `WEEKDAYS` 1–6). A capacidade do sábado nasce 0 até alguém configurar. | 2, 3 |
+| A1 | Sábado entra no quadro, como no original (Seg–Sáb, `WEEKDAYS` 1–6). Implementado com a capacidade padrão da pessoa; a gestão zera o sábado nas configurações se não for usado. | 2, 3 |
 | A2 | Todo usuário interno com `planning.view` vê os dois setores; edita conforme `planning.edit`. | 1, 3 |
 | A3 | Card ligado a uma `Demand` é sentido único: o card mostra status e prazo da demanda e abre a demanda. Concluir o card **não** altera a demanda. | 4 |
 | A4 | Pessoas do quadro = usuários internos ativos do setor (`User.sectorId`), sem seed fixo "Léo/Mabelly". | 1, 5 |
@@ -61,7 +61,7 @@ Fora de escopo (não portar): login/cadastro do painel, gestão de acessos (`Acc
 | `activity_log` | `AuditLog` com `AuditAction` novas, tela do quadro e `/historico` |
 | `user_roles` (admin/user) | `planning.manage` (gestor) e `planning.edit`/`planning.view` (demais) |
 
-Ausência cadastrada (`Absence`, `canceledAt` nulo) cobrindo o dia zera a capacidade da pessoa naquele dia, sem precisar criar bloqueio manual. Feriado de `AgencySettings.holidays` zera o dia do setor. Os dois entram em `capacityFor` como parâmetros puros (a camada de serviço busca e passa), nunca com acesso a banco dentro da função.
+Ausência cadastrada (`Absence`, `canceledAt` nulo) cobrindo o dia zera a capacidade da pessoa naquele dia, sem precisar criar bloqueio manual. Feriado vira `PlanDayBlock` (o campo `AgencySettings.holidays` existe, mas nenhum código o usa). Os dois entram em `capacityFor` como parâmetros puros (a camada de serviço busca e passa), nunca com acesso a banco dentro da função.
 
 ## 3. Modelo de dados
 

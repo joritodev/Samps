@@ -342,3 +342,47 @@ describe("histórico", () => {
     await expect(listPlanningHistory(user([]), "video", WEEK)).rejects.toThrow(/permissão/);
   });
 });
+
+describe("vínculo já existente e falha no histórico", () => {
+  it("editar um card de cliente fora do escopo não revalida o que já estava vinculado", async () => {
+    db.planCard.findUnique.mockResolvedValue(
+      dbCard({ clientId: "c-alheio", clientName: "OUTRO", demandId: "d-alheia" }),
+    );
+    await updatePlanCard(editor, "k1", WEEK, {
+      ...input,
+      clientId: "c-alheio",
+      demandId: "d-alheia",
+      notes: "só ajustei a observação",
+    });
+    expect(guardDemand).not.toHaveBeenCalled();
+    expect(db.client.findUnique).not.toHaveBeenCalled();
+    expect(db.planCard.update.mock.calls[0]![0].data).toMatchObject({
+      clientId: "c-alheio",
+      clientName: "OUTRO",
+      demandId: "d-alheia",
+    });
+  });
+
+  it("trocar para uma demanda nova volta a passar pela guarda", async () => {
+    db.planCard.findUnique.mockResolvedValue(dbCard({ clientId: "c1", clientName: "COCO BAMBU", demandId: "d1" }));
+    await updatePlanCard(editor, "k1", WEEK, { ...input, clientId: "c1", demandId: "d2" });
+    expect(guardDemand).toHaveBeenCalledWith(editor, "d2", {});
+  });
+
+  it("trocar de cliente mantendo a demanda velha também é revalidado", async () => {
+    db.planCard.findUnique.mockResolvedValue(dbCard({ clientId: "c1", clientName: "COCO BAMBU", demandId: "d1" }));
+    guardDemand.mockResolvedValue({ ok: true, demand: { clientId: "c1" } });
+    await expect(
+      updatePlanCard(editor, "k1", WEEK, { ...input, clientId: "c2", demandId: "d1" }),
+    ).rejects.toThrow(/não é deste cliente/);
+  });
+
+  it("falha ao gravar o histórico não desfaz nem mascara a alteração", async () => {
+    logAudit.mockRejectedValue(new Error("banco fora"));
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    await expect(createPlanCard(editor, "video", WEEK, input)).resolves.toEqual({ id: "novo" });
+    expect(db.planCard.create).toHaveBeenCalled();
+    spy.mockRestore();
+    logAudit.mockReset();
+  });
+});

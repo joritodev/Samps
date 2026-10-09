@@ -49,14 +49,19 @@ async function auditSettings(
   week: IsoWeek,
   description: string,
 ) {
-  await logAudit({
-    userId: user.id,
-    action,
-    entityType: "PlanSetting",
-    entityId: sector.id,
-    newValue: { sector: sector.slug, isoYear: week.year, isoWeek: week.week, description },
-    origin: "planning",
-  });
+  try {
+    await logAudit({
+      userId: user.id,
+      action,
+      entityType: "PlanSetting",
+      entityId: sector.id,
+      newValue: { sector: sector.slug, isoYear: week.year, isoWeek: week.week, description },
+      origin: "planning",
+    });
+  } catch (error) {
+    // O histórico não pode mascarar uma configuração que já foi gravada.
+    console.error("[planejamento] falha ao registrar histórico", error);
+  }
 }
 
 /* -------------------------------- Equipe -------------------------------- */

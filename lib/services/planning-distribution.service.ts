@@ -11,6 +11,15 @@ import { logAudit } from "@/lib/services/audit.service";
 import { getPlanningSector, listPlanMembers, toPlanCardData } from "@/lib/services/planning.service";
 import type { SessionUser } from "@/types/auth";
 
+async function logAuditSafe(params: Parameters<typeof logAudit>[0]) {
+  try {
+    await logAudit(params);
+  } catch (error) {
+    // O histórico não pode desfazer nem mascarar movimentos já gravados.
+    console.error("[planejamento] falha ao registrar histórico", error);
+  }
+}
+
 export type DistributionMoveView = {
   cardId: string;
   title: string;
@@ -222,7 +231,7 @@ export async function applyDistribution(
       : "não alocadas";
   for (const move of moves) {
     const week: IsoWeek = { year: move.toYear, week: move.toWeek };
-    await logAudit({
+    await logAuditSafe({
       userId: user.id,
       action: AuditAction.PLAN_DISTRIBUTION_APPLIED,
       entityType: "PlanCard",
