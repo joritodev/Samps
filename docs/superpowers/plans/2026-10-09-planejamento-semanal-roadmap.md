@@ -132,3 +132,11 @@ Não executar nada disto antes de a Fatia 0 aprovar a spec. Nenhuma fatia pode m
 2. Confirmar a semântica da ligação card × demanda (proposta acima).
 3. Sábado entra no quadro (o original tem Seg–Sáb; a jornada do Samps é Seg–Sex)?
 4. Quem vê o quadro do outro setor (proposta: todo usuário interno vê os dois, edita conforme `planning.edit`).
+
+## Registro de execução (09/10)
+
+- **Fatia 1** (fundação): feita, ver `2026-10-09-planejamento-fatia1-fundacao.md`.
+- **Fatia 2** (lógica pura): feita em `lib/agency/planning/` (`types`, `week`, `capacity`, `distribution`, `generate`, `config`) com 50 testes. Achados do porte:
+  - O painel original calcula errado a segunda-feira da semana 1 quando 1º de janeiro cai de sexta a domingo (2027 começa em 04/01). Corrigido ancorando em 4 de janeiro, com teste de ida e volta de 2025 a 2028. Fidelidade ao vídeo não inclui bugs.
+  - `AgencySettings.holidays` não é usado em lugar nenhum do código; feriados ficam em `PlanDayBlock`. A spec dizia o contrário; vale o `PlanDayBlock`.
+  - `capacityFor` e `suggestDistribution` recebem `isAbsent(memberId, "AAAA-MM-DD")` para zerar o dia de quem tem `Absence`; o serviço da Fatia 3 monta essa função com `isAbsentOn`.
