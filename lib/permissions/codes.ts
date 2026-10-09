@@ -26,6 +26,9 @@ export const PERMISSION_CODES = [
   "roles.manage",
   "boards.manage_lists",
   "goals.manage",
+  "planning.view",
+  "planning.edit",
+  "planning.manage",
 ] as const;
 
 export type PermissionCode = (typeof PERMISSION_CODES)[number];
@@ -58,4 +61,7 @@ export const PERMISSION_LABELS: Record<PermissionCode, string> = {
   "roles.manage": "Gerenciar funções e permissões",
   "boards.manage_lists": "Gerenciar colunas do quadro",
   "goals.manage": "Gerenciar metas e OKRs",
+  "planning.view": "Ver planejamento semanal",
+  "planning.edit": "Criar e mover cards no planejamento semanal",
+  "planning.manage": "Gerenciar planejamento semanal",
 };

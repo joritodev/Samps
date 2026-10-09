@@ -1,7 +1,9 @@
 # Fatia 1: fundação do planejamento semanal (schema, RLS, permissões)
 
+**Status:** executada em 09/10 (código pronto; aguarda Security Review + Bugbot e merge).
+
 **Spec:** `docs/superpowers/specs/2026-10-09-planejamento-semanal-design.md` (seções 2, 3 e 4). **Com schema, permissão e RLS:** desenho fechado aqui; o implementer não improvisa (se precisar fugir, BLOCKED).
-**Branch:** `feat/planejamento-fundacao`. **Motor:** SDD (controller Opus; implementer mid-tier). **Gates:** tsc, lint, build, `npm test`, `npm run check:rls`, **Security Review + Bugbot**.
+**Branch:** `claude/nifty-wright-6etnzp` (branch única da sessão; o playbook sugere `feat/planejamento-fundacao`). **Motor:** SDD (controller Opus; implementer mid-tier). **Gates:** tsc, lint, build, `npm test`, `npm run check:rls`, **Security Review + Bugbot**.
 **Não inclui:** lógica de capacidade, serviço, rotas, UI (Fatias 2–6).
 
 ## Banco (migração `20261009120000_planning_foundation`)
@@ -25,7 +27,19 @@ Todas as tabelas com `id TEXT` (cuid, como o resto do schema), `createdAt`/`upda
 | `planning.edit` | Criar e mover cards no planejamento | papéis internos operacionais (design, vídeo, social, tráfego, gestão) |
 | `planning.manage` | Gerenciar planejamento (excluir, equipe, capacidade, modelos) | Gestor/Admin |
 
-> Ao implementar, listar os papéis reais lidos de `prisma/seed.ts` e da migration `goals` e fixar a lista no commit; se um papel não for óbvio → BLOCKED, perguntar.
+Papéis reais (de `prisma/seed.ts`): `Administrador`, `Gestão`, `Social Media`, `Designer`, `Videomaker`, `Editor de Vídeo`, `Colaborador`, `Cliente Externo`. `view` e `edit` vão para todos menos `Cliente Externo`; `manage` só para `Administrador` e `Gestão`. Papéis personalizados criados na tela de funções não recebem nada automaticamente.
+
+## Decisões tomadas na execução
+
+- `PlanCapacityOverride` **sem unique** no banco (colunas nulas; Prisma não modela índice com `COALESCE`). O serviço da Fatia 5 substitui a linha em transação.
+- `weekday`, `isoYear`, `isoWeek` ficam como `Int` com CHECK; `dueDate` é `DATE`.
+- `PlanCard.createdById` e as FKs opcionais usam `ON DELETE SET NULL`; `PlanMember`/`PlanDayBlock`/`PlanCapacityOverride` seguem o membro com `CASCADE`; setor usa `RESTRICT`.
+- Seed cria `PlanMember` para designer, videomaker e editor de vídeo, e os presets (Vídeo 5, Design 10). `resetDatabase` limpa as tabelas novas primeiro.
+- Entidades de auditoria previstas: `PlanCard` e `PlanSetting` (rótulos em `ENTITY_TYPE_LABEL`).
+
+## Divergência anterior à fatia (não corrigida aqui)
+
+O schema da master tem `DemandDelay`, `DemandDelayResolution` e `User.notificationPrefs` **sem migration**. Num banco criado só por `prisma migrate deploy` (como o workflow `migrate-production.yml`), o seed e as telas que leem `notificationPrefs` falham. Para testar esta fatia, essas peças foram aplicadas só no banco local de teste. Decidir à parte: migration de correção (recomendado, fatia `fix/` própria) ou confirmar que a produção foi criada com `db push`.
 
 ## Código
 
@@ -41,11 +55,11 @@ Todas as tabelas com `id TEXT` (cuid, como o resto do schema), `createdAt`/`upda
 
 ## Tasks
 
-- [ ] 1. Migration de `AuditAction` (`20261009110000_planning_audit_actions`) + rótulos em `audit-labels.ts`. Commit próprio.
-- [ ] 2. `schema.prisma` + migration `20261009120000_planning_foundation` (tabelas, CHECKs, índices, RLS, permissões). `npx prisma validate` e `npx prisma generate` limpos; migration aplicada em banco local de teste (`prisma migrate deploy`).
-- [ ] 3. Códigos de permissão, rótulos, grupo e seed (permissões + presets). Teste unitário em `lib/permissions/*.test.ts` se existir cobertura de lista de códigos.
-- [ ] 4. `check-rls.ts` com as 6 tabelas; `npm run check:rls` verde.
-- [ ] 5. Gates: `npx tsc --noEmit`, `npm run lint`, `npm run build`, `npm test`. Security Review (`Diff: branch changes`) e Bugbot. PR da fatia.
+- [x] 1. Migration de `AuditAction` (`20261009110000_planning_audit_actions`) + rótulos em `audit-labels.ts`. Commit próprio.
+- [x] 2. `schema.prisma` + migration `20261009120000_planning_foundation` (tabelas, CHECKs, índices, RLS, permissões). `npx prisma validate` e `npx prisma generate` limpos; migration aplicada em banco local de teste (`prisma migrate deploy`).
+- [x] 3. Códigos de permissão, rótulos, grupo e seed (permissões + presets). Teste unitário em `lib/permissions/*.test.ts` se existir cobertura de lista de códigos.
+- [x] 4. `check-rls.ts` com as 6 tabelas; `npm run check:rls` verde.
+- [~] 5. Gates automáticos verdes (tsc, lint, build, 772 testes, check:rls). Falta: Security Review + Bugbot e PR da fatia.
 
 ## Smoke
 

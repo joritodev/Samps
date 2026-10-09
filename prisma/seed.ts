@@ -93,13 +93,21 @@ const ROLE_DEFINITIONS: {
       "timers.view",
       "indicators.view",
       "boards.manage_lists",
+      "planning.view",
+      "planning.edit",
     ],
   },
   {
     name: "Designer",
     description: "Executa demandas do setor de design.",
     userType: UserType.DESIGNER,
-    permissions: ["clients.view_assigned", "demands.edit", "timers.view"],
+    permissions: [
+      "clients.view_assigned",
+      "demands.edit",
+      "timers.view",
+      "planning.view",
+      "planning.edit",
+    ],
   },
   {
     name: "Videomaker",
@@ -110,19 +118,33 @@ const ROLE_DEFINITIONS: {
       "demands.edit",
       "shoots.create",
       "timers.view",
+      "planning.view",
+      "planning.edit",
     ],
   },
   {
     name: "Editor de Vídeo",
     description: "Executa a edição das demandas de vídeo.",
     userType: UserType.VIDEO_EDITOR,
-    permissions: ["clients.view_assigned", "demands.edit", "timers.view"],
+    permissions: [
+      "clients.view_assigned",
+      "demands.edit",
+      "timers.view",
+      "planning.view",
+      "planning.edit",
+    ],
   },
   {
     name: "Colaborador",
     description: "Perfil genérico para demais colaboradores internos.",
     userType: UserType.OTHER,
-    permissions: ["clients.view_assigned", "demands.edit", "timers.view"],
+    permissions: [
+      "clients.view_assigned",
+      "demands.edit",
+      "timers.view",
+      "planning.view",
+      "planning.edit",
+    ],
   },
   {
     name: "Cliente Externo",
@@ -131,6 +153,32 @@ const ROLE_DEFINITIONS: {
     permissions: ["portal.view"],
   },
 ];
+
+/**
+ * Durações rápidas do planejamento semanal (horas). No Design, os rótulos são
+ * os do painel original e valem como chave dos tempos-padrão das peças.
+ */
+const PLAN_PRESETS: Record<"video" | "design", { label: string; hours: number }[]> = {
+  video: [
+    { label: "30 minutos", hours: 0.5 },
+    { label: "Reel simples", hours: 1 },
+    { label: "Vídeo intermediário", hours: 2 },
+    { label: "Vídeo complexo", hours: 3 },
+    { label: "Vídeo elaborado", hours: 6 },
+  ],
+  design: [
+    { label: "Criativo estático (por criativo)", hours: 15 / 60 },
+    { label: "Carrossel (por slide)", hours: 15 / 60 },
+    { label: "PDF / apresentação (por página)", hours: 5 / 60 },
+    { label: "Sequência de stories (~5)", hours: 20 / 60 },
+    { label: "Landing page (6–7 seções)", hours: 150 / 60 },
+    { label: "Identidade visual simples", hours: 90 / 60 },
+    { label: "Identidade visual completa", hours: 150 / 60 },
+    { label: "Criação de template de vídeo", hours: 20 / 60 },
+    { label: "Vídeo com template pronto (por vídeo)", hours: 7 / 60 },
+    { label: "Adicional: sem identidade visual definida", hours: 90 / 60 },
+  ],
+};
 
 const SECTORS = [
   { name: "Social Media", slug: "social", color: "#8b5cf6" },
@@ -185,6 +233,12 @@ const ACTIVITY_STATUSES = [
 
 async function resetDatabase() {
   // Ordem de dependências: filhos antes dos pais.
+  await prisma.planCard.deleteMany();
+  await prisma.planTemplate.deleteMany();
+  await prisma.planDayBlock.deleteMany();
+  await prisma.planCapacityOverride.deleteMany();
+  await prisma.planMember.deleteMany();
+  await prisma.planPreset.deleteMany();
   await prisma.priorityScore.deleteMany();
   await prisma.workPause.deleteMany();
   await prisma.workSession.deleteMany();
@@ -289,6 +343,18 @@ async function main() {
   const video = sectorBySlug.get("video")!;
   const trafego = sectorBySlug.get("trafego")!;
 
+  console.log("Criando durações rápidas do planejamento semanal…");
+  await prisma.planPreset.createMany({
+    data: (["video", "design"] as const).flatMap((slug) =>
+      PLAN_PRESETS[slug].map((preset, index) => ({
+        sectorId: sectorBySlug.get(slug)!.id,
+        label: preset.label,
+        hours: preset.hours,
+        sortOrder: index,
+      }))
+    ),
+  });
+
   console.log("Criando usuários…");
   const passwordHash = await bcrypt.hash(DEFAULT_PASSWORD, 12);
 
@@ -391,6 +457,21 @@ async function main() {
       data: { leaderId: colaborador.id },
     }),
   ]);
+
+  console.log("Montando a equipe do planejamento semanal…");
+  const planningTeam = [
+    { user: designer, sectorId: design.id, color: "#e8608c" },
+    { user: videomaker, sectorId: video.id, color: "#1d4ed8" },
+    { user: videoEditor, sectorId: video.id, color: "#059669" },
+  ];
+  await prisma.planMember.createMany({
+    data: planningTeam.map((member, index) => ({
+      userId: member.user.id,
+      sectorId: member.sectorId,
+      color: member.color,
+      sortOrder: index,
+    })),
+  });
 
   console.log("Criando clientes e contratos…");
   const sorriso = await prisma.client.create({

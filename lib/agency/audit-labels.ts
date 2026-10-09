@@ -39,6 +39,14 @@ export const AUDIT_ACTION_LABEL: Record<AuditAction, string> = {
   OBJECTIVE_UPDATED: "Objetivo atualizado",
   OBJECTIVE_DELETED: "Objetivo apagado",
   KEY_RESULT_CHECKED_IN: "Check-in de resultado-chave",
+  PLAN_CARD_CREATED: "Card do planejamento criado",
+  PLAN_CARD_UPDATED: "Card do planejamento atualizado",
+  PLAN_CARD_MOVED: "Card do planejamento movido",
+  PLAN_CARD_DELETED: "Card do planejamento apagado",
+  PLAN_WEEK_GENERATED: "Semana gerada pelos modelos",
+  PLAN_WEEK_DUPLICATED: "Semana duplicada",
+  PLAN_DISTRIBUTION_APPLIED: "Distribuição aplicada",
+  PLAN_SETTINGS_UPDATED: "Configuração do planejamento alterada",
   LOGIN: "Login",
   LOGIN_FAILED: "Falha de login",
   OTHER: "Outro",
@@ -55,6 +63,8 @@ export const ENTITY_TYPE_LABEL: Record<string, string> = {
   Goal: "Meta",
   Objective: "Objetivo",
   KeyResult: "Resultado-chave",
+  PlanCard: "Card do planejamento",
+  PlanSetting: "Configuração do planejamento",
 };
 
 export function auditActionLabel(action: AuditAction) {
