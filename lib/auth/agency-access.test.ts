@@ -30,19 +30,11 @@ describe("agencyAccessRedirect", () => {
 });
 
 describe("agencyAccessRedirect: planejamento semanal", () => {
-  it("sem planning.view volta para a home do perfil", () => {
-    expect(agencyAccessRedirect("/planejamento-semanal", "DESIGNER", ["demands.edit"])).toBe(
-      "/meu-painel/design",
-    );
-    expect(agencyAccessRedirect("/planejamento-semanal/video", "VIDEOMAKER", [])).toBe(
-      "/meu-painel/video",
-    );
-  });
-
-  it("com planning.view entra nos dois setores", () => {
-    const perms = ["planning.view"];
-    expect(agencyAccessRedirect("/planejamento-semanal", "DESIGNER", perms)).toBeNull();
-    expect(agencyAccessRedirect("/planejamento-semanal/video", "DESIGNER", perms)).toBeNull();
-    expect(agencyAccessRedirect("/planejamento-semanal/design", "VIDEOMAKER", perms)).toBeNull();
+  it("não barra pelo token: a página confere a permissão atual no banco", () => {
+    // Token de quem entrou antes de ganhar planning.view não pode jogar a pessoa para casa.
+    const stale = ["demands.edit"];
+    expect(agencyAccessRedirect("/planejamento-semanal", "DESIGNER", stale)).toBeNull();
+    expect(agencyAccessRedirect("/planejamento-semanal/video", "VIDEOMAKER", stale)).toBeNull();
+    expect(agencyAccessRedirect("/planejamento-semanal/design", "VIDEOMAKER", [])).toBeNull();
   });
 });

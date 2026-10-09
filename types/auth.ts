@@ -166,12 +166,9 @@ export function agencyAccessRedirect(
     return goHome();
   }
 
-  if (
-    (pathname === "/planejamento-semanal" || pathname.startsWith("/planejamento-semanal/")) &&
-    !permissions.includes("planning.view")
-  ) {
-    return goHome();
-  }
+  // /planejamento-semanal não é barrado aqui de propósito: este gate lê as permissões gravadas no
+  // token de login (até 7 dias de idade) e mandaria para casa quem ganhou `planning.view` depois de
+  // entrar. A página confere a permissão no banco a cada requisição (`requirePermission`).
 
   const sectorMatch = pathname.match(/^\/setores\/([^/]+)/);
   if (sectorMatch) {
