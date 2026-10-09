@@ -1,0 +1,62 @@
+Samps OS — vídeo de abertura da reunião (70 s)
+================================================
+
+ONDE USAR
+Primeiro item da reunião, antes da demonstração ao vivo. Projete em tela cheia, com som.
+O vídeo termina em "Agora, ao vivo." — é a deixa para você assumir e abrir a plataforma.
+
+--- Mensagem curta (WhatsApp / abertura da call) -------------------------------
+
+Antes de eu abrir o sistema, 70 segundos: de onde a operação saiu e onde ela está agora.
+
+--- Post / e-mail para o time --------------------------------------------------
+
+Mil abas. Nenhuma resposta. Era assim que a operação funcionava: um quadro novo para cada
+mês, briefing mudando no meio da produção e o status real aparecendo no WhatsApp às 23h.
+
+O Samps OS fecha esse ciclo em um só lugar: o contrato gera a demanda, cada cliente tem o
+seu quadro, o briefing trava quando é concluído, a produção é medida por cronômetro, a
+entrega vira link do Drive com visibilidade controlada e o cliente enxerga só o que foi
+liberado no portal.
+
+E, por cima disso, a gestão vê sem perguntar: carga por pessoa, atrasos, demandas sem
+responsável, agenda única e performance do trimestre — com metas e OKRs que se atualizam
+sozinhos.
+
+Do contrato à publicação, em um só lugar.
+
+--- Legenda de 1 linha ---------------------------------------------------------
+
+Samps OS: do contrato à publicação, em um só lugar.
+
+--- Roteiro falado (se você quiser narrar por cima, 70 s) ----------------------
+
+(0–7 s)   A operação morava em mil abas. O briefing mudava no meio da produção e o status
+          real estava no WhatsApp, às 23h.
+(7–13 s)  O Samps OS é o sistema operacional da agência.
+(13–38 s) O contrato gera a demanda. Cada cliente tem o seu quadro. O briefing trava quando
+          é concluído. A produção é medida por cronômetro. A entrega vira link, e o time
+          decide o que o cliente vê.
+(38–52 s) Cada setor com a sua fila, uma agenda só, e a gestão vendo tudo sem perguntar.
+(52–65 s) Um trimestre medido pelo próprio sistema, com metas e OKRs que se atualizam.
+(65–70 s) Do contrato à publicação, em um só lugar. Agora, ao vivo.
+
+--- Observações de honestidade (diga se alguém perguntar) ----------------------
+
+Os números em tela (307 entregas, 81% no prazo, 624 h, 57 em aberto, 126 eventos em outubro)
+vêm do banco de simulação de trimestre que acompanha o produto, usado para validar os
+indicadores. Não são resultados de cliente real, e os cinco clientes das telas são fictícios.
+A legenda da cena de performance diz isso em tela.
+
+--- Créditos obrigatórios ------------------------------------------------------
+
+Trilha: "Threshold", de Jason Shaw (audionautix.com), licenciada em CC BY 4.0.
+O crédito já aparece no quadro final do vídeo. Se você reaproveitar o áudio em outro lugar,
+leve o crédito junto: https://creativecommons.org/licenses/by/4.0/
+
+Efeitos sonoros: Kenney (kenney.nl), domínio público (CC0).
+
+--- Arquivos -------------------------------------------------------------------
+
+brag.mp4   1920×1080, 30 fps, 70 s — vídeo final
+brag.jpg   quadro de capa (mesmo frame usado como primeiro frame do MP4)
