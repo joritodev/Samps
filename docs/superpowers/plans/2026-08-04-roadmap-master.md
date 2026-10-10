@@ -38,6 +38,8 @@ Nenhuma fase de código começa antes de a anterior ter PRs mergeados e gates ap
 
 **Próxima fatia a executar:** nenhuma de código. O projeto está concluído nos itens abaixo; o que resta é operação e espera (seção "Decisões de 06/10").
 
+**Projetos, captações, histórico do card, representantes e convites (10/10):** spec `specs/2026-10-10-projetos-captacoes-historico-design.md` e roadmap `plans/2026-10-10-projetos-captacoes-roadmap.md` (só documentação; código nas próximas fatias).  
+
 **Planejamento semanal Design/Vídeo (09/10):** implementado em `claude/nifty-wright-6etnzp` (fatias 1 a 7, sem PR ainda). Spec `specs/2026-10-09-planejamento-semanal-design.md`, roadmap `plans/2026-10-09-planejamento-semanal-roadmap.md`, guia `notas/2026-10-09-planejamento-semanal-guia.md`. Falta: Bugbot/Security Review externos, PR, `migrate deploy` e zerar os dados de teste.  
 
 **Já na master:** 3.3 briefing por categoria (#60), 3.7 CSP enforce (#59), 4.3 reunião na agenda (#62), 4.4 dívida técnica fechada em 28/09.  
