@@ -23,7 +23,7 @@ export function PlanColumn({ id, cards, ...shared }: Shared & { id: string; card
     <div
       ref={setNodeRef}
       className={`min-h-[80px] space-y-2 rounded-md p-1 transition-colors ${
-        isOver ? "bg-blue-50 ring-1 ring-blue-200" : ""
+        isOver ? "bg-primary/5 ring-1 ring-primary/30" : ""
       }`}
     >
       <SortableContext items={cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>

@@ -44,12 +44,12 @@ export function DistributionDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto bg-white text-slate-900">
+      <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto bg-card text-foreground">
         <DialogHeader>
           <DialogTitle>Sugestão de distribuição {data.relaxed ? "(liberando protegidos)" : ""}</DialogTitle>
         </DialogHeader>
         {data.unplaced.length > 0 && (
-          <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+          <div className="rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm text-warning-ink">
             <p className="font-semibold">
               <AlertTriangle className="mr-1 inline h-4 w-4" />
               {data.unplaced.length} demanda(s) não couberam mantendo os cards já planejados.
@@ -63,7 +63,7 @@ export function DistributionDialog({
           </div>
         )}
         {data.moves.length === 0 ? (
-          <p className="py-6 text-center text-sm text-slate-500">
+          <p className="py-6 text-center text-sm text-muted-foreground">
             Não há uma alocação disponível para as demandas pendentes neste período.
           </p>
         ) : (
@@ -71,16 +71,16 @@ export function DistributionDialog({
             {data.moves.map((m) => (
               <li
                 key={m.cardId}
-                className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white p-2 text-sm"
+                className="flex items-center justify-between gap-2 rounded-lg border border-border bg-card p-2 text-sm"
               >
                 <span className="min-w-0 truncate">
-                  <strong className="text-[#0f1c3f]">{m.title}</strong>
+                  <strong className="text-foreground">{m.title}</strong>
                   {m.clientName ? ` — ${m.clientName}` : ""}
                 </span>
-                <span className="shrink-0 text-right text-xs text-slate-600">
+                <span className="shrink-0 text-right text-xs text-muted-foreground">
                   {sourcePlace(m)} → {m.toDate.split("-").reverse().join("/")} • {place(m.toMemberId, m.toWeekday)}
                   {m.outsideOriginalWeek && (
-                    <span className="mt-0.5 block text-[11px] font-semibold text-amber-700">
+                    <span className="mt-0.5 block text-[11px] font-semibold text-warning-ink">
                       Sem vaga na semana original — sugerido fora dela
                     </span>
                   )}

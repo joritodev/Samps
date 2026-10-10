@@ -39,24 +39,24 @@ export function HistoryDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto bg-white text-slate-900 sm:max-w-xl">
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>Histórico — {weekRangeLabel(week)}</DialogTitle>
         </DialogHeader>
         {error ? (
-          <p className="text-sm text-rose-700">{error}</p>
+          <p className="text-sm text-destructive">{error}</p>
         ) : entries === null ? (
-          <p className="flex items-center text-sm text-slate-500">
+          <p className="flex items-center text-sm text-muted-foreground">
             <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Carregando…
           </p>
         ) : entries.length === 0 ? (
-          <p className="text-sm text-slate-500">Nenhuma alteração registrada nesta semana.</p>
+          <p className="text-sm text-muted-foreground">Nenhuma alteração registrada nesta semana.</p>
         ) : (
           <ul className="space-y-2">
             {entries.map((entry) => (
-              <li key={entry.id} className="rounded-md border border-slate-200 p-2 text-sm">
-                <p className="text-slate-800">{entry.description}</p>
-                <p className="mt-0.5 text-xs text-slate-500">
+              <li key={entry.id} className="rounded-md border border-border p-2 text-sm">
+                <p className="text-foreground">{entry.description}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
                   {entry.actorName ?? "Sistema"} ·{" "}
                   {new Date(entry.createdAt).toLocaleString("pt-BR", {
                     timeZone: "America/Sao_Paulo",

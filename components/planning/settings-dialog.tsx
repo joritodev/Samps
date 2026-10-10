@@ -100,20 +100,20 @@ export function SettingsDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto bg-white text-slate-900 sm:max-w-2xl">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Configurações da equipe e capacidade</DialogTitle>
         </DialogHeader>
         <div className="space-y-5">
           {members.length === 0 && (
-            <p className="text-sm text-slate-500">Nenhum profissional no quadro deste setor ainda.</p>
+            <p className="text-sm text-muted-foreground">Nenhum profissional no quadro deste setor ainda.</p>
           )}
           {members.map((member, index) => (
-            <div key={member.id} className="rounded-lg border border-slate-200 p-3">
+            <div key={member.id} className="rounded-lg border border-border p-3">
               <div className="flex flex-wrap items-end gap-3">
                 <div className="space-y-1">
                   <Label>Nome</Label>
-                  <Input value={member.name} readOnly className="bg-slate-50" title="O nome vem do cadastro do usuário" />
+                  <Input value={member.name} readOnly className="bg-muted/50" title="O nome vem do cadastro do usuário" />
                 </div>
                 <div className="space-y-1">
                   <Label>Cor</Label>
@@ -147,7 +147,7 @@ export function SettingsDialog({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="ml-auto text-rose-600"
+                  className="ml-auto text-destructive"
                   onClick={() => void removeMember(member.id)}
                 >
                   Remover
@@ -178,7 +178,7 @@ export function SettingsDialog({
                 })}
               </div>
               <div className="mt-3 grid grid-cols-6 gap-2">
-                <p className="col-span-6 text-xs font-medium text-slate-500">
+                <p className="col-span-6 text-xs font-medium text-muted-foreground">
                   Só nesta semana ({week.week}/{week.year})
                 </p>
                 {WEEKDAYS.map((d) => {
@@ -214,7 +214,7 @@ export function SettingsDialog({
               <Label htmlFor="plan-new-member">Adicionar profissional</Label>
               <select
                 id="plan-new-member"
-                className="h-9 w-full rounded-md border border-slate-200 bg-white px-2 text-sm text-slate-900"
+                className="h-9 w-full rounded-md border border-border bg-card px-2 text-sm text-foreground"
                 value={newPerson}
                 onChange={(e) => setNewPerson(e.target.value)}
               >
@@ -232,7 +232,7 @@ export function SettingsDialog({
               Adicionar
             </Button>
           </div>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-muted-foreground">
             As pessoas do quadro vêm do cadastro de usuários do setor. Para criar um acesso novo, use
             Equipe.
           </p>

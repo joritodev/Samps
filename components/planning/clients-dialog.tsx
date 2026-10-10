@@ -29,7 +29,7 @@ import type {
 } from "@/lib/agency/planning/types";
 import { WEEKDAYS, formatHours } from "@/lib/agency/planning/week";
 
-const selectClass = "h-9 rounded-md border border-slate-200 bg-white px-1 text-xs text-slate-900";
+const selectClass = "h-9 rounded-md border border-border bg-card px-1 text-xs text-foreground";
 
 export function ClientsDialog({
   slug,
@@ -89,7 +89,7 @@ export function ClientsDialog({
   return (
     <>
       <Dialog open onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto bg-white text-slate-900 sm:max-w-3xl">
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle>Clientes e demandas fixas</DialogTitle>
           </DialogHeader>
@@ -105,7 +105,7 @@ export function ClientsDialog({
           {tab === "clients" && (
             <div className="space-y-2">
               {templates === null ? (
-                <p className="flex items-center text-sm text-slate-500">
+                <p className="flex items-center text-sm text-muted-foreground">
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Carregando…
                 </p>
               ) : (
@@ -114,11 +114,11 @@ export function ClientsDialog({
                   return (
                     <div
                       key={c.id}
-                      className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2"
+                      className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2"
                     >
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-[#0f1c3f]">{c.name}</p>
-                        <p className="text-xs text-slate-500">
+                        <p className="truncate text-sm font-semibold text-foreground">{c.name}</p>
+                        <p className="text-xs text-muted-foreground">
                           {count} demanda{count === 1 ? "" : "s"} fixa{count === 1 ? "" : "s"}
                         </p>
                       </div>
@@ -129,8 +129,8 @@ export function ClientsDialog({
                   );
                 })
               )}
-              {clients.length === 0 && <p className="text-sm text-slate-500">Nenhum cliente ativo.</p>}
-              <p className="pt-1 text-xs text-slate-500">
+              {clients.length === 0 && <p className="text-sm text-muted-foreground">Nenhum cliente ativo.</p>}
+              <p className="pt-1 text-xs text-muted-foreground">
                 Os clientes são os do cadastro do Samps. Para criar ou editar um cliente, use Clientes no menu.
               </p>
             </div>
@@ -140,10 +140,10 @@ export function ClientsDialog({
             <div className="space-y-2">
               {presetList.map((p) => (
                 <div key={p.id} className="flex items-center gap-2">
-                  <Input value={p.label} readOnly className="bg-slate-50" />
-                  <Input value={p.hours} readOnly className="w-24 bg-slate-50" />
+                  <Input value={p.label} readOnly className="bg-muted/50" />
+                  <Input value={p.hours} readOnly className="w-24 bg-muted/50" />
                   <Button variant="ghost" size="icon" aria-label={`Remover ${p.label}`} onClick={() => void removePreset(p)}>
-                    <Trash2 className="h-4 w-4 text-rose-600" />
+                    <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 </div>
               ))}
@@ -271,14 +271,14 @@ function ClientTemplatesForm({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto bg-white text-slate-900 sm:max-w-3xl">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>Editar {client.name}</DialogTitle>
         </DialogHeader>
         <div className="space-y-2 pt-2">
-          <p className="text-sm font-semibold text-[#0f1c3f]">Demandas fixas semanais</p>
+          <p className="text-sm font-semibold text-foreground">Demandas fixas semanais</p>
           {rows.length === 0 && (
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted-foreground">
               Nenhuma demanda fixa. Adicione quantos itens por semana este cliente tem.
             </p>
           )}
@@ -355,7 +355,7 @@ function ClientTemplatesForm({
                   aria-label="Remover demanda"
                   onClick={() => setRows((prev) => prev.filter((_, i) => i !== index))}
                 >
-                  <Trash2 className="h-4 w-4 text-rose-600" />
+                  <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
                 <select
                   aria-label="Responsável"
@@ -383,7 +383,7 @@ function ClientTemplatesForm({
                     </option>
                   ))}
                 </select>
-                <label className="col-span-2 flex items-center gap-1 text-[11px] text-slate-600">
+                <label className="col-span-2 flex items-center gap-1 text-[11px] text-muted-foreground">
                   <input
                     type="checkbox"
                     checked={r.required}
@@ -391,7 +391,7 @@ function ClientTemplatesForm({
                   />
                   Obrigatório
                 </label>
-                <p className="col-span-12 -mt-1 text-[10px] text-slate-400">
+                <p className="col-span-12 -mt-1 text-[10px] text-muted-foreground">
                   {formatHours(r.durationHours)} × {r.weeklyQuantity} por semana
                 </p>
               </div>
