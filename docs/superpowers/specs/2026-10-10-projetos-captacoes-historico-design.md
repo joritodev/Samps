@@ -1,6 +1,6 @@
 # Projetos, captações, histórico do card, representantes e convites
 
-**Data:** 2026-10-10 · **Status:** projetos e captações implementados (guia em `notas/2026-10-10-projetos-captacoes-guia.md`); histórico do card, representantes e convites seguem como spec · **Roadmap de fatias:** `docs/superpowers/plans/2026-10-10-projetos-captacoes-roadmap.md`
+**Data:** 2026-10-10 · **Status:** projetos, captações e histórico do card implementados (guia em `notas/2026-10-10-projetos-captacoes-guia.md`); representantes e convites seguem como spec · **Roadmap de fatias:** `docs/superpowers/plans/2026-10-10-projetos-captacoes-roadmap.md`
 **Origem:** conversa de 10/10 com o responsável pelo projeto, depois de ver o quadro de planejamento semanal. Pedidos adicionais da reunião com a Samps (representantes do cliente, convites no Google Agenda, atraso simplificado, histórico de descrição).
 
 ## Problema

@@ -28,5 +28,11 @@
 - RLS: nenhuma tabela nova; `Project`, `Shoot` e `Demand` mantêm a policy `client_scope`.
 - Migrations: `20261010110000_projects_shoots_audit_actions` (enum) e `20261010120000_projects_shoots_flow` (colunas opcionais; nada é apagado). Em produção, só pelo workflow `migrate-production.yml`.
 
+## Histórico do card (prazo e descrição)
+- Qualquer pessoa interna com acesso à demanda muda o **prazo** e a **descrição**; a permissão `demands.change_deadline` deixou de ser exigida (o código continua existindo para papéis personalizados).
+- O motivo é **opcional** (até 500 caracteres). Mudar para a mesma data é recusado.
+- Cada mudança entra no **Histórico do card**, dentro do próprio card (aba "Atrasos e histórico" no quadro do cliente; rodapé do card nos setores e no quadro geral): quem, quando, de/para e motivo. Na descrição, "Ver antes e depois" mostra os dois textos.
+- O registro de atrasos (`DemandDelay`) continua alimentando relatórios e alertas; mudar o prazo ainda encerra o atraso aberto como "prazo prorrogado".
+
 ## Ainda não feito (próximas fatias do roadmap)
-Histórico do card (prazo livre e descrição), representantes do cliente com aniversário, convites `.ics`, card de captação no planejamento semanal, simulação com projetos e captações ligados.
+Representantes do cliente com aniversário, convites `.ics`, card de captação no planejamento semanal, simulação com projetos e captações ligados.

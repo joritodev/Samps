@@ -21,7 +21,7 @@ import {
 } from "@/lib/actions/cards.actions";
 import { addDriveAttachmentAction } from "@/app/actions/attachments";
 import { requestAdjustmentAction } from "@/lib/actions/adjustment.actions";
-import { DeadlineChangeForm } from "@/components/shared/deadline-change-form";
+import { DemandHistoryPanel } from "@/components/shared/demand-history-panel";
 import {
   DemandDelayHistory,
   type DemandDelayRow,
@@ -123,7 +123,6 @@ export function CardDetailSheet({
   card: cardProp,
   open,
   onOpenChange,
-  canChangeDeadline = false,
   canEditChecklist = false,
   checklistAssignees = [],
   priorities = [],
@@ -285,7 +284,7 @@ export function CardDetailSheet({
                 {!card.isChecklistItem ? (
                   <TabsTrigger value="checklist">Checklist</TabsTrigger>
                 ) : null}
-                <TabsTrigger value="delays">Atrasos</TabsTrigger>
+                <TabsTrigger value="delays">Atrasos e histórico</TabsTrigger>
                 <TabsTrigger value="briefing">Briefing</TabsTrigger>
                 <TabsTrigger value="production">Produção</TabsTrigger>
                 <TabsTrigger value="publication">Publicação</TabsTrigger>
@@ -339,10 +338,11 @@ export function CardDetailSheet({
 
               <TabsContent value="delays" className="space-y-4">
                 <DemandDelayHistory delays={delays} />
-                {canChangeDeadline && card && (
-                  <DeadlineChangeForm
+                {card && (
+                  <DemandHistoryPanel
                     demandId={card.id}
                     clientId={clientId}
+                    description={card.description}
                     dueDate={card.dueDate}
                     demandDeadline={card.demandDeadline}
                     publishDate={card.publishDate}

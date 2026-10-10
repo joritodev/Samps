@@ -1,7 +1,7 @@
-import { AuditAction, DemandDelayResolution } from "@prisma/client";
+import { AuditAction, DemandDelayResolution, UserType } from "@prisma/client";
+import { parseReason } from "@/lib/agency/demand-history";
 import { db } from "@/lib/db";
 import type { SessionUser } from "@/types/auth";
-import { hasPermission } from "@/lib/permissions/resolve";
 import { logAudit } from "@/lib/services/audit.service";
 import {
   resolveOpenDelay,
@@ -11,28 +11,32 @@ import {
 
 export type { DeadlineField };
 
+/**
+ * Qualquer pessoa com acesso à demanda muda o prazo (a guarda fica na action).
+ * O motivo é opcional; cada mudança entra no histórico do próprio card.
+ */
 export async function changeDemandDeadline(
   demandId: string,
   user: SessionUser,
   input: {
     field: DeadlineField;
     newDate: Date;
-    justification: string;
+    justification?: string | null;
   }
 ) {
-  if (!hasPermission(user.permissions, "demands.change_deadline")) {
+  if (user.userType === UserType.EXTERNAL_CLIENT) {
     throw new Error("Sem permissão para alterar prazo");
   }
-
-  const justification = input.justification.trim();
-  if (justification.length < 10) {
-    throw new Error("Justificativa deve ter pelo menos 10 caracteres");
-  }
+  const reason = parseReason(input.justification);
 
   const demand = await db.demand.findUnique({ where: { id: demandId } });
   if (!demand) throw new Error("Demanda não encontrada");
 
   const previous = demand[input.field];
+  if (previous && previous.toISOString().slice(0, 10) === input.newDate.toISOString().slice(0, 10)) {
+    throw new Error("A nova data é igual à atual");
+  }
+
   await db.demand.update({
     where: { id: demandId },
     data: { [input.field]: input.newDate },
@@ -51,7 +55,7 @@ export async function changeDemandDeadline(
       field: input.field,
       previous: previous?.toISOString() ?? null,
       new: input.newDate.toISOString(),
-      justification,
+      justification: reason ?? "",
     },
     origin: "deadline-change",
   });

@@ -24,7 +24,7 @@ import { registerPublicationAction } from "@/lib/actions/cards.actions";
 import { aprovarDemanda } from "@/app/actions/review";
 import { completeChecklistItemAction } from "@/app/actions/checklist";
 import { listDemandDelaysAction } from "@/lib/actions/deadline.actions";
-import { DeadlineChangeForm } from "@/components/shared/deadline-change-form";
+import { DemandHistoryPanel } from "@/components/shared/demand-history-panel";
 import {
   DemandDelayHistory,
   type DemandDelayRow,
@@ -73,7 +73,6 @@ export function SectorCardSheet({
   currentUserId,
   canAssign,
   canReview = false,
-  canChangeDeadline = false,
   readOnly = false,
   sectorUsers,
 }: {
@@ -535,10 +534,11 @@ export function SectorCardSheet({
               Histórico de atrasos
             </p>
             <DemandDelayHistory delays={delays} />
-            {canChangeDeadline && card && (
-              <DeadlineChangeForm
+            {card && (
+              <DemandHistoryPanel
                 demandId={card.id}
                 clientId={card.clientId}
+                description={card.description}
                 dueDate={card.dueDate}
                 demandDeadline={card.demandDeadline}
                 publishDate={card.publishDate}

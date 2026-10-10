@@ -2,7 +2,7 @@
 
 import { revalidateOperationalViews } from "@/lib/revalidate-operational";import { requireAuth } from "@/lib/permissions/check";
 import { guardDemand } from "@/lib/permissions/demand-guard";
-import { hasPermission } from "@/lib/permissions/resolve";
+import { listDemandHistory, updateDemandDescription } from "@/lib/services/demand-history.service";
 import {
   changeDemandDeadline as changeDeadlineService,
   type DeadlineField,
@@ -12,12 +12,9 @@ export async function changeDemandDeadlineAction(input: {
   clientId: string;
   field: DeadlineField;
   newDate: string;
-  justification: string;
+  justification?: string;
 }) {
   const user = await requireAuth();
-  if (!hasPermission(user.permissions, "demands.change_deadline")) {
-    return { error: "Sem permissão para alterar prazo" as const };
-  }
 
   const guard = await guardDemand(user, input.demandId);
   if (!guard.ok) return { error: guard.error };
@@ -56,4 +53,25 @@ export async function listDemandDelaysAction(demandId: string) {
     resolvedAt: r.resolvedAt?.toISOString() ?? null,
     originalDueDate: r.originalDueDate.toISOString(),
   }));
+}
+
+export async function listDemandHistoryAction(demandId: string) {
+  const user = await requireAuth();
+  return listDemandHistory(user, demandId);
+}
+
+export async function updateDemandDescriptionAction(input: {
+  demandId: string;
+  clientId: string;
+  description: string;
+  reason?: string;
+}) {
+  const user = await requireAuth();
+  try {
+    await updateDemandDescription(user, input.demandId, input.description, input.reason);
+    revalidateOperationalViews(input.clientId);
+    return { success: true as const };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Erro ao salvar a descrição" };
+  }
 }

@@ -54,6 +54,8 @@ vi.mock("@/app/actions/checklist", () => ({
 vi.mock("@/lib/actions/deadline.actions", () => ({
   listDemandDelaysAction: vi.fn().mockResolvedValue([]),
   changeDemandDeadlineAction: vi.fn(),
+  listDemandHistoryAction: vi.fn().mockResolvedValue([]),
+  updateDemandDescriptionAction: vi.fn(),
 }));
 
 afterEach(() => {

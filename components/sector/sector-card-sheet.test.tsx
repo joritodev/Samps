@@ -30,6 +30,9 @@ vi.mock("@/app/actions/review", () => ({
 
 vi.mock("@/lib/actions/deadline.actions", () => ({
   listDemandDelaysAction: vi.fn(async () => []),
+  listDemandHistoryAction: vi.fn(async () => []),
+  changeDemandDeadlineAction: vi.fn(),
+  updateDemandDescriptionAction: vi.fn(),
 }));
 
 vi.mock("@/app/actions/checklist", () => ({
