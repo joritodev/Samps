@@ -175,46 +175,35 @@ export const DURATION_PRESETS = [
   { label: "Vídeo elaborado — 6h", hours: 6 },
 ];
 
-/** Captação e roteiro usam cor cheia própria. */
-export const KIND_STYLES: Record<
-  string,
-  { card: string; bar: string; title: string; hours: string; chip: string }
-> = {
-  captacao: {
-    card: "border-rose-300 bg-rose-600 text-white",
-    bar: "#7f1d1d",
-    title: "text-white",
-    hours: "text-white",
-    chip: "bg-white/20 text-white",
-  },
-  roteiro: {
-    card: "border-violet-300 bg-violet-600 text-white",
-    bar: "#4c1d95",
-    title: "text-white",
-    hours: "text-white",
-    chip: "bg-white/20 text-white",
-  },
+/**
+ * Captação e roteiro têm cor própria no card. Todas as cores vêm dos tokens do tema (claro, escuro e
+ * temas personalizados), nunca de valores fixos.
+ */
+export const KIND_STYLES: Record<string, { card: string; bar: string }> = {
+  captacao: { card: "border-brand/40 bg-brand/10", bar: "hsl(var(--brand))" },
+  roteiro: { card: "border-primary/30 bg-primary/[0.06]", bar: "hsl(var(--primary))" },
 };
 
+/** Chip da categoria: tom do token no fundo e na borda, texto sempre no contraste do tema. */
 export const CATEGORY_STYLES: Record<string, string> = {
-  "Tráfego": "bg-blue-100 text-blue-800 border-blue-300",
-  "Orgânico": "bg-emerald-100 text-emerald-800 border-emerald-300",
-  Institucional: "bg-sky-100 text-sky-900 border-sky-300",
-  Corte: "bg-amber-100 text-amber-900 border-amber-300",
-  Podcast: "bg-violet-100 text-violet-800 border-violet-300",
-  Vendas: "bg-rose-100 text-rose-800 border-rose-300",
-  "Lançamento": "bg-orange-100 text-orange-800 border-orange-300",
-  Outro: "bg-slate-200 text-slate-800 border-slate-300",
+  "Tráfego": "border-primary/30 bg-primary/10 text-foreground",
+  "Orgânico": "border-success/30 bg-success/10 text-foreground",
+  Institucional: "border-chart-3/30 bg-chart-3/10 text-foreground",
+  Corte: "border-warning/30 bg-warning/10 text-foreground",
+  Podcast: "border-brand/30 bg-brand/10 text-foreground",
+  Vendas: "border-destructive/30 bg-destructive/10 text-foreground",
+  "Lançamento": "border-brand/30 bg-brand/10 text-foreground",
+  Outro: "border-border bg-foreground/[0.05] text-foreground",
 };
 
 /** Cor da faixa lateral do card por categoria. */
 export const CATEGORY_BAR: Record<string, string> = {
-  "Tráfego": "#2563eb",
-  "Orgânico": "#059669",
-  Institucional: "#0284c7",
-  Corte: "#d97706",
-  Podcast: "#7c3aed",
-  Vendas: "#e11d48",
-  "Lançamento": "#ea580c",
-  Outro: "#64748b",
+  "Tráfego": "hsl(var(--primary))",
+  "Orgânico": "hsl(var(--success))",
+  Institucional: "hsl(var(--chart-3))",
+  Corte: "hsl(var(--warning))",
+  Podcast: "hsl(var(--brand))",
+  Vendas: "hsl(var(--destructive))",
+  "Lançamento": "hsl(var(--brand))",
+  Outro: "hsl(var(--muted-foreground))",
 };

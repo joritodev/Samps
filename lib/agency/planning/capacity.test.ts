@@ -109,6 +109,15 @@ describe("slotSuggestions", () => {
       expect(total).toBeCloseTo(3, 5);
     }
   });
+  it("começa pelas peças maiores: poucas entregas, não dezenas de peças curtas", () => {
+    expect(slotSuggestions(3)[0]).toBe("1 de 3h");
+    expect(slotSuggestions(3)).toContain("1 de 2h + 1 de 1h");
+    // presets curtos do Design: a primeira sugestão usa a peça maior que cabe
+    const design = [5 / 60, 0.25, 0.5, 1.5, 2.5];
+    expect(slotSuggestions(6, design)[0]).toMatch(/^2 de 2\.5h/);
+    expect(slotSuggestions(6, design)[0]).toMatch(/^2 de 2\.5h/);
+  });
+
   it("respeita os presets informados", () => {
     expect(slotSuggestions(2, [1])).toEqual(["2 de 1h"]);
   });

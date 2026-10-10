@@ -1,0 +1,103 @@
+name: Planejamento de exemplo
+
+# Manual. Monta o quadro do planejamento semanal (Design e Vídeo) a partir das demandas e das
+# captações que já estão no banco, como as da simulação de um trimestre. Só mexe nas tabelas
+# Plan*: cria as pessoas do quadro que faltam e os cards de exemplo ligados às demandas.
+# Nada de demanda, cliente ou usuário é alterado ou apagado.
+#
+# Por padrão roda só o ENSAIO (mostra o que faria, sem alterar nada). Para aplicar, desmarque
+# "ensaio" e digite a frase de confirmação. Rodar de novo recria os cards de exemplo (os que
+# alguém arrastou ou editou deixam de ser tratados como exemplo e ficam). Para só remover os
+# cards de exemplo, escolha a ação "limpar".
+
+on:
+  workflow_dispatch:
+    inputs:
+      acao:
+        description: 'Ação'
+        required: true
+        type: choice
+        options:
+          - montar
+          - limpar
+        default: montar
+      ensaio:
+        description: 'Ensaio: não altera o banco (desmarque para aplicar)'
+        required: true
+        type: boolean
+        default: true
+      confirmar:
+        description: 'Para aplicar, digite: montar exemplo'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+# Divide a trava com as migrações e a simulação: nunca duas mexendo no banco ao mesmo tempo.
+concurrency:
+  group: migrate-production
+  cancel-in-progress: false
+
+jobs:
+  exemplo:
+    if: github.ref == 'refs/heads/master' && (inputs.ensaio || inputs.confirmar == 'montar exemplo')
+    runs-on: ubuntu-latest
+    environment: production-db
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Instalar dependências
+        env:
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci?schema=public
+        run: npm ci
+
+      - name: Conferir o secret
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::O secret PRODUCTION_DATABASE_URL não está configurado."
+            exit 1
+          fi
+
+      - name: Ensaio (não altera nada)
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: |
+          case "$DATABASE_URL" in
+            *connect_timeout=*) ;;
+            *\?*) DATABASE_URL="${DATABASE_URL}&connect_timeout=30" ;;
+            *) DATABASE_URL="${DATABASE_URL}?connect_timeout=30" ;;
+          esac
+          export DATABASE_URL
+          for attempt in 1 2 3 4 5; do
+            npx tsx prisma/seed-planning-demo.ts --dry-run && exit 0
+            echo "Tentativa $attempt falhou; esperando o banco acordar…"
+            sleep 10
+          done
+          exit 1
+
+      - name: Aplicar
+        if: ${{ !inputs.ensaio }}
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          ACAO: ${{ inputs.acao }}
+        run: |
+          case "$DATABASE_URL" in
+            *connect_timeout=*) ;;
+            *\?*) DATABASE_URL="${DATABASE_URL}&connect_timeout=30" ;;
+            *) DATABASE_URL="${DATABASE_URL}?connect_timeout=30" ;;
+          esac
+          export DATABASE_URL
+          if [ "$ACAO" = "limpar" ]; then
+            npx tsx prisma/seed-planning-demo.ts --limpar
+          else
+            npx tsx prisma/seed-planning-demo.ts --yes
+          fi

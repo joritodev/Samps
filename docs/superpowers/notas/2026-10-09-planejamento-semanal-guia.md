@@ -73,3 +73,9 @@ Cliente externo nunca acessa (rota, serviço e RLS).
 3. **Migrations antigas faltando na master**: `DemandDelay`, `DemandDelayResolution` e `User.notificationPrefs` existem no schema sem migration. Num banco criado só com `migrate deploy` o seed e algumas telas falham. Fatia `fix/` própria (ou confirmar que a produção foi criada com `db push`).
 4. **Visão mobile**: o quadro rola na horizontal e a largura das colunas se ajusta; um layout específico para celular não foi desenhado.
 5. **Zerar os dados de teste** antes de a equipe usar (ver o roadmap master, "Decisões de 06/10": apagar contas e dados de teste no repasse). Exige a `DATABASE_URL` do banco de teste e decisão sobre o que preservar.
+
+## Cores e dados de exemplo (10/10)
+
+- O quadro usa só tokens do tema (`primary`, `success`, `warning`, `destructive`, `brand`, `card`, `border`), claro e escuro. Estilos de tipo e categoria ficam em `lib/agency/planning/config.ts`.
+- Dados de exemplo: workflow manual `planejamento-exemplo.yml` (só na master, ambiente `production-db`). `acao=montar` cria os membros que faltam (usuários ativos de Design/Vídeo, com sábado zerado) e cards ligados às demandas da simulação nas semanas atuais; `acao=limpar` remove só os cards de exemplo (posição >= 1000). Rodar com `ensaio=true` primeiro; para aplicar, `ensaio=false` e `confirmar="montar exemplo"`. Idempotente.
+- `slotSuggestions` agora sugere primeiro as peças maiores.

@@ -66,13 +66,14 @@ export function isBacklogCard(card: Pick<PlanCardData, "weekday" | "memberId">) 
 
 /**
  * Combinações que aproveitam exatamente as horas livres.
- * Ex.: 3h livres → "3 de 1h", "1 de 2h + 1 de 1h", "1 de 3h".
+ * Ex.: 3h livres → "1 de 3h", "1 de 2h + 1 de 1h"… Começa pelas peças maiores, para sugerir poucas
+ * entregas em vez de dezenas de peças curtas (o painel original começava pelas menores).
  */
 export function slotSuggestions(free: number, presetHours?: number[]) {
   if (free <= 0) return [] as string[];
   const sizes = Array.from(
     new Set((presetHours?.length ? presetHours : [0.5, 1, 2, 3, 6]).filter((h) => h > 0)),
-  ).sort((a, b) => a - b);
+  ).sort((a, b) => b - a);
   const results: string[] = [];
   const step = (index: number, remaining: number, picked: number[]) => {
     if (results.length >= 4) return;
@@ -86,7 +87,7 @@ export function slotSuggestions(free: number, presetHours?: number[]) {
       if (label && !results.includes(label)) results.push(label);
       return;
     }
-    if (index >= sizes.length || remaining < sizes[0]! - 0.01) return;
+    if (index >= sizes.length || remaining < sizes[sizes.length - 1]! - 0.01) return;
     const size = sizes[index]!;
     const max = Math.floor((remaining + 0.01) / size);
     for (let n = max; n >= 0; n--) {

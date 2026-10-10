@@ -13,7 +13,9 @@ vi.mock("@/lib/actions/notifications.actions", () => ({
   markAllNotificationsReadAction: () => markAll(),
 }));
 
-const now = Date.now();
+// Relógio fixo ao meio-dia: com Date.now() o teste falhava na primeira hora depois de 00h UTC,
+// quando "5 minutos atrás" cai no dia anterior e o grupo "Hoje" some.
+const now = new Date("2026-10-09T15:00:00Z").getTime();
 const iso = (msAgo: number) => new Date(now - msAgo).toISOString();
 const rows = [
   { id: "a", type: "ADJUSTMENT_REQUESTED", title: "Ajuste solicitado", message: "Banner voltou", link: "/demandas", read: false, createdAt: iso(5 * 60_000) },
@@ -21,8 +23,15 @@ const rows = [
   { id: "c", type: "OTHER", title: "Material aguardando revisão", message: "Stories", link: null, read: true, createdAt: iso(10 * 86_400_000) },
 ];
 
-beforeEach(() => vi.clearAllMocks());
-afterEach(cleanup);
+beforeEach(() => {
+  vi.clearAllMocks();
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(now);
+});
+afterEach(() => {
+  cleanup();
+  vi.useRealTimers();
+});
 
 describe("NotificationsList", () => {
   it("agrupa por dia e mostra contagens nos filtros", () => {

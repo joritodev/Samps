@@ -32,6 +32,8 @@ import {
   ZoomOut,
 } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   applyDistributionAction,
   createPlanCardAction,
@@ -422,60 +424,70 @@ export function PlanningBoard({
     router.refresh();
   }
 
+  const selectClass =
+    "h-9 rounded-md border border-input bg-card px-2 text-sm text-foreground shadow-xs hover:border-foreground/20 focus-visible:border-primary focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-cyan/25";
+  const group = "flex items-center gap-1 rounded-lg border border-border bg-card p-1 shadow-xs";
+
   return (
-    <div className="-m-1 min-h-full rounded-xl bg-slate-200/70 pb-8 text-slate-900 sm:-m-2">
-      <header className="sticky top-0 z-20 rounded-t-xl border-b-4 border-[#1d4ed8] bg-white/95 backdrop-blur">
+    <div className="-m-1 min-h-full pb-8 text-foreground sm:-m-2">
+      <header className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur">
         <div className="flex w-full flex-wrap items-center gap-3 px-3 py-3 sm:px-4">
           <div className="mr-auto">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#1d4ed8]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary-ink">
               Samps Digital
             </p>
-            <h1 className="text-lg font-semibold text-[#0f1c3f]">{config.title}</h1>
+            <h1 className="font-display text-lg font-semibold tracking-tight text-foreground">
+              {config.title}
+            </h1>
           </div>
-          <nav className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1">
+          <nav className={group} aria-label="Setor">
             {(["video", "design"] as const).map((tab) => (
               <Link
                 key={tab}
                 href={`/planejamento-semanal/${tab}${sectorQuery}`}
-                className={`rounded-md px-3 py-1.5 text-sm font-semibold transition-colors ${
+                aria-current={sector.slug === tab ? "page" : undefined}
+                className={cn(
+                  "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
                   sector.slug === tab
-                    ? "bg-[#0f1c3f] text-white"
-                    : "text-slate-600 hover:bg-slate-100"
-                }`}
+                    ? "bg-primary text-primary-foreground shadow-xs"
+                    : "text-muted-foreground hover:bg-foreground/[0.05] hover:text-foreground",
+                )}
               >
                 {PLAN_SECTOR_CONFIG[tab].label}
               </Link>
             ))}
           </nav>
-          <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1">
-            <button
+          <div className={group}>
+            <Button
               type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
               aria-label="Semana anterior"
-              className="grid h-8 w-8 place-items-center rounded-md text-slate-700 hover:bg-slate-100"
               onClick={() => goToWeek(shiftWeek(week, -1))}
             >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <span className="px-2 text-sm font-medium text-[#0f1c3f]">{weekRangeLabel(week)}</span>
-            <button
+              <ChevronLeft />
+            </Button>
+            <span className="px-2 text-sm font-medium tabular-nums text-foreground">
+              {weekRangeLabel(week)}
+            </span>
+            <Button
               type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
               aria-label="Próxima semana"
-              className="grid h-8 w-8 place-items-center rounded-md text-slate-700 hover:bg-slate-100"
               onClick={() => goToWeek(shiftWeek(week, 1))}
             >
-              <ChevronRight className="h-4 w-4" />
-            </button>
+              <ChevronRight />
+            </Button>
           </div>
-          <button
-            type="button"
-            className="h-9 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50"
-            onClick={() => goToWeek(todayWeek)}
-          >
+          <Button type="button" variant="outline" onClick={() => goToWeek(todayWeek)}>
             Semana atual
-          </button>
+          </Button>
           <select
             aria-label="Semana"
-            className="h-9 rounded-md border border-slate-200 bg-white px-2 text-sm text-slate-800"
+            className={selectClass}
             value={week.week}
             onChange={(e) => goToWeek({ ...week, week: Number(e.target.value) })}
           >
@@ -487,7 +499,7 @@ export function PlanningBoard({
           </select>
           <select
             aria-label="Ano"
-            className="h-9 rounded-md border border-slate-200 bg-white px-2 text-sm text-slate-800"
+            className={selectClass}
             value={week.year}
             onChange={(e) => goToWeek({ year: Number(e.target.value), week: 1 })}
           >
@@ -497,107 +509,94 @@ export function PlanningBoard({
               </option>
             ))}
           </select>
-          <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1">
-            <button
+          <div className={group}>
+            <Button
               type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
               title="Reduzir zoom"
               aria-label="Reduzir zoom"
-              className="grid h-8 w-8 place-items-center rounded-md text-slate-700 hover:bg-slate-100 disabled:opacity-40"
               onClick={() => changeColumnWidth(columnWidth - COL_WIDTH_STEP)}
               disabled={columnWidth <= COL_WIDTH_MIN}
             >
-              <ZoomOut className="h-4 w-4" />
-            </button>
-            <span className="w-12 text-center text-xs font-medium text-[#0f1c3f]">
+              <ZoomOut />
+            </Button>
+            <span className="w-12 text-center text-xs font-medium tabular-nums text-foreground">
               {zoomPercent(columnWidth)}%
             </span>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
               title="Aumentar zoom"
               aria-label="Aumentar zoom"
-              className="grid h-8 w-8 place-items-center rounded-md text-slate-700 hover:bg-slate-100 disabled:opacity-40"
               onClick={() => changeColumnWidth(columnWidth + COL_WIDTH_STEP)}
               disabled={columnWidth >= COL_WIDTH_MAX}
             >
-              <ZoomIn className="h-4 w-4" />
-            </button>
-            <button
+              <ZoomIn />
+            </Button>
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               title="Ajustar para ver a semana inteira"
-              className="flex h-8 items-center rounded-md px-2 text-sm text-slate-700 hover:bg-slate-100"
               onClick={fitWholeWeek}
             >
-              <Maximize className="mr-1 h-4 w-4" /> Semana inteira
-            </button>
+              <Maximize /> Semana inteira
+            </Button>
           </div>
           {canEdit && (
-            <button
-              type="button"
-              className="flex h-9 items-center rounded-md bg-[#1d4ed8] px-3 text-sm font-medium text-white hover:bg-[#1e40af]"
-              onClick={() => setDraft(emptyDraft(sector.slug))}
-            >
-              <Plus className="mr-1 h-4 w-4" /> Novo card
-            </button>
+            <Button type="button" onClick={() => setDraft(emptyDraft(sector.slug))}>
+              <Plus /> Novo card
+            </Button>
           )}
           {canEdit && (
-            <button
+            <Button
               type="button"
-              className="flex h-9 items-center rounded-md bg-violet-600 px-3 text-sm font-medium text-white hover:bg-violet-700 disabled:opacity-60"
+              variant="brand"
               onClick={() => void runDistribution(0, false)}
               disabled={suggesting}
             >
-              {suggesting ? (
-                <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-              ) : (
-                <Sparkles className="mr-1 h-4 w-4" />
-              )}
+              {suggesting ? <Loader2 className="animate-spin" /> : <Sparkles />}
               Sugerir distribuição
-            </button>
+            </Button>
           )}
-          <button
-            type="button"
-            className="flex h-9 items-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50"
-            onClick={() => setHistoryOpen(true)}
-          >
-            <History className="mr-1 h-4 w-4" /> Histórico
-          </button>
+          <Button type="button" variant="outline" onClick={() => setHistoryOpen(true)}>
+            <History /> Histórico
+          </Button>
           {access.canManage && (
             <>
-              <button
-                type="button"
-                className="h-9 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50"
-                onClick={() => setClientsOpen(true)}
-              >
+              <Button type="button" variant="outline" onClick={() => setClientsOpen(true)}>
                 Clientes
-              </button>
-              <button
-                type="button"
-                className="h-9 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50"
-                onClick={() => void duplicatePrevious()}
-              >
+              </Button>
+              <Button type="button" variant="outline" onClick={() => void duplicatePrevious()}>
                 Duplicar semana anterior
-              </button>
-              <Link
-                href="/equipe"
-                className="flex h-9 items-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50"
-              >
-                <Users className="mr-1 h-4 w-4" /> Acessos
-              </Link>
-              <button
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/equipe">
+                  <Users /> Acessos
+                </Link>
+              </Button>
+              <Button
                 type="button"
+                variant="outline"
+                size="icon"
                 aria-label="Configurações da equipe e capacidade"
                 title="Configurações da equipe e capacidade"
-                className="grid h-9 w-9 place-items-center rounded-md border border-slate-200 bg-white text-slate-800 hover:bg-slate-50"
                 onClick={() => setSettingsOpen(true)}
               >
-                <Settings className="h-4 w-4" />
-              </button>
+                <Settings />
+              </Button>
             </>
           )}
-          {navigating && <Loader2 className="h-4 w-4 animate-spin text-slate-500" aria-label="Carregando" />}
+          {navigating && (
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" aria-label="Carregando" />
+          )}
         </div>
         {!access.canManage && (
-          <p className="bg-slate-100 px-4 py-1 text-center text-xs text-slate-600">
+          <p className="border-t border-border/60 bg-muted/50 px-4 py-1 text-center text-xs text-muted-foreground">
             {access.canEdit
               ? "Acesso operacional — você pode criar, editar e mover cards. Excluir cards e configurar equipe, capacidade e modelos é função do gestor."
               : "Somente leitura — você pode acompanhar o planejamento, mas não alterar cards."}
@@ -614,11 +613,11 @@ export function PlanningBoard({
       >
       <div className="flex w-full flex-col gap-4 px-3 py-4 sm:px-4 lg:flex-row">
         <aside className="w-full shrink-0 lg:w-[clamp(14rem,16vw,20rem)]">
-          <div className="rounded-xl border-2 border-amber-300 bg-amber-50 p-3 shadow-sm">
-            <h2 className="text-sm font-bold uppercase tracking-wide text-amber-900">
+          <div className="rounded-xl border-2 border-warning/40 bg-warning/10 p-3 shadow-sm">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-warning-ink">
               Demandas não alocadas
             </h2>
-            <p className="mb-2 text-xs font-medium text-amber-700">
+            <p className="mb-2 text-xs font-medium text-warning-ink">
               {(grouped.get(BACKLOG) ?? []).length} card(s)
             </p>
             <PlanColumn
@@ -636,7 +635,7 @@ export function PlanningBoard({
 
         <div ref={boardRef} className="w-full min-w-0 flex-1 overflow-x-auto">
           {members.length === 0 ? (
-            <div className="rounded-xl border border-slate-300 bg-white p-6 text-sm text-slate-600">
+            <div className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
               Nenhuma pessoa configurada neste setor ainda.
               {access.canManage
                 ? " Adicione a equipe nas configurações do quadro."
@@ -650,20 +649,22 @@ export function PlanningBoard({
                   <section
                     key={day.value}
                     style={{ width: columnWidth }}
-                    className={`shrink-0 overflow-hidden rounded-xl border bg-white shadow-sm ${
-                      dayBlocked ? "border-rose-300" : "border-slate-300"
+                    className={`shrink-0 overflow-hidden rounded-xl border bg-card shadow-sm ${
+                      dayBlocked ? "border-destructive/30" : "border-border"
                     }`}
                   >
                     <div
                       className={`mb-2 flex items-center justify-between px-3 py-2 ${
-                        dayBlocked ? "bg-rose-600" : "bg-[#0f1c3f]"
+                        dayBlocked
+                          ? "bg-destructive text-destructive-foreground"
+                          : "bg-primary text-primary-foreground"
                       }`}
                     >
                       <div>
-                        <p className="text-sm font-bold uppercase tracking-wide text-white">
+                        <p className="text-sm font-bold uppercase tracking-wide">
                           {day.short}
                         </p>
-                        <p className="text-xs text-white/70">
+                        <p className="text-xs opacity-80">
                           {formatShortDate(dayDate(week, day.value))}
                         </p>
                       </div>
@@ -672,21 +673,21 @@ export function PlanningBoard({
                           type="button"
                           aria-label={dayBlocked ? `Desbloquear ${day.label}` : `Bloquear ${day.label}`}
                           title={dayBlocked ? "Desbloquear o dia" : "Bloquear o dia (feriado)"}
-                          className="rounded-md p-1 hover:bg-white/10"
+                          className="rounded-md p-1 hover:bg-foreground/10"
                           onClick={() => void toggleBlock(day.value, null)}
                         >
                           {dayBlocked ? (
-                            <Unlock className="h-4 w-4 text-white" />
+                            <Unlock className="h-4 w-4" />
                           ) : (
-                            <Lock className="h-4 w-4 text-white/70" />
+                            <Lock className="h-4 w-4 opacity-70" />
                           )}
                         </button>
                       ) : (
-                        <Lock className="h-4 w-4 text-white/70" aria-hidden />
+                        <Lock className="h-4 w-4 opacity-70" aria-hidden />
                       )}
                     </div>
                     {dayBlocked && (
-                      <p className="mx-3 mb-2 rounded-md bg-rose-100 px-2 py-1 text-center text-xs font-semibold uppercase tracking-wide text-rose-700">
+                      <p className="mx-3 mb-2 rounded-md bg-destructive/10 px-2 py-1 text-center text-xs font-semibold uppercase tracking-wide text-destructive">
                         Feriado / dia bloqueado
                       </p>
                     )}
@@ -715,21 +716,23 @@ export function PlanningBoard({
                             key={key}
                             className={`rounded-lg border p-2 ${
                               memberBlocked
-                                ? "border-rose-200 bg-rose-50"
+                                ? "border-destructive/30 bg-destructive/10"
                                 : free < 0
-                                  ? "border-rose-200 bg-rose-50/60"
+                                  ? "border-destructive/30 bg-destructive/5"
                                   : free === 0
-                                    ? "border-emerald-200 bg-emerald-50/60"
-                                    : "border-slate-200 bg-slate-50"
+                                    ? "border-success/30 bg-success/5"
+                                    : "border-border bg-muted/50"
                             }`}
                             style={{ borderTop: `3px solid ${member.color}` }}
                           >
                             <div className="mb-1 flex items-center justify-between">
-                              <span
-                                className="text-xs font-bold uppercase tracking-wide"
-                                style={{ color: member.color }}
-                              >
-                                {member.name}
+                              <span className="flex min-w-0 items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-foreground">
+                                <span
+                                  aria-hidden
+                                  className="size-2 shrink-0 rounded-full"
+                                  style={{ backgroundColor: member.color }}
+                                />
+                                <span className="truncate">{member.name}</span>
                               </span>
                               {access.canManage ? (
                                 <button
@@ -739,18 +742,18 @@ export function PlanningBoard({
                                       ? `Desbloquear ${member.name} em ${day.label}`
                                       : `Bloquear ${member.name} em ${day.label}`
                                   }
-                                  className="text-slate-400 hover:text-rose-600"
+                                  className="text-muted-foreground hover:text-destructive"
                                   onClick={() => void toggleBlock(day.value, member.id)}
                                   title="Bloquear profissional neste dia"
                                 >
                                   {memberBlocked ? (
-                                    <Unlock className="h-3.5 w-3.5 text-rose-600" />
+                                    <Unlock className="h-3.5 w-3.5 text-destructive" />
                                   ) : (
                                     <Lock className="h-3.5 w-3.5" />
                                   )}
                                 </button>
                               ) : (
-                                <Lock className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+                                <Lock className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
                               )}
                             </div>
                             <PlanColumn
@@ -763,32 +766,32 @@ export function PlanningBoard({
                 onDuplicate={duplicate}
                 onToggleComplete={toggleComplete}
                             />
-                            <div className="mt-2 border-t border-slate-200 pt-2 text-sm font-medium text-slate-700">
-                              <div className="mb-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
+                            <div className="mt-2 border-t border-border pt-2 text-sm font-medium text-foreground/80">
+                              <div className="mb-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
                                 <div
                                   className={`h-full rounded-full ${
                                     free < 0
-                                      ? "bg-rose-500"
+                                      ? "bg-destructive"
                                       : fillPct >= 90
-                                        ? "bg-emerald-500"
-                                        : "bg-blue-500"
+                                        ? "bg-success"
+                                        : "bg-primary"
                                   }`}
                                   style={{ width: `${free < 0 ? 100 : fillPct}%` }}
                                 />
                               </div>
                               <div className="grid grid-cols-1 gap-1">
-                                <p className="rounded bg-blue-100 px-2 py-1 text-blue-900">
+                                <p className="rounded bg-primary/10 px-2 py-1 text-primary-ink">
                                   Disponível: {formatHours(capacity)}
                                 </p>
-                                <p className="rounded bg-amber-100 px-2 py-1 text-amber-900">
+                                <p className="rounded bg-warning/15 px-2 py-1 text-warning-ink">
                                   Ocupado: {formatHours(used)}
                                 </p>
                                 {free >= 0 ? (
-                                  <p className="rounded bg-emerald-100 px-2 py-1 font-semibold text-emerald-800">
+                                  <p className="rounded bg-success/10 px-2 py-1 font-semibold text-success-ink">
                                     Livre: {formatHours(free)}
                                   </p>
                                 ) : (
-                                  <p className="rounded bg-rose-100 px-2 py-1 font-semibold text-rose-700">
+                                  <p className="rounded bg-destructive/10 px-2 py-1 font-semibold text-destructive">
                                     <AlertTriangle className="mr-1 inline h-3 w-3" />
                                     Sobrecarga de {formatHours(-free)}
                                   </p>
@@ -798,15 +801,15 @@ export function PlanningBoard({
                                 <p
                                   className={
                                     used + incoming > capacity
-                                      ? "font-semibold text-rose-600"
-                                      : "font-semibold text-blue-700"
+                                      ? "font-semibold text-destructive"
+                                      : "font-semibold text-primary-ink"
                                   }
                                 >
                                   Ao soltar: {formatHours(used + incoming)} / {formatHours(capacity)}
                                 </p>
                               )}
                               {free > 0 && (
-                                <p className="text-slate-400">
+                                <p className="text-muted-foreground">
                                   Pode receber: {slotSuggestions(free, presetHours).join(" • ")}
                                 </p>
                               )}
@@ -831,24 +834,29 @@ export function PlanningBoard({
       <section className="mt-2 w-full px-3 sm:px-4">
         <div className="grid gap-3 md:grid-cols-3">
           {totals.perMember.map((row) => (
-            <div key={row.member.id} className="rounded-xl border border-slate-200 bg-white p-4">
-              <p className="text-sm font-semibold" style={{ color: row.member.color }}>
+            <div key={row.member.id} className="rounded-xl border border-border bg-card p-4">
+              <p className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                <span
+                  aria-hidden
+                  className="size-2 shrink-0 rounded-full"
+                  style={{ backgroundColor: row.member.color }}
+                />
                 {row.member.name}
               </p>
               <div className="mt-2 grid grid-cols-3 gap-2 text-sm font-semibold">
-                <p className="rounded bg-blue-100 px-2 py-2 text-blue-900">
+                <p className="rounded bg-primary/10 px-2 py-2 text-primary-ink">
                   Disponível
                   <br />
                   {formatHours(row.capacity)}
                 </p>
-                <p className="rounded bg-amber-100 px-2 py-2 text-amber-900">
+                <p className="rounded bg-warning/15 px-2 py-2 text-warning-ink">
                   Ocupado
                   <br />
                   {formatHours(row.used)}
                 </p>
                 <p
                   className={`rounded px-2 py-2 ${
-                    row.free >= 0 ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-700"
+                    row.free >= 0 ? "bg-success/10 text-success-ink" : "bg-destructive/10 text-destructive"
                   }`}
                 >
                   {row.free >= 0 ? "Livre" : "Sobrecarga"}
@@ -856,27 +864,29 @@ export function PlanningBoard({
                   {formatHours(Math.abs(row.free))}
                 </p>
               </div>
-              <p className="mt-2 text-sm text-slate-700">
+              <p className="mt-2 text-sm text-foreground/80">
                 {config.itemLabel} programados: {row.items}
               </p>
             </div>
           ))}
-          <div className="rounded-xl border border-[#0f1c3f]/15 bg-[#0f1c3f] p-4 text-white">
+          <div className="rounded-xl border border-primary/30 bg-primary p-4 text-primary-foreground shadow-sm">
             <p className="text-base font-semibold">Total da semana</p>
             <div className="mt-2 grid grid-cols-3 gap-2 text-sm font-semibold">
-              <p className="rounded bg-blue-500/30 px-2 py-2">
+              <p className="rounded bg-primary-foreground/15 px-2 py-2">
                 Disponível
                 <br />
                 {formatHours(totals.capacity)}
               </p>
-              <p className="rounded bg-amber-500/30 px-2 py-2">
+              <p className="rounded bg-primary-foreground/15 px-2 py-2">
                 Ocupado
                 <br />
                 {formatHours(totals.used)}
               </p>
               <p
                 className={`rounded px-2 py-2 ${
-                  totals.free >= 0 ? "bg-emerald-500/30" : "bg-rose-500/40"
+                  totals.free >= 0
+                    ? "bg-primary-foreground/15"
+                    : "bg-destructive text-destructive-foreground"
                 }`}
               >
                 {totals.free >= 0 ? "Livre" : "Sobrecarga"}

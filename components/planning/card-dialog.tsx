@@ -109,7 +109,7 @@ export function draftToInput(draft: CardDraft): PlanCardInput {
   };
 }
 
-const selectClass = "h-9 w-full rounded-md border border-slate-200 bg-white px-2 text-sm text-slate-900";
+const selectClass = "h-9 w-full rounded-md border border-border bg-card px-2 text-sm text-foreground";
 
 export function CardDialog({
   draft,
@@ -167,7 +167,7 @@ export function CardDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto bg-white text-slate-900 sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{draft.id ? "Editar card" : "Novo card"}</DialogTitle>
         </DialogHeader>
@@ -394,7 +394,7 @@ export function CardDialog({
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <label className="flex items-center gap-2 text-sm text-slate-700">
+            <label className="flex items-center gap-2 text-sm text-foreground/80">
               <input
                 type="checkbox"
                 checked={draft.required}
@@ -402,7 +402,7 @@ export function CardDialog({
               />
               Obrigatório
             </label>
-            <label className="flex items-center gap-2 text-sm text-slate-700">
+            <label className="flex items-center gap-2 text-sm text-foreground/80">
               <input
                 type="checkbox"
                 checked={draft.recurring}
@@ -420,7 +420,7 @@ export function CardDialog({
                 value={draft.dueDate}
                 onChange={(e) => onChange({ ...draft, dueDate: e.target.value })}
               />
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-muted-foreground">
                 A distribuição automática nunca joga o card para depois desta data.
               </p>
             </div>

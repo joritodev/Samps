@@ -27,8 +27,8 @@ export function DesignCalculator({
   const unit = DESIGN_TIME_DEFAULTS.find((d) => d.key === kind)?.unit;
 
   return (
-    <div className="space-y-2 rounded-md border border-blue-200 bg-blue-50 p-3">
-      <p className="text-xs font-semibold uppercase tracking-wide text-[#0f1c3f]">Calculadora de tempo</p>
+    <div className="space-y-2 rounded-md border border-primary/25 bg-primary/5 p-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-foreground">Calculadora de tempo</p>
       <div className="flex flex-wrap items-end gap-3">
         {unit && (
           <div className="w-28 space-y-1">
@@ -44,19 +44,19 @@ export function DesignCalculator({
             />
           </div>
         )}
-        <label className="flex items-center gap-2 text-sm text-slate-800">
+        <label className="flex items-center gap-2 text-sm text-foreground">
           <input type="checkbox" checked={noIdentity} onChange={(e) => setNoIdentity(e.target.checked)} />
           Sem identidade visual (+{formatHours(extraIdentity / 60)})
         </label>
         {kind === "video_template" && (
-          <label className="flex items-center gap-2 text-sm text-slate-800">
+          <label className="flex items-center gap-2 text-sm text-foreground">
             <input type="checkbox" checked={newTemplate} onChange={(e) => setNewTemplate(e.target.checked)} />
             Criar template novo (+{formatHours(extraTemplate / 60)})
           </label>
         )}
       </div>
       <div className="flex items-center justify-between gap-2">
-        <p className="text-sm text-slate-700">
+        <p className="text-sm text-foreground/80">
           {result.summary} = <strong>{formatHours(result.totalMinutes / 60)}</strong>
         </p>
         <Button type="button" size="sm" onClick={() => onApply(result.hours)}>

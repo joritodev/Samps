@@ -95,13 +95,13 @@ export function MoveCardDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-md bg-white text-slate-900">
+      <DialogContent className="max-w-md bg-card text-foreground">
         <DialogHeader>
           <DialogTitle>Mover “{card.title}” para…</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1">
-            <Label htmlFor="move-date" className="text-xs uppercase tracking-wide text-slate-500">
+            <Label htmlFor="move-date" className="text-xs uppercase tracking-wide text-muted-foreground">
               Data
             </Label>
             <Input
@@ -112,12 +112,12 @@ export function MoveCardDialog({
             />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="move-member" className="text-xs uppercase tracking-wide text-slate-500">
+            <Label htmlFor="move-member" className="text-xs uppercase tracking-wide text-muted-foreground">
               Responsável
             </Label>
             <select
               id="move-member"
-              className="h-9 w-full rounded-md border border-slate-200 bg-white px-2 text-sm text-slate-900"
+              className="h-9 w-full rounded-md border border-border bg-card px-2 text-sm text-foreground"
               value={memberId}
               onChange={(e) => setMemberId(e.target.value)}
             >
@@ -129,25 +129,25 @@ export function MoveCardDialog({
             </select>
           </div>
           {sunday && (
-            <p className="rounded-md bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
+            <p className="rounded-md bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive">
               <AlertTriangle className="mr-1 inline h-3.5 w-3.5" />
               O quadro vai de segunda a sábado. Escolha outra data.
             </p>
           )}
           {blocked && (
-            <p className="rounded-md bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
+            <p className="rounded-md bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive">
               <AlertTriangle className="mr-1 inline h-3.5 w-3.5" />
               Este dia está bloqueado para o responsável escolhido.
             </p>
           )}
           {overloaded && !blocked && (
-            <p className="rounded-md bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+            <p className="rounded-md bg-warning/10 px-3 py-2 text-xs font-medium text-warning-ink">
               <AlertTriangle className="mr-1 inline h-3.5 w-3.5" />A carga do dia ficará em{" "}
               {formatHours(used + card.durationHours)} de {formatHours(capacity)}.
             </p>
           )}
           {lateDelivery && (
-            <p className="rounded-md bg-orange-50 px-3 py-2 text-xs font-medium text-orange-800">
+            <p className="rounded-md bg-brand/15 px-3 py-2 text-xs font-medium text-[hsl(16_80%_36%)] dark:text-brand">
               <AlertTriangle className="mr-1 inline h-3.5 w-3.5" />A data escolhida passa do prazo de
               entrega ({card.dueDate?.split("-").reverse().join("/")}).
             </p>
