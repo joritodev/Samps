@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
+import Link from "next/link";
 import {
   addMonths,
   eachDayOfInterval,
@@ -29,6 +30,8 @@ export interface ScheduleItem {
   status: string;
   statusLabel: string;
   meta: string | null;
+  /** Abre o detalhe do item quando informado. */
+  href?: string;
 }
 
 const WEEK_DAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -39,6 +42,7 @@ export function ScheduleView({
   dateLabel,
   items,
   emptyMessage,
+  action,
 }: {
   title: string;
   description: string;
@@ -46,6 +50,8 @@ export function ScheduleView({
   dateLabel: string;
   items: ScheduleItem[];
   emptyMessage: string;
+  /** Botão de ação do cabeçalho (ex.: "Novo projeto"). */
+  action?: ReactNode;
 }) {
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [selectedDay, setSelectedDay] = useState(() => new Date());
@@ -70,11 +76,14 @@ export function ScheduleView({
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">
-      <header className="shrink-0 bg-background px-6 pb-3 pt-6">
-        <h1 className="text-2xl font-semibold text-foreground">
-          {title}
-        </h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>
+      <header className="flex shrink-0 flex-wrap items-start justify-between gap-3 bg-background px-6 pb-3 pt-6">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">
+            {title}
+          </h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>
+        </div>
+        {action}
       </header>
 
       <div className="p-6">
@@ -110,9 +119,15 @@ export function ScheduleView({
                         className="border-b border-border last:border-b-0"
                       >
                         <td className="px-6 py-3">
-                          <p className="font-medium text-foreground">
-                            {item.title}
-                          </p>
+                          {item.href ? (
+                            <Link href={item.href} className="font-medium text-foreground hover:text-primary hover:underline">
+                              {item.title}
+                            </Link>
+                          ) : (
+                            <p className="font-medium text-foreground">
+                              {item.title}
+                            </p>
+                          )}
                           {item.meta ? (
                             <p className="text-xs text-muted-foreground">
                               {item.meta}
@@ -246,9 +261,15 @@ export function ScheduleView({
                           key={item.id}
                           className="rounded-lg border border-border p-3"
                         >
-                          <p className="text-sm font-medium text-foreground">
-                            {item.title}
-                          </p>
+                          {item.href ? (
+                            <Link href={item.href} className="text-sm font-medium text-foreground hover:text-primary hover:underline">
+                              {item.title}
+                            </Link>
+                          ) : (
+                            <p className="text-sm font-medium text-foreground">
+                              {item.title}
+                            </p>
+                          )}
                           <p className="mt-0.5 text-xs text-muted-foreground">
                             {item.clientName}
                           </p>

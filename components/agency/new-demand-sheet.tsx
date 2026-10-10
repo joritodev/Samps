@@ -36,18 +36,29 @@ const TYPE_OPTIONS: { value: DemandType; label: string }[] = [
   { value: DemandType.OTHER, label: "Outro" },
 ];
 
+const NO_LINK = "__none__";
+
 export function NewDemandSheet({
   open,
   onOpenChange,
   clients,
   sectors,
   priorities,
+  projects = [],
+  shoots = [],
+  defaultProjectId,
+  defaultShootId,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   clients: TaxonomyOption[];
   sectors: TaxonomyOption[];
   priorities: TaxonomyOption[];
+  /** Projetos abertos; o seletor mostra só os do cliente escolhido. */
+  projects?: { id: string; title: string; clientId: string }[];
+  shoots?: { id: string; title: string; clientId: string }[];
+  defaultProjectId?: string;
+  defaultShootId?: string;
 }) {
   const router = useRouter();
   const [clientId, setClientId] = useState("");
@@ -58,11 +69,17 @@ export function NewDemandSheet({
   const [sectorId, setSectorId] = useState("");
   const [priorityId, setPriorityId] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const [projectId, setProjectId] = useState("");
+  const [shootId, setShootId] = useState("");
   const [pending, startTransition] = useTransition();
 
   useEffect(() => {
     if (!open) return;
-    setClientId(clients[0]?.id ?? "");
+    const presetProject = projects.find((p) => p.id === defaultProjectId);
+    const presetShoot = shoots.find((x) => x.id === defaultShootId);
+    setClientId(presetProject?.clientId ?? presetShoot?.clientId ?? clients[0]?.id ?? "");
+    setProjectId(presetProject?.id ?? "");
+    setShootId(presetShoot?.id ?? "");
     setTitle("");
     setDescription("");
     setFormat("");
@@ -70,7 +87,12 @@ export function NewDemandSheet({
     setSectorId(sectors[0]?.id ?? "");
     setPriorityId(priorities[0]?.id ?? "");
     setDueDate("");
-  }, [open, clients, sectors, priorities]);
+    // Só reinicia ao abrir: as listas chegam como props novas a cada render do pai e apagariam o que a pessoa digitou.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  const clientProjects = projects.filter((p) => p.clientId === clientId);
+  const clientShoots = shoots.filter((x) => x.clientId === clientId);
 
   function submit() {
     if (!clientId || !title.trim()) {
@@ -88,6 +110,8 @@ export function NewDemandSheet({
         sectorId: sectorId || undefined,
         priorityId: priorityId || undefined,
         dueDate: dueDate || undefined,
+        projectId: projectId || undefined,
+        shootId: shootId || undefined,
       });
       if (result.error) {
         toast.error(result.error);
@@ -113,7 +137,14 @@ export function NewDemandSheet({
         <div className="flex flex-1 flex-col gap-4 px-6 py-5">
           <div className="space-y-2">
             <Label htmlFor="demand-client">Cliente</Label>
-            <Select value={clientId} onValueChange={setClientId}>
+            <Select
+              value={clientId}
+              onValueChange={(v) => {
+                setClientId(v);
+                setProjectId("");
+                setShootId("");
+              }}
+            >
               <SelectTrigger id="demand-client">
                 <SelectValue placeholder="Selecione" />
               </SelectTrigger>
@@ -126,6 +157,49 @@ export function NewDemandSheet({
               </SelectContent>
             </Select>
           </div>
+
+          {clientProjects.length > 0 || clientShoots.length > 0 ? (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="demand-project">Projeto (opcional)</Label>
+                <Select
+                  value={projectId || NO_LINK}
+                  onValueChange={(v) => setProjectId(v === NO_LINK ? "" : v)}
+                >
+                  <SelectTrigger id="demand-project">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NO_LINK}>Sem projeto</SelectItem>
+                    {clientProjects.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="demand-shoot">Captação (opcional)</Label>
+                <Select
+                  value={shootId || NO_LINK}
+                  onValueChange={(v) => setShootId(v === NO_LINK ? "" : v)}
+                >
+                  <SelectTrigger id="demand-shoot">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NO_LINK}>Sem captação</SelectItem>
+                    {clientShoots.map((x) => (
+                      <SelectItem key={x.id} value={x.id}>
+                        {x.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          ) : null}
 
           <div className="space-y-2">
             <Label htmlFor="demand-title">Título</Label>

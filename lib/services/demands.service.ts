@@ -198,6 +198,8 @@ export async function createDemand(
     assigneeId?: string;
     priorityId?: string;
     sectorId?: string;
+    projectId?: string;
+    shootId?: string;
   }
 ) {
   if (!canAccessClient(user.permissions, user.clientIds, data.clientId)) {
@@ -233,6 +235,8 @@ export async function createDemand(
       ...(data.sectorId
         ? { sector: { connect: { id: data.sectorId as string } } }
         : {}),
+      ...(data.projectId ? { project: { connect: { id: data.projectId } } } : {}),
+      ...(data.shootId ? { shoot: { connect: { id: data.shootId } } } : {}),
     },
     include: demandInclude,
   });

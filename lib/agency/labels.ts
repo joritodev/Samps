@@ -194,3 +194,22 @@ export function assertCanRegisterPublication(status: string) {
   }
 }
 
+
+export type StatusTone = "default" | "secondary" | "success" | "warning" | "destructive" | "outline";
+
+export const PROJECT_STATUS_TONE: Record<ProjectStatus, StatusTone> = {
+  PLANNING: "secondary",
+  ACTIVE: "default",
+  ON_HOLD: "warning",
+  COMPLETED: "success",
+  CANCELLED: "outline",
+};
+
+export const SHOOT_STATUS_TONE: Record<ShootStatus, StatusTone> = {
+  PLANNED: "secondary",
+  SCHEDULED: "default",
+  CONFIRMED: "default",
+  IN_PROGRESS: "warning",
+  COMPLETED: "success",
+  CANCELLED: "outline",
+};

@@ -75,6 +75,8 @@ export function DemandBoard({
   columns,
   taxonomy,
   clients = [],
+  projects = [],
+  shoots = [],
   canCreate = false,
   filterLabel,
   openDemandId,
@@ -88,6 +90,8 @@ export function DemandBoard({
   columns: BoardColumn[];
   taxonomy: BoardTaxonomy;
   clients?: TaxonomyOption[];
+  projects?: { id: string; title: string; clientId: string }[];
+  shoots?: { id: string; title: string; clientId: string }[];
   canCreate?: boolean;
   /** Rótulo do recorte vindo de `?filtro=` (links do painel). */
   filterLabel?: string;
@@ -263,6 +267,8 @@ export function DemandBoard({
           clients={clients}
           sectors={taxonomy.sectors}
           priorities={taxonomy.priorities}
+          projects={projects}
+          shoots={shoots}
         />
       ) : null}
     </div>

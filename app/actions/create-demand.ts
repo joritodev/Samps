@@ -7,12 +7,15 @@ import {
   DemandType,
   UserType,
 } from "@prisma/client";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requirePermission } from "@/lib/permissions/check";
 import { hasPermission } from "@/lib/permissions/resolve";
 import { revalidateOperationalViews } from "@/lib/revalidate-operational";
 import { logAudit } from "@/lib/services/audit.service";
+import { db } from "@/lib/db";
 import { createDemand } from "@/lib/services/demands.service";
+import { refreshProject } from "@/lib/services/projects.service";
 
 const createDemandSchema = z.object({
   clientId: z.string().min(1, "Selecione o cliente."),
@@ -21,6 +24,8 @@ const createDemandSchema = z.object({
   format: z.string().trim().max(80).optional(),
   sectorId: z.string().min(1).optional(),
   priorityId: z.string().min(1).optional(),
+  projectId: z.string().min(1).optional(),
+  shootId: z.string().min(1).optional(),
   type: z.nativeEnum(DemandType).optional(),
   dueDate: z
     .string()
@@ -53,6 +58,8 @@ export async function createDemandAction(input: {
   format?: string;
   sectorId?: string;
   priorityId?: string;
+  projectId?: string;
+  shootId?: string;
   type?: DemandType;
   dueDate?: string;
 }) {
@@ -67,6 +74,29 @@ export async function createDemandAction(input: {
   }
 
   try {
+    // Projeto e captação precisam ser do mesmo cliente, e o projeto não pode estar encerrado.
+    if (parsed.data.projectId) {
+      const project = await db.project.findUnique({
+        where: { id: parsed.data.projectId },
+        select: { clientId: true, status: true },
+      });
+      if (!project || project.clientId !== parsed.data.clientId) {
+        return { error: "Projeto não encontrado para este cliente." };
+      }
+      if (project.status === "COMPLETED" || project.status === "CANCELLED") {
+        return { error: "Este projeto está encerrado. Reabra-o para ligar demandas." };
+      }
+    }
+    if (parsed.data.shootId) {
+      const shoot = await db.shoot.findUnique({
+        where: { id: parsed.data.shootId },
+        select: { clientId: true, projectId: true },
+      });
+      if (!shoot || shoot.clientId !== parsed.data.clientId) {
+        return { error: "Captação não encontrada para este cliente." };
+      }
+    }
+
     const row = await createDemand(actor, {
       clientId: parsed.data.clientId,
       title: parsed.data.title,
@@ -80,7 +110,20 @@ export async function createDemandAction(input: {
       boardColumn: "todo",
       dueDate: parsed.data.dueDate,
       visibleToClient: false,
+      projectId: parsed.data.projectId,
+      shootId: parsed.data.shootId,
     });
+    if (parsed.data.projectId) {
+      await refreshProject(parsed.data.projectId);
+      await logAudit({
+        userId: actor.id,
+        action: AuditAction.PROJECT_UPDATED,
+        entityType: "Project",
+        entityId: parsed.data.projectId,
+        newValue: { description: `Demanda "${row.title}" criada no projeto` },
+        origin: "demandas/criar",
+      }).catch((e) => console.error("[projetos] histórico", e));
+    }
 
     await logAudit({
       userId: actor.id,
@@ -93,10 +136,14 @@ export async function createDemandAction(input: {
         clientId: row.clientId,
         status: row.status,
         demandOrigin: row.origin,
+        projectId: parsed.data.projectId ?? null,
+        shootId: parsed.data.shootId ?? null,
       },
     });
 
     revalidateOperationalViews(row.clientId);
+    if (parsed.data.projectId) revalidatePath(`/projetos/${parsed.data.projectId}`);
+    if (parsed.data.shootId) revalidatePath(`/captacoes/${parsed.data.shootId}`);
     return { success: true, id: row.id };
   } catch (error) {
     console.error("createDemandAction", error);

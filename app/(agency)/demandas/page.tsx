@@ -6,6 +6,8 @@ import { clientScopeFilter, requireAuth } from "@/lib/permissions/check";
 import { buildDemandVisibilityWhere } from "@/lib/permissions/demand-visibility";
 import { listLedSectorIds } from "@/lib/permissions/led-sectors";
 import { hasPermission } from "@/lib/permissions/resolve";
+import { listOpenProjectOptions } from "@/lib/services/projects.service";
+import { listOpenShootOptions } from "@/lib/services/shoots.service";
 import { demandFilter } from "@/lib/agency/demand-filters";
 import { groupIntoStatusColumns } from "@/lib/agency/demand-columns";
 import { canReviewDemand } from "@/lib/agency/labels";
@@ -24,7 +26,7 @@ export default async function DemandasPage({
   const isGestao =
     user.userType === "ADMIN" || user.userType === "MANAGEMENT";
 
-  const [sectors, priorities, clients, ledSectorIds] = await Promise.all([
+  const [sectors, priorities, clients, ledSectorIds, projectOptions, shootOptions] = await Promise.all([
     db.sector.findMany({
       where: { isActive: true },
       orderBy: { name: "asc" },
@@ -46,6 +48,8 @@ export default async function DemandasPage({
         })
       : Promise.resolve([]),
     listLedSectorIds(user.id),
+    canCreate ? listOpenProjectOptions(user) : Promise.resolve([]),
+    canCreate ? listOpenShootOptions(user) : Promise.resolve([]),
   ]);
 
   let demands: BoardDemand[] = [];
@@ -94,6 +98,8 @@ export default async function DemandasPage({
       columns={columns}
       taxonomy={{ sectors, priorities }}
       clients={clients}
+      projects={projectOptions}
+      shoots={shootOptions}
       canCreate={canCreate}
       filterLabel={filterLabel}
       openDemandId={searchParams.abrir}

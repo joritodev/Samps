@@ -128,6 +128,9 @@ export async function getSocialBoardData(
       d.status === DemandStatus.SCHEDULED
     ) {
       grouped.publication.push(d);
+    } else if (d.shootId) {
+      // Edição ligada a uma captação cadastrada (a demanda de vídeo "capta..." sem vínculo segue abaixo).
+      grouped.shoots.push(d);
     } else if (d.type === DemandType.PROJECT_TASK || d.projectId) {
       grouped.projects.push(d);
     } else if (d.type === DemandType.EXTRA || d.origin === DemandOrigin.MANAGEMENT) {
